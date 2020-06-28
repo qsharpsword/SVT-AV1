@@ -967,6 +967,22 @@ EbErrorType signal_derivation_multi_processes_oq(
     EbErrorType return_error = EB_ErrorNone;
     FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
 
+#if GM_MV_BUG_FIX
+    // High Precision
+    frm_hdr->allow_high_precision_mv =
+#if !MAR2_M8_ADOPTIONS
+        pcs_ptr->enc_mode <= ENC_M7 &&
+#endif
+        frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
+#if NEW_RESOLUTION_RANGES
+        (scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)
+#else
+        (scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
+        ? 1
+        : 0;
+#endif
+
 #if !UNIFY_SC_NSC
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
 #endif
@@ -2360,7 +2376,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 2 ON - INTER TXS restricted to max 1 depth
 #if RESTRICT_INTER_TXS_DEPTH
 #if UNIFY_SC_NSC
+#if REMOVE_MR_MACRO
+    if (pcs_ptr->enc_mode <= ENC_MRS)
+#else
     if (MRS_MODE)
+#endif
 #else
 #if JUNE15_ADOPTIONS
     if (MRS_MODE || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0))

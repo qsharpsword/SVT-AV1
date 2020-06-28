@@ -639,6 +639,9 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #if SB64_MEM_OPT
                                                 uint8_t sb_size,
 #endif
+#if MEM_OPT_UV_MODE
+                                                uint32_t buffer_desc_mask,
+#endif
 #if MEM_OPT_MD_BUF_DESC
                                                 EbPictureBufferDesc *temp_residual_ptr,
                                                 EbPictureBufferDesc *temp_recon_ptr,
@@ -665,7 +668,11 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #endif
     picture_buffer_desc_init_data.bit_depth                       = max_bitdepth;
     picture_buffer_desc_init_data.color_format                    = EB_YUV420;
+#if MEM_OPT_UV_MODE
+    picture_buffer_desc_init_data.buffer_enable_mask              = buffer_desc_mask;
+#else
     picture_buffer_desc_init_data.buffer_enable_mask              = PICTURE_BUFFER_DESC_FULL_MASK;
+#endif
     picture_buffer_desc_init_data.left_padding                    = 0;
     picture_buffer_desc_init_data.right_padding                   = 0;
     picture_buffer_desc_init_data.top_padding                     = 0;
@@ -699,7 +706,11 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     thirty_two_width_picture_buffer_desc_init_data.bit_depth    = EB_32BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask =
+#if MEM_OPT_UV_MODE
+        buffer_desc_mask;
+#else
         PICTURE_BUFFER_DESC_FULL_MASK;
+#endif
     thirty_two_width_picture_buffer_desc_init_data.left_padding  = 0;
     thirty_two_width_picture_buffer_desc_init_data.right_padding = 0;
     thirty_two_width_picture_buffer_desc_init_data.top_padding   = 0;
@@ -4918,6 +4929,291 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                           &cand_total_cnt);
 
     if (context_ptr->global_mv_injection) {
+#if INJECT_GLOBAL_CAND
+        for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
+
+            MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];
+            MvReferenceFrame rf[2];
+            av1_set_ref_frame(rf, ref_pair);
+
+            //single ref/list
+            if (rf[1] == NONE_FRAME) {
+                MvReferenceFrame frame_type = rf[0];
+                uint8_t          list_idx = get_list_idx(rf[0]);
+                uint8_t          ref_idx = get_ref_frame_idx(rf[0]);
+
+
+#if 0 // TODO
+                if (!is_valid_unipred_ref(context_ptr, WARP_GROUP, list_idx, ref_idx)) continue;
+
+                if (ref_idx > context_ptr->md_max_ref_count - 1)
+                    continue;
+#endif
+
+                // Get gm params
+                EbWarpedMotionParams *gm_params = &pcs_ptr->parent_pcs_ptr->global_motion[frame_type];
+
+                IntMv mv = gm_get_motion_vector_enc(
+                    gm_params,
+                    pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv,
+                    context_ptr->blk_geom->bsize,
+                    mi_col,
+                    mi_row,
+                    0 /* force_integer_mv */);
+
+                int16_t to_inject_mv_x = mv.as_mv.col;
+                int16_t to_inject_mv_y = mv.as_mv.row;
+
+                if (umv0tile)
+                    inside_tile = is_inside_tile_boundary(&(xd->tile),
+                        to_inject_mv_x,
+                        to_inject_mv_y,
+                        mi_col,
+                        mi_row,
+                        context_ptr->blk_geom->bsize);
+
+                if (inside_tile &&
+                    (((gm_params->wmtype > TRANSLATION && context_ptr->blk_geom->bwidth >= 8 &&
+                        context_ptr->blk_geom->bheight >= 8) ||
+                        gm_params->wmtype <= TRANSLATION))) {
+
+                    uint8_t inter_type;
+                    uint8_t is_ii_allowed = svt_is_interintra_allowed(
+                        context_ptr->md_enable_inter_intra, bsize, GLOBALMV, rf);
+                    uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
+
+                    for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
+                        cand_array[cand_total_cnt].type = INTER_MODE;
+
+                        cand_array[cand_total_cnt].inter_mode = GLOBALMV;
+                        cand_array[cand_total_cnt].pred_mode = GLOBALMV;
+                        cand_array[cand_total_cnt].motion_mode = gm_params->wmtype > TRANSLATION
+                            ? WARPED_CAUSAL
+                            : SIMPLE_TRANSLATION;
+
+                        cand_array[cand_total_cnt].wm_params_l0 = *gm_params;
+                        cand_array[cand_total_cnt].wm_params_l1 = *gm_params;
+
+                        cand_array[cand_total_cnt].is_compound = 0;
+                        cand_array[cand_total_cnt].distortion_ready = 0;
+                        cand_array[cand_total_cnt].use_intrabc = 0;
+                        cand_array[cand_total_cnt].merge_flag = EB_FALSE;
+                        cand_array[cand_total_cnt].prediction_direction[0] = list_idx;
+                        cand_array[cand_total_cnt].is_new_mv = 0;
+#if !CLEAN_UP_SB_DATA_7
+                        cand_array[cand_total_cnt].is_zero_mv = 0;
+#endif
+                        if (list_idx == 0) {
+                            cand_array[cand_total_cnt].motion_vector_xl0 = to_inject_mv_x;
+                            cand_array[cand_total_cnt].motion_vector_yl0 = to_inject_mv_y;
+                            context_ptr->injected_mv_x_l0_array[context_ptr->injected_mv_count_l0] =
+                                to_inject_mv_x;
+                            context_ptr->injected_mv_y_l0_array[context_ptr->injected_mv_count_l0] =
+                                to_inject_mv_y;
+                            context_ptr->injected_ref_type_l0_array[context_ptr->injected_mv_count_l0] =
+                                frame_type;
+                            ++context_ptr->injected_mv_count_l0;
+                        }
+                        else {
+                            cand_array[cand_total_cnt].motion_vector_xl1 = to_inject_mv_x;
+                            cand_array[cand_total_cnt].motion_vector_yl1 = to_inject_mv_y;
+                            context_ptr->injected_mv_x_l1_array[context_ptr->injected_mv_count_l1] =
+                                to_inject_mv_x;
+                            context_ptr->injected_mv_y_l1_array[context_ptr->injected_mv_count_l1] =
+                                to_inject_mv_y;
+                            context_ptr->injected_ref_type_l1_array[context_ptr->injected_mv_count_l1] =
+                                frame_type;
+                            ++context_ptr->injected_mv_count_l1;
+                        }
+
+                        cand_array[cand_total_cnt].drl_index = 0;
+                        cand_array[cand_total_cnt].ref_mv_index = 0;
+#if !CLEAN_UP_SB_DATA_7
+                        cand_array[cand_total_cnt].pred_mv_weight = 0;
+#endif
+                        cand_array[cand_total_cnt].ref_frame_type = frame_type;
+                        cand_array[cand_total_cnt].ref_frame_index_l0 = (list_idx == 0) ? ref_idx : -1;
+                        cand_array[cand_total_cnt].ref_frame_index_l1 = (list_idx == 1) ? ref_idx : -1;
+                        cand_array[cand_total_cnt].transform_type[0] = DCT_DCT;
+                        cand_array[cand_total_cnt].transform_type_uv = DCT_DCT;
+                        if (inter_type == 0) {
+                            cand_array[cand_total_cnt].is_interintra_used = 0;
+                        }
+                        else {
+                            if (is_ii_allowed) {
+                                if (inter_type == 1) {
+                                    inter_intra_search(
+                                        pcs_ptr, context_ptr, &cand_array[cand_total_cnt]);
+                                    cand_array[cand_total_cnt].is_interintra_used = 1;
+                                    cand_array[cand_total_cnt].use_wedge_interintra = 1;
+#if !CLEAN_UP_SB_DATA_5
+                                    cand_array[cand_total_cnt].ii_wedge_sign = 0;
+#endif
+                                }
+                                else if (inter_type == 2) {
+                                    cand_array[cand_total_cnt].is_interintra_used = 1;
+                                    cand_array[cand_total_cnt].interintra_mode =
+                                        cand_array[cand_total_cnt - 1].interintra_mode;
+                                    cand_array[cand_total_cnt].use_wedge_interintra = 0;
+                                }
+                            }
+                        }
+                        INCRMENT_CAND_TOTAL_COUNT(cand_total_cnt);
+                    }
+                }
+            }
+#if 1
+            else if (is_compound_enabled && allow_bipred) {
+
+                uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
+                uint8_t ref_idx_1 = get_ref_frame_idx(rf[1]);
+                uint8_t list_idx_0 = get_list_idx(rf[0]);
+                uint8_t list_idx_1 = get_list_idx(rf[1]);
+
+#if 0 // TODO
+                if (!is_valid_bipred_ref(
+                    context_ptr, NRST_NEAR_GROUP, list_idx_0, ref_idx_0, list_idx_1, ref_idx_1)) return;
+
+                if (ref_idx_0 > context_ptr->md_max_ref_count - 1 ||
+                    ref_idx_1 > context_ptr->md_max_ref_count - 1)
+                    return;
+#endif
+                // Get gm params
+                EbWarpedMotionParams *gm_params_0 =
+                    &pcs_ptr->parent_pcs_ptr->global_motion[svt_get_ref_frame_type(
+                        list_idx_0, ref_idx_0)];
+
+                EbWarpedMotionParams *gm_params_1 =
+                    &pcs_ptr->parent_pcs_ptr->global_motion[svt_get_ref_frame_type(
+                        list_idx_1, ref_idx_1)];
+
+                IntMv mv_0 = gm_get_motion_vector_enc(
+                    gm_params_0,
+                    pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv,
+                    context_ptr->blk_geom->bsize,
+                    mi_col,
+                    mi_row,
+                    0 /* force_integer_mv */);
+
+                int16_t to_inject_mv_x_l0 = mv_0.as_mv.col;
+                int16_t to_inject_mv_y_l0 = mv_0.as_mv.row;
+
+                IntMv mv_1 = gm_get_motion_vector_enc(
+                    gm_params_1,
+                    pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv,
+                    context_ptr->blk_geom->bsize,
+                    mi_col,
+                    mi_row,
+                    0 /* force_integer_mv */);
+
+                int16_t to_inject_mv_x_l1 = mv_1.as_mv.col;
+                int16_t to_inject_mv_y_l1 = mv_1.as_mv.row;
+
+                inside_tile = 1;
+                if (umv0tile) {
+                    inside_tile = is_inside_tile_boundary(&(xd->tile),
+                        to_inject_mv_x_l0,
+                        to_inject_mv_y_l0,
+                        mi_col,
+                        mi_row,
+                        context_ptr->blk_geom->bsize) &&
+                        is_inside_tile_boundary(&(xd->tile),
+                            to_inject_mv_x_l1,
+                            to_inject_mv_y_l1,
+                            mi_col,
+                            mi_row,
+                            context_ptr->blk_geom->bsize);
+                }
+
+
+                if (inside_tile && gm_params_0->wmtype > TRANSLATION && gm_params_1->wmtype > TRANSLATION ){
+  
+
+                    uint8_t to_inject_ref_type = av1_ref_frame_type(rf);
+
+                    // Warped prediction is only compatible with MD_COMP_AVG and MD_COMP_DIST.
+                    for (cur_type = MD_COMP_AVG;
+                        cur_type <= MIN(MD_COMP_DIST, tot_comp_types);
+                        cur_type++) {
+                        cand_array[cand_total_cnt].type = INTER_MODE;
+                        cand_array[cand_total_cnt].distortion_ready = 0;
+                        cand_array[cand_total_cnt].use_intrabc = 0;
+
+                        cand_array[cand_total_cnt].merge_flag = EB_FALSE;
+
+                        cand_array[cand_total_cnt].prediction_direction[0] = BI_PRED;
+
+                        cand_array[cand_total_cnt].inter_mode = GLOBAL_GLOBALMV;
+                        cand_array[cand_total_cnt].pred_mode = GLOBAL_GLOBALMV;
+                        cand_array[cand_total_cnt].motion_mode =
+                            gm_params_0->wmtype > TRANSLATION ? WARPED_CAUSAL
+                            : SIMPLE_TRANSLATION;
+                        cand_array[cand_total_cnt].wm_params_l0 = *gm_params_0;
+                        cand_array[cand_total_cnt].wm_params_l1 = *gm_params_1;
+                        cand_array[cand_total_cnt].is_compound = 1;
+                        cand_array[cand_total_cnt].is_interintra_used = 0;
+                        cand_array[cand_total_cnt].is_new_mv = 0;
+#if !CLEAN_UP_SB_DATA_7
+                        cand_array[cand_total_cnt].is_zero_mv = 0;
+#endif
+                        cand_array[cand_total_cnt].drl_index = 0;
+                        // will be needed later by the rate estimation
+                        cand_array[cand_total_cnt].ref_mv_index = 0;
+#if !CLEAN_UP_SB_DATA_7
+                        cand_array[cand_total_cnt].pred_mv_weight = 0;
+#endif
+                        cand_array[cand_total_cnt].ref_frame_type = to_inject_ref_type;
+                        cand_array[cand_total_cnt].ref_frame_index_l0 = ref_idx_0;
+                        cand_array[cand_total_cnt].ref_frame_index_l1 = ref_idx_1;
+                        cand_array[cand_total_cnt].transform_type[0] = DCT_DCT;
+                        cand_array[cand_total_cnt].transform_type_uv = DCT_DCT;
+                        // Set the MV to frame MV
+
+                        cand_array[cand_total_cnt].motion_vector_xl0 =
+                            to_inject_mv_x_l0;
+                        cand_array[cand_total_cnt].motion_vector_yl0 =
+                            to_inject_mv_y_l0;
+                        cand_array[cand_total_cnt].motion_vector_xl1 =
+                            to_inject_mv_x_l1;
+                        cand_array[cand_total_cnt].motion_vector_yl1 =
+                            to_inject_mv_y_l1;
+                        //GLOB-GLOB
+#if INTER_COMP_REDESIGN
+                        if (cur_type == MD_COMP_AVG && tot_comp_types > MD_COMP_AVG)
+                            calc_pred_masked_compound(
+                                pcs_ptr, context_ptr, &cand_array[cand_total_cnt]);
+
+                        if (context_ptr->inter_comp_ctrls.similar_predictions)
+                            if (cur_type > MD_COMP_AVG &&
+                                context_ptr->prediction_mse <=
+                                context_ptr->inter_comp_ctrls.similar_predictions_th)
+                                continue;
+
+#endif
+                        determine_compound_mode(pcs_ptr,
+                            context_ptr,
+                            &cand_array[cand_total_cnt],
+                            cur_type);
+                        INCRMENT_CAND_TOTAL_COUNT(cand_total_cnt);
+
+                        context_ptr->injected_mv_x_bipred_l0_array
+                            [context_ptr->injected_mv_count_bipred] = to_inject_mv_x_l0;
+                        context_ptr->injected_mv_y_bipred_l0_array
+                            [context_ptr->injected_mv_count_bipred] = to_inject_mv_y_l0;
+                        context_ptr->injected_mv_x_bipred_l1_array
+                            [context_ptr->injected_mv_count_bipred] = to_inject_mv_x_l1;
+                        context_ptr->injected_mv_y_bipred_l1_array
+                            [context_ptr->injected_mv_count_bipred] = to_inject_mv_y_l1;
+                        context_ptr->injected_ref_type_bipred_array
+                            [context_ptr->injected_mv_count_bipred] =
+                            to_inject_ref_type;
+                        ++context_ptr->injected_mv_count_bipred;
+                    }                   
+                }
+            }
+#endif
+        }
+#else
 #if GM_DOWN_16
         if (pcs_ptr->parent_pcs_ptr->gm_level <= GM_DOWN16) {
 #else
@@ -5167,6 +5463,7 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                         }
                     }
                 }
+
         } else {
             /**************
          GLOBALMV L0
@@ -5402,6 +5699,7 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 }
             }
         }
+#endif
     }
 
     // Warped Motion
@@ -6577,7 +6875,11 @@ EbErrorType generate_md_stage_0_cand(
                 &cand_total_cnt);
     }
     if (!coeff_based_nsq_cand_reduction)
+#if FILTER_INTRA_CLI
+       if (context_ptr->md_filter_intra_level > 0 && av1_filter_intra_allowed_bsize(scs_ptr->seq_header.filter_intra_level, context_ptr->blk_geom->bsize))
+#else
        if (context_ptr->md_filter_intra_mode > 0 && av1_filter_intra_allowed_bsize(scs_ptr->seq_header.enable_filter_intra, context_ptr->blk_geom->bsize))
+#endif
 
             inject_filter_intra_candidates(
                 pcs_ptr,

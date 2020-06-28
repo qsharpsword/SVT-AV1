@@ -2453,7 +2453,11 @@ void copy_api_from_app(
     scs_ptr->static_config.disable_cfl_flag = ((EbSvtAv1EncConfiguration*)config_struct)->disable_cfl_flag;
 
     // OBMC
+#if OBMC_CLI
+    scs_ptr->static_config.obmc_level = ((EbSvtAv1EncConfiguration*)config_struct)->obmc_level;
+#else
     scs_ptr->static_config.enable_obmc = ((EbSvtAv1EncConfiguration*)config_struct)->enable_obmc;
+#endif
 
     // RDOQ
     scs_ptr->static_config.enable_rdoq = ((EbSvtAv1EncConfiguration*)config_struct)->enable_rdoq;
@@ -2469,7 +2473,11 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_smooth = ((EbSvtAv1EncConfiguration*)config_struct)->enable_smooth;
 
     // Filter intra prediction
+#if FILTER_INTRA_CLI
+    scs_ptr->static_config.filter_intra_level = ((EbSvtAv1EncConfiguration*)config_struct)->filter_intra_level;
+#else
     scs_ptr->static_config.enable_filter_intra = ((EbSvtAv1EncConfiguration*)config_struct)->enable_filter_intra;
+#endif
 
     // Intra Edge Filter
     scs_ptr->static_config.enable_intra_edge_filter = ((EbSvtAv1EncConfiguration*)config_struct)->enable_intra_edge_filter;
@@ -2710,8 +2718,13 @@ static EbErrorType verify_settings(
     EbErrorType return_error = EB_ErrorNone;
     EbSvtAv1EncConfiguration *config = &scs_ptr->static_config;
     unsigned int channel_number = config->channel_id;
+#if REMOVE_MR_MACRO
+    if (config->enc_mode > MAX_ENC_PRESET || config->enc_mode < -2) {
+        SVT_LOG("Error instance %u: EncoderMode must be in the range of [-2-%d]\n", channel_number + 1, MAX_ENC_PRESET);
+#else
     if (config->enc_mode > MAX_ENC_PRESET) {
         SVT_LOG("Error instance %u: EncoderMode must be in the range of [0-%d]\n", channel_number + 1, MAX_ENC_PRESET);
+#endif
         return_error = EB_ErrorBadParameter;
     }
     if (config->snd_pass_enc_mode > MAX_ENC_PRESET + 1) {
@@ -3006,16 +3019,30 @@ static EbErrorType verify_settings(
     }
 
     // OBMC
+#if OBMC_CLI
+    if (config->obmc_level < (int32_t)(-1) || config->obmc_level > 3) {
+      SVT_LOG("Error instance %u: Invalid OBMC flag [-1, 0, 1, 2, 3], your input: %d\n", channel_number + 1, config->obmc_level);
+      return_error = EB_ErrorBadParameter;
+    }
+#else
     if (config->enable_obmc != 0 && config->enable_obmc != 1) {
       SVT_LOG("Error instance %u: Invalid OBMC flag [0 - 1], your input: %d\n", channel_number + 1, config->enable_obmc);
       return_error = EB_ErrorBadParameter;
     }
+#endif
 
     // Filter Intra prediction
+#if FILTER_INTRA_CLI
+    if (config->filter_intra_level < (int32_t)(-1) || config->filter_intra_level > 1) {
+        SVT_LOG("Error instance %u: Invalid Filter Intra flag [0 - 1], your input: %d\n", channel_number + 1, config->filter_intra_level);
+        return_error = EB_ErrorBadParameter;
+    }
+#else
     if (config->enable_filter_intra != 0 && config->enable_filter_intra != 1) {
       SVT_LOG("Error instance %u: Invalid Filter Intra flag [0 - 1], your input: %d\n", channel_number + 1, config->enable_filter_intra);
       return_error = EB_ErrorBadParameter;
     }
+#endif
 
     // Intra Edge Filter
     if (config->enable_intra_edge_filter != 0 && config->enable_intra_edge_filter != 1 && config->enable_intra_edge_filter != -1) {
@@ -3343,12 +3370,20 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->frame_end_cdf_update = DEFAULT;
     config_ptr->set_chroma_mode = DEFAULT;
     config_ptr->disable_cfl_flag = DEFAULT;
+#if OBMC_CLI
+    config_ptr->obmc_level = DEFAULT;
+#else
     config_ptr->enable_obmc = EB_TRUE;
+#endif
     config_ptr->enable_rdoq = DEFAULT;
     config_ptr->pred_me = DEFAULT;
     config_ptr->bipred_3x3_inject = DEFAULT;
     config_ptr->compound_level = DEFAULT;
+#if FILTER_INTRA_CLI
+    config_ptr->filter_intra_level = DEFAULT;
+#else
     config_ptr->enable_filter_intra = EB_TRUE;
+#endif
     config_ptr->enable_intra_edge_filter = DEFAULT;
     config_ptr->pic_based_rate_est = DEFAULT;
     config_ptr->ext_block_flag = EB_FALSE;

@@ -67,12 +67,20 @@ typedef struct EbSvtAv1EncConfiguration {
      * density mode.
      *
      * Default is defined as MAX_ENC_PRESET. */
+#if 1//REMOVE_MR_MACRO
+    int8_t enc_mode;
+#else
     uint8_t enc_mode;
+#endif
     /* For two pass encoding, the enc_mod of the second pass is passed in the first pass.
     * First pass has the option to run with second pass ME settings.
     *
     * Default is defined as MAX_ENC_PRESET. */
+#if 1//REMOVE_MR_MACRO
+    int8_t snd_pass_enc_mode;
+#else
     uint8_t snd_pass_enc_mode;
+#endif
     // GOP Structure
 
     /* The intra period defines the interval of frames after which you insert an
@@ -275,7 +283,7 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int enable_paeth;
-#if 1//OMARK
+#if 1//ON_OFF_FEATURE_MRP
     /* mrp level
     *
     * Default is -1. */
@@ -369,20 +377,49 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is -1 (auto) */
     int disable_cfl_flag;
 
+#if 1 // OBMC_CLI
+    /* obmc_level specifies the level of the OBMC feature that would be
+     * considered when the level is specified in the command line instruction (CLI).
+     * The meaning of the feature level in the CLI is different from that for
+     * the default settings. See description of pic_obmc_level for the full details.
+     *
+     * The table below specifies the meaning of obmc_level when specified in the CLI.
+     *     obmc_level   | Command Line Settings
+     *        -1        | Default settings (auto)
+     *         0        | OFF everywhere in encoder
+     *         1        | Fully ON in PD_PASS_2
+     *         2        | Level 2 everywhere in PD_PASS_2
+     *         3        | Level 3 everywhere in PD_PASS_3
+     *
+     * Default is -1 (auto). */
+    int8_t obmc_level;
+#else
     /* OBMC
-    *
-    * Default is 1. */
+     *
+     * Default is 1. */
     EbBool enable_obmc;
+#endif
 
     /* RDOQ
     *
     * Default is -1. */
     int enable_rdoq;
 
+#if 1 // FILTER_INTRA_CLI
+    /* Filter intra prediction
+    *
+    * The table below specifies the meaning of filter_intra_level when specified in the CLI.
+    * filter_intra_level | Command Line Settings
+    *        -1          | Default settings (auto)
+    *         0          | OFF everywhere in encoder
+    *         1          | Fully ON in PD_PASS_2, Default settings in PD_PASS_0 */
+    int8_t filter_intra_level;
+#else
     /* Filter intra prediction
     *
     * Default is 1. */
     EbBool enable_filter_intra;
+#endif
 
     /* Intra Edge Filter
     *
