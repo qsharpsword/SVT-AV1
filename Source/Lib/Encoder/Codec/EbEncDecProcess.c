@@ -169,6 +169,17 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
     // Mode Decision Context
 #if SB64_MEM_OPT
 #if CHANGE_HBD_MODE
+#if MEM_OPT_FAST_MODE_CAND_NUMBER
+    EB_NEW(context_ptr->md_context,
+           mode_decision_context_ctor,
+           color_format,
+           static_config->super_block_size,
+           static_config->enc_mode,
+           0,
+           0,
+           enable_hbd_mode_decision == DEFAULT ? 2 : enable_hbd_mode_decision ,
+           static_config->screen_content_mode);
+#else
     EB_NEW(context_ptr->md_context,
            mode_decision_context_ctor,
            color_format,
@@ -177,6 +188,7 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
            0,
            enable_hbd_mode_decision == DEFAULT ? 2 : enable_hbd_mode_decision ,
            static_config->screen_content_mode);
+#endif
 #else
     EB_NEW(context_ptr->md_context,
            mode_decision_context_ctor,

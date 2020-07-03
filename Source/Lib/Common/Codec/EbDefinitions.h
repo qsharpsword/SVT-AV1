@@ -607,7 +607,7 @@ extern "C" {
 #define SVT_02_TEMP 1 // based on svt-01 1702a2b5f8dd4d7bf8a06f2c693f3702ee629115
 
 #if SVT_02_TEMP
-
+#define MEM_OPT_FAST_MODE_CAND_NUMBER 1 // Memory optimization of candidate_buffer for fast mode
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
