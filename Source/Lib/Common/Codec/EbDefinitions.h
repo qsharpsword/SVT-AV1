@@ -181,7 +181,21 @@ extern "C" {
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
-
+#define M6_GLOBAL_MV        1
+#define M6_SKIP_ANGLE_INTRA 1
+#define M6_SE_DEPTH         1
+#define M6_PIC_FILTER_INTRA 1
+#define M6_OBMC             1
+#define M6_ME               1
+#define M6_HME_L0           1
+#define M6_COMPUTE_GLOBAL_MOTION    1
+#define M6_DISABLE_NSQ_16_ABOVE     1
+#define M6_LOOP_FILTER_ADOPT        1
+#define M6_TF_LEVEL                 1
+#define M6_MRP_LEVEL                1
+#define M6_NIC_1_LAST_STAGE         1
+#define M6_RESTORATION              1
+#define M6_FILTER_INTRA             1
 // START  MAY2020 /////////////////////////////////////////////////////////
 
 #define MAY2020        1 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22

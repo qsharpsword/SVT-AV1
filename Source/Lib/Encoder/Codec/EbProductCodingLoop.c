@@ -3847,7 +3847,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if M6_M7_NIC
     uint8_t use_nic_1_last_stage;
 #if JUNE26_ADOPTIONS
+#if M6_NIC_1_LAST_STAGE
+    if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M5) {
 #endif

@@ -3989,7 +3989,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
+#if M6_GLOBAL_MV
+            if (enc_mode <= ENC_M7)
+#else            
             if (enc_mode <= ENC_M6)
+#endif
 #else
             if (enc_mode <= ENC_M5)
 #endif
@@ -4830,7 +4834,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
 #if JUNE23_ADOPTIONS
 #if JUNE25_ADOPTIONS
+#if M6_SKIP_ANGLE_INTRA
+            if (enc_mode <= ENC_M7)
+#else
             if (enc_mode <= ENC_M6)
+#endif
 #else
             if (enc_mode <= ENC_M4)
 #endif
@@ -9476,7 +9484,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if MAY16_7PM_ADOPTIONS
 #if JUNE26_ADOPTIONS
+#if M6_SE_DEPTH
+                            if (pcs_ptr->enc_mode <= ENC_M7) {
+#else                                
                             if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #else
 #if JUNE17_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M5) {

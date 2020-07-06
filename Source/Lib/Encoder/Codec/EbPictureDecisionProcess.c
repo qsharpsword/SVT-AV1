@@ -1496,7 +1496,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_FALSE;
 #if JUNE17_ADOPTIONS
+#if M6_DISABLE_NSQ_16_ABOVE
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1856,7 +1860,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESET_SHIFITNG
 #if M6_LOOP_FILTER_MODE
 #if UNIFY_SC_NSC
+#if M6_LOOP_FILTER_ADOPT
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else        
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M6 || pcs_ptr->sc_content_detected)
 #endif
@@ -2762,7 +2770,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 context_ptr->tf_level = 0;
         }
+#if M6_TF_LEVEL
+        else if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
         else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
             if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                 context_ptr->tf_level = 2;
             else
@@ -2864,7 +2876,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
 #endif
 #if JUNE26_ADOPTIONS
+#if M6_MRP_LEVEL
+            if (pcs_ptr->enc_mode <= ENC_M7)
+#else
             if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
                 pcs_ptr->mrp_level = 2;
 #else
             if (pcs_ptr->enc_mode <= ENC_M5)

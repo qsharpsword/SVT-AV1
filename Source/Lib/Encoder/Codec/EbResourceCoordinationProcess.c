@@ -135,9 +135,9 @@ Output  : Pre-Analysis signal(s)
 ******************************************************/
 EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
                                               PictureParentControlSet *pcs_ptr) {
-    EbErrorType return_error     = EB_ErrorNone;
+    EbErrorType return_error = EB_ErrorNone;
 #if !REFACTOR_ME_HME
-    uint8_t     input_resolution = scs_ptr->input_resolution;
+    uint8_t input_resolution = scs_ptr->input_resolution;
     // HME Flags updated @ signal_derivation_multi_processes_oq
     uint8_t hme_me_level =
         scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
@@ -194,7 +194,8 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     if (scs_ptr->static_config.enable_intra_edge_filter == DEFAULT)
         scs_ptr->seq_header.enable_intra_edge_filter = 1;
     else
-        scs_ptr->seq_header.enable_intra_edge_filter = (uint8_t)scs_ptr->static_config.enable_intra_edge_filter;
+        scs_ptr->seq_header.enable_intra_edge_filter =
+            (uint8_t)scs_ptr->static_config.enable_intra_edge_filter;
 
     if (scs_ptr->static_config.pic_based_rate_est == DEFAULT)
 #if PIC_BASED_RE_OFF
@@ -216,16 +217,20 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
 #else
 #if REVERT_BLUE
 #if JUNE17_ADOPTIONS
-            scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M6) ? 1 : 0;
+#if M6_RESTORATION
+        scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M7) ? 1 : 0;
+#else
+        scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M6) ? 1 : 0;
+#endif
 #else
 #if PRESET_SHIFITNG
-            scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+        scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #else
-            scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M7) ? 1 : 0;
+        scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M7) ? 1 : 0;
 #endif
 #endif
 #else
-            scs_ptr->seq_header.enable_restoration = 1;
+        scs_ptr->seq_header.enable_restoration = 1;
 #endif
 #endif
     } else
@@ -235,11 +240,11 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     if (scs_ptr->static_config.cdef_mode == DEFAULT)
         scs_ptr->seq_header.enable_cdef = 1;
     else
-        scs_ptr->seq_header.enable_cdef = (uint8_t)(scs_ptr->static_config.cdef_mode>0);
+        scs_ptr->seq_header.enable_cdef = (uint8_t)(scs_ptr->static_config.cdef_mode > 0);
 
 #if SHUT_FILTERING
     scs_ptr->seq_header.enable_restoration = 0;
-    scs_ptr->seq_header.enable_cdef = 0;
+    scs_ptr->seq_header.enable_cdef        = 0;
 #endif
 #if !M8_CDF
 #if MAR2_M7_ADOPTIONS
@@ -255,7 +260,8 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     if (scs_ptr->static_config.enable_warped_motion == DEFAULT) {
         scs_ptr->seq_header.enable_warped_motion = 1;
     } else
-        scs_ptr->seq_header.enable_warped_motion = (uint8_t)scs_ptr->static_config.enable_warped_motion;
+        scs_ptr->seq_header.enable_warped_motion =
+            (uint8_t)scs_ptr->static_config.enable_warped_motion;
 
     return return_error;
 }
@@ -578,7 +584,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs_ptr, uint8_t *dst, 
         }
 
         // U
-        for (input_row_index = 0; input_row_index<(luma_height>> 1); input_row_index++) {
+        for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
             EB_MEMCPY((dst_picture_ptr->buffer_cb + chroma_buffer_offset +
                        chroma_stride * input_row_index),
                       (src_picture_ptr->buffer_cb + chroma_buffer_offset +
@@ -587,7 +593,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs_ptr, uint8_t *dst, 
         }
 
         // V
-        for (input_row_index = 0; input_row_index<(luma_height>> 1); input_row_index++) {
+        for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
             EB_MEMCPY((dst_picture_ptr->buffer_cr + chroma_buffer_offset +
                        chroma_stride * input_row_index),
                       (src_picture_ptr->buffer_cr + chroma_buffer_offset +
@@ -618,7 +624,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs_ptr, uint8_t *dst, 
             }
 
             // U 8bit
-            for (input_row_index = 0; input_row_index<(luma_height>> 1); input_row_index++) {
+            for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
                 EB_MEMCPY((dst_picture_ptr->buffer_cb + chroma_buffer_offset +
                            chroma_stride * input_row_index),
                           (src_picture_ptr->buffer_cb + chroma_buffer_offset +
@@ -627,7 +633,7 @@ static EbErrorType copy_frame_buffer(SequenceControlSet *scs_ptr, uint8_t *dst, 
             }
 
             // V 8bit
-            for (input_row_index = 0; input_row_index<(luma_height>> 1); input_row_index++) {
+            for (input_row_index = 0; input_row_index < (luma_height >> 1); input_row_index++) {
                 EB_MEMCPY((dst_picture_ptr->buffer_cr + chroma_buffer_offset +
                            chroma_stride * input_row_index),
                           (src_picture_ptr->buffer_cr + chroma_buffer_offset +
@@ -733,7 +739,6 @@ static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceContro
     pcs_ptr->referenced_area_has_non_zero = referenced_area_has_non_zero ? 1 : 0;
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
-
 
 /* Resource Coordination Kernel */
 /*********************************************************************************
@@ -889,41 +894,41 @@ void *resource_coordination_kernel(void *input_ptr) {
                 scs_ptr->seq_header.enable_interintra_compound =
 #if MAY12_ADOPTIONS
 #if UNIFY_SC_NSC
-                (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
 #else
 #if PRESET_SHIFITNG
-                (scs_ptr->static_config.enc_mode <= ENC_M2 &&
+                    (scs_ptr->static_config.enc_mode <= ENC_M2 &&
 #else
-                (scs_ptr->static_config.enc_mode <= ENC_M4 &&
+                    (scs_ptr->static_config.enc_mode <= ENC_M4 &&
 #endif
-                    scs_ptr->static_config.screen_content_mode != 1)
-                    ? 1
-                    : 0;
+                     scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
 #endif
 #else
 #if APR24_M3_ADOPTIONS
-                (scs_ptr->static_config.enc_mode <= ENC_M2 &&
-                    scs_ptr->static_config.screen_content_mode != 1)
-                    ? 1
-                    : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M2 &&
+                     scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
 #else
 #if APR23_ADOPTIONS
-                (scs_ptr->static_config.enc_mode <= ENC_M5 &&
-                    scs_ptr->static_config.screen_content_mode != 1)
-                    ? 1
-                    : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M5 &&
+                     scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
 #else
 #if PRESETS_SHIFT
                     (scs_ptr->static_config.enc_mode <= ENC_M2 &&
-                    scs_ptr->static_config.screen_content_mode != 1)
-                    ? 1
-                    : 0;
+                     scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
 #else
 #if MAR18_MR_TESTS_ADOPTIONS
                     (scs_ptr->static_config.enc_mode <= ENC_M3 &&
-                    scs_ptr->static_config.screen_content_mode != 1)
-                    ? 1
-                    : 0;
+                     scs_ptr->static_config.screen_content_mode != 1)
+                        ? 1
+                        : 0;
 #else
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
@@ -954,39 +959,43 @@ void *resource_coordination_kernel(void *input_ptr) {
 #if MAY19_ADOPTIONS
                 scs_ptr->seq_header.filter_intra_level =
 #if JUNE17_ADOPTIONS
-                (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+#if M6_FILTER_INTRA
+                    (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+#else
+                    (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+#endif
 #else
 #if PRESET_SHIFITNG
-                (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #else
-                (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
 #endif
 #endif
 #else
 #if APR23_ADOPTIONS_2
                 scs_ptr->seq_header.enable_filter_intra =
-                (scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
 #else
 #if PRESETS_SHIFT
                 scs_ptr->seq_header.enable_filter_intra =
-                (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #else
 #if MAR10_ADOPTIONS
                 if (scs_ptr->static_config.screen_content_mode == 1)
 #if MAR17_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
 #else
 #if MAR12_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
 #else
 #if MAR11_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
 #else
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
 #endif
 #endif
 #endif
@@ -994,16 +1003,16 @@ void *resource_coordination_kernel(void *input_ptr) {
 #endif
 #if MAR17_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
 #else
-                    scs_ptr->seq_header.enable_filter_intra =
+                scs_ptr->seq_header.enable_filter_intra =
                     (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #endif
 #endif
 #endif
 #endif
-            else
-                scs_ptr->seq_header.filter_intra_level = (scs_ptr->static_config.filter_intra_level == 0) ? 0 : 1;
+                    else scs_ptr->seq_header.filter_intra_level =
+                        (scs_ptr->static_config.filter_intra_level == 0) ? 0 : 1;
 #else
             // Set filter intra mode      Settings
             // 0                 OFF
@@ -1012,47 +1021,47 @@ void *resource_coordination_kernel(void *input_ptr) {
 #if MAY19_ADOPTIONS
                 scs_ptr->seq_header.enable_filter_intra =
 #if JUNE17_ADOPTIONS
-                (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
 #else
 #if PRESET_SHIFITNG
-                (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #else
-                (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
 #endif
 #endif
 #else
 #if APR23_ADOPTIONS_2
                 scs_ptr->seq_header.enable_filter_intra =
-                (scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
 #else
 #if PRESETS_SHIFT
                 scs_ptr->seq_header.enable_filter_intra =
-                (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+                    (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
 #else
 #if MAR10_ADOPTIONS
                 if (scs_ptr->static_config.screen_content_mode == 1)
 #if MAR17_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
 #else
 #if MAR12_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
 #else
 #if MAR11_ADOPTIONS
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
 #else
                     scs_ptr->seq_header.enable_filter_intra =
-                    (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+                        (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
 #endif
 #endif
 #endif
                 else
 #endif
 #if MAR17_ADOPTIONS
-                scs_ptr->seq_header.enable_filter_intra =
-                (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
+                    scs_ptr->seq_header.enable_filter_intra =
+                        (scs_ptr->static_config.enc_mode <= ENC_M7) ? 1 : 0;
 #else
                 scs_ptr->seq_header.enable_filter_intra =
                     (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
@@ -1077,7 +1086,7 @@ void *resource_coordination_kernel(void *input_ptr) {
                 scs_ptr->compound_mode = scs_ptr->static_config.compound_level;
 
 #if M8_NEW_REF
-                scs_ptr->compound_mode = 1 ;
+            scs_ptr->compound_mode = 1;
 #endif
             if (scs_ptr->compound_mode) {
                 scs_ptr->seq_header.order_hint_info.enable_jnt_comp = 1; //DISTANCE
@@ -1108,10 +1117,10 @@ void *resource_coordination_kernel(void *input_ptr) {
 
             pcs_ptr->p_pcs_wrapper_ptr = pcs_wrapper_ptr;
 
-            pcs_ptr->sb_params_array = scs_ptr->sb_params_array;
-            pcs_ptr->sb_geom = scs_ptr->sb_geom;
-            pcs_ptr->input_resolution = scs_ptr->input_resolution;
-            pcs_ptr->picture_sb_width = scs_ptr->pic_width_in_sb;
+            pcs_ptr->sb_params_array   = scs_ptr->sb_params_array;
+            pcs_ptr->sb_geom           = scs_ptr->sb_geom;
+            pcs_ptr->input_resolution  = scs_ptr->input_resolution;
+            pcs_ptr->picture_sb_width  = scs_ptr->pic_width_in_sb;
             pcs_ptr->picture_sb_height = scs_ptr->picture_height_in_sb;
 
             pcs_ptr->overlay_ppcs_ptr = NULL;
@@ -1262,11 +1271,10 @@ void *resource_coordination_kernel(void *input_ptr) {
             else
                 eb_object_inc_live_count(pcs_ptr->pa_reference_picture_wrapper_ptr, 2);
             if (scs_ptr->static_config.unrestricted_motion_vector == 0) {
-                struct PictureParentControlSet *ppcs_ptr = pcs_ptr;
-                Av1Common *const                cm       = ppcs_ptr->av1_cm;
-                uint8_t                         pic_width_in_sb =
-                    (uint8_t)((pcs_ptr->aligned_width + scs_ptr->sb_size_pix - 1) /
-                              scs_ptr->sb_size_pix);
+                struct PictureParentControlSet *ppcs_ptr        = pcs_ptr;
+                Av1Common *const                cm              = ppcs_ptr->av1_cm;
+                uint8_t                         pic_width_in_sb = (uint8_t)(
+                    (pcs_ptr->aligned_width + scs_ptr->sb_size_pix - 1) / scs_ptr->sb_size_pix);
                 int       tile_row, tile_col;
                 uint32_t  x_sb_index, y_sb_index;
                 const int tile_cols = cm->tiles_info.tile_cols;
@@ -1282,13 +1290,15 @@ void *resource_coordination_kernel(void *input_ptr) {
 
                         for ((y_sb_index =
                                   cm->tiles_info.tile_row_start_mi[tile_row] >> sb_size_log2);
-                             (y_sb_index<((uint32_t)cm->tiles_info.tile_row_start_mi[tile_row + 1]>>
-                              sb_size_log2));
+                             (y_sb_index <
+                              ((uint32_t)cm->tiles_info.tile_row_start_mi[tile_row + 1] >>
+                               sb_size_log2));
                              y_sb_index++) {
                             for ((x_sb_index =
                                       cm->tiles_info.tile_col_start_mi[tile_col] >> sb_size_log2);
-                                 (x_sb_index<((uint32_t)cm->tiles_info
-                                                 .tile_col_start_mi[tile_col + 1]>> sb_size_log2));
+                                 (x_sb_index <
+                                  ((uint32_t)cm->tiles_info.tile_col_start_mi[tile_col + 1] >>
+                                   sb_size_log2));
                                  x_sb_index++) {
                                 int sb_index =
                                     (uint16_t)(x_sb_index + y_sb_index * pic_width_in_sb);
