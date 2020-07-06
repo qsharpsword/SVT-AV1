@@ -33,6 +33,119 @@
 
 #define RC_QPMOD_MAXQP 54
 
+#if TWOPASS_RC
+enum {
+    KF_UPDATE            = 0,
+    LF_UPDATE            = 1,
+    GF_UPDATE            = 2,
+    ARF_UPDATE           = 3,
+    OVERLAY_UPDATE       = 4,
+    BRF_UPDATE           = 5, // Backward Reference Frame
+    LAST_BIPRED_UPDATE   = 6, // Last Bi-predictive Frame
+    BIPRED_UPDATE        = 7, // Bi-predictive Frame, but not the last one
+    INTNL_OVERLAY_UPDATE = 8, // Internal Overlay Frame
+    INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
+    FRAME_UPDATE_TYPES   = 10
+} frame_update_type;
+
+typedef struct {
+    // Rate targetting variables
+    int base_frame_target; // A baseline frame target before adjustment
+        // for previous under or over shoot.
+    int this_frame_target; // Actual frame target after rc adjustment.
+    int projected_frame_size;
+    int sb64_target_rate;
+    int last_q[FRAME_TYPES]; // Separate values for Intra/Inter
+    int last_boosted_qindex; // Last boosted GF/KF/ARF q
+    int last_kf_qindex; // Q index of the last key frame coded.
+
+    int gfu_boost;
+    int kf_boost;
+
+    // double rate_correction_factors[RATE_FACTOR_LEVELS];
+
+    int frames_since_golden;
+    int frames_till_gf_update_due;
+    int min_gf_interval;
+    int max_gf_interval;
+    int static_scene_max_gf_interval;
+    int baseline_gf_interval;
+    int constrained_gf_group;
+    int frames_to_key;
+    int frames_since_key;
+    int this_key_frame_forced;
+    int next_key_frame_forced;
+    int source_alt_ref_pending;
+    int source_alt_ref_active;
+    int is_src_frame_alt_ref;
+    int sframe_due;
+
+    // Length of the bi-predictive frame group interval
+    int bipred_group_interval;
+
+    // NOTE: Different types of frames may have different bits allocated
+    //       accordingly, aiming to achieve the overall optimal RD performance.
+    int is_bwd_ref_frame;
+    int is_last_bipred_frame;
+    int is_bipred_frame;
+    int is_src_frame_ext_arf;
+
+    int avg_frame_bandwidth; // Average frame size target for clip
+    int min_frame_bandwidth; // Minimum allocation used for any frame
+    int max_frame_bandwidth; // Maximum burst rate allowed for a frame.
+
+    int    ni_av_qi;
+    int    ni_tot_qi;
+    int    ni_frames;
+    int    avg_frame_qindex[FRAME_TYPES];
+    double tot_q;
+    double avg_q;
+
+    int64_t buffer_level;
+    int64_t bits_off_target;
+    int64_t vbr_bits_off_target;
+    int64_t vbr_bits_off_target_fast;
+
+    int decimation_factor;
+    int decimation_count;
+
+    int rolling_target_bits;
+    int rolling_actual_bits;
+
+    int long_rolling_target_bits;
+    int long_rolling_actual_bits;
+
+    int rate_error_estimate;
+
+    int64_t total_actual_bits;
+    int64_t total_target_bits;
+    int64_t total_target_vs_actual;
+
+    int worst_quality;
+    int best_quality;
+
+    int64_t starting_buffer_level;
+    int64_t optimal_buffer_level;
+    int64_t maximum_buffer_size;
+
+    // rate control history for last frame(1) and the frame before(2).
+    // -1: undershot
+    //  1: overshoot
+    //  0: not initialized.
+    int rc_1_frame;
+    int rc_2_frame;
+    int q_1_frame;
+    int q_2_frame;
+
+    // Auto frame-scaling variables.
+    //   int rf_level_maxq[RATE_FACTOR_LEVELS];
+    float_t arf_boost_factor;
+    // Q index used for ALT frame
+    int arf_q;
+} RATE_CONTROL;
+
+#endif //TWOPASS_RC
+
 /**************************************
  * Input Port Types
  **************************************/

@@ -607,6 +607,7 @@ extern "C" {
 #define SVT_02_TEMP 1 // based on svt-01 1702a2b5f8dd4d7bf8a06f2c693f3702ee629115
 
 #if SVT_02_TEMP
+#define TWOPASS_RC 1 // port 2pass RC code
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////

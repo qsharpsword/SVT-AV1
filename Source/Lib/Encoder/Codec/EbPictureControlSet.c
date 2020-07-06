@@ -1302,6 +1302,15 @@ static void picture_parent_control_set_dctor(EbPtr p) {
 #if !REMOVE_UNUSED_CODE_PH2
     EB_FREE_2D(obj->ois_sb_results);
 #endif
+#if TWOPASS_RC
+    {
+        if (obj->firstpass_data.mb_stats)
+            EB_FREE_ARRAY(obj->firstpass_data.mb_stats);
+        if (obj->firstpass_data.raw_motion_err_list)
+            EB_FREE_ARRAY(obj->firstpass_data.raw_motion_err_list);
+    }
+#endif
+
 #if TPL_LA
     if (obj->ois_mb_results)
         EB_FREE_2D(obj->ois_mb_results);
@@ -1459,6 +1468,14 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
     }
     else {
         object_ptr->ois_sb_results = NULL;
+    }
+#endif
+#if TWOPASS_RC
+    {
+        const uint16_t picture_width_in_mb  = (uint16_t)((init_data_ptr->picture_width + 15) / 16);
+        const uint16_t picture_height_in_mb = (uint16_t)((init_data_ptr->picture_height + 15) / 16);
+        EB_MALLOC_ARRAY(object_ptr->firstpass_data.mb_stats, (uint32_t)(picture_width_in_mb * picture_height_in_mb));
+        EB_MALLOC_ARRAY(object_ptr->firstpass_data.raw_motion_err_list, (uint32_t)(picture_width_in_mb * picture_height_in_mb));
     }
 #endif
 #if TPL_LA

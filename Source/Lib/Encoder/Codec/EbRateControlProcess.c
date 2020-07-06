@@ -3934,6 +3934,7 @@ uint32_t qp_scaling_calc(SequenceControlSet *scs_ptr, EB_SLICE slice_type,
 
     return scaled_qp;
 }
+#if !TWOPASS_RC
 typedef struct {
     // Rate targetting variables
     int base_frame_target; // A baseline frame target before adjustment
@@ -4029,6 +4030,7 @@ typedef struct {
     // Q index used for ALT frame
     int arf_q;
 } RATE_CONTROL;
+#endif
 #define STATIC_MOTION_THRESH 95
 
 enum {
@@ -4041,6 +4043,7 @@ enum {
     RATE_FACTOR_LEVELS = 6
 } rate_factor_level;
 
+#if !TWOPASS_RC
 enum {
     KF_UPDATE            = 0,
     LF_UPDATE            = 1,
@@ -4054,6 +4057,7 @@ enum {
     INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
     FRAME_UPDATE_TYPES   = 10
 } frame_update_type;
+#endif
 
 // that are not marked as coded with 0,0 motion in the first pass.
 #define FAST_MOVING_KF_GROUP_THRESH 5

@@ -31,6 +31,9 @@
 
 #include "av1me.h"
 #include "hash_motion.h"
+#if TWOPASS_RC
+#include "firstpass.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -658,6 +661,11 @@ typedef struct PictureParentControlSet {
     // Open loop Intra candidate Search Results
     OisSbResults **ois_sb_results;
     OisCandidate **ois_candicate;
+#endif
+#if TWOPASS_RC
+    FirstPassData firstpass_data;
+    TWO_PASS      twopass;
+    //RATE_CONTROL  rc;
 #endif
 #if TPL_LA
     OisMbResults **ois_mb_results;
