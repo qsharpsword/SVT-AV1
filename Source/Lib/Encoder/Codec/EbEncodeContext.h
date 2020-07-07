@@ -21,7 +21,9 @@
 #include "EbPredictionStructure.h"
 #include "EbRateControlTables.h"
 #include "EbObject.h"
-
+#if TWOPASS_STAT_BUF
+#include "firstpass.h"
+#endif
 // *Note - the queues are small for testing purposes.  They should be increased when they are done.
 #define PRE_ASSIGNMENT_MAX_DEPTH 128 // should be large enough to hold an entire prediction period
 #define INPUT_QUEUE_MAX_DEPTH 5000
@@ -39,7 +41,16 @@
 #define PARALLEL_GOP_MAX_NUMBER 256
 #define RC_GROUP_IN_GOP_MAX_NUMBER 512
 #define PICTURE_IN_RC_GROUP_MAX_NUMBER 64
-
+#if TWOPASS_STAT_BUF
+/*!\brief Generic fixed size buffer structure
+ *
+ * This structure is able to hold a reference to any fixed size buffer.
+ */
+typedef struct aom_fixed_buf {
+    void *buf;       /**< Pointer to the data. Does NOT own the data! */
+    size_t sz;       /**< Length of the buffer, in chars */
+} aom_fixed_buf_t; /**< alias for struct aom_fixed_buf */
+#endif
 typedef struct DpbDependentList
 {
     int32_t                              list[1 << MAX_TEMPORAL_LAYERS];
@@ -183,6 +194,13 @@ typedef struct EncodeContext {
 #if LAD_MEM_RED
     EbByte  mc_flow_rec_picture_buffer_saved;
 #endif
+#endif
+#if TWOPASS_STAT_BUF
+    FIRSTPASS_STATS *frame_stats_buffer;
+    // Number of stats buffers required for look ahead
+    int num_lap_buffers;
+    STATS_BUFFER_CTX stats_buf_context;
+    aom_fixed_buf_t rc_twopass_stats_in; //anaghdin: replaced oxcf->two_pass_cfg.stats_in in aom
 #endif
 } EncodeContext;
 

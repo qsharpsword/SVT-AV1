@@ -95,7 +95,8 @@ static AOM_INLINE void output_stats(FIRSTPASS_STATS *stats,
   }
 #endif
 }
-
+#endif
+#if TWOPASS_STAT_BUF
 void av1_twopass_zero_stats(FIRSTPASS_STATS *section) {
   section->frame = 0.0;
   section->weight = 0.0;
@@ -715,8 +716,13 @@ static void update_firstpass_stats(PictureParentControlSet *pcs_ptr, //AV1_COMP 
                                    const double raw_err_stdev,
                                    const int frame_number,
                                    const int64_t ts_duration) {
+#if TWOPASS_STAT_BUF
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    TWO_PASS *twopass = &scs_ptr->twopass;
+#else
   TWO_PASS *twopass = &pcs_ptr->twopass;
   SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+#endif  
   const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
   const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
   //AV1_COMMON *const cm = &cpi->common;
@@ -1178,8 +1184,11 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
                       (stats.image_data_start_row * mi_params->mb_cols * 2));
   }
 #endif
-
+#if TWOPASS_STAT_BUF
+  TWO_PASS *twopass = &scs_ptr->twopass;
+#else
   TWO_PASS *twopass = &pcs_ptr->twopass;
+#endif
   const int num_mbs = mb_rows * mb_cols;
                       /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
                           ? cpi->initial_mbs

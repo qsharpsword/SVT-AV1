@@ -694,6 +694,66 @@ static void copy_input_buffer(SequenceControlSet *sequenceControlSet, EbBufferHe
     // Copy the picture buffer
     if (src->p_buffer != NULL) copy_frame_buffer(sequenceControlSet, dst->p_buffer, src->p_buffer);
 }
+#if TWOPASS_STAT_BUF
+/******************************************************
+ * Read Stat from File
+ ******************************************************/
+// anaghdin to handle the memory allocation properly
+static void read_stat_from_file(SequenceControlSet *scs_ptr) {
+    size_t nbytes;
+
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    if (fseek(scs_ptr->static_config.input_stat_file, 0, SEEK_END))
+        SVT_LOG("First-pass stats file must be seekable!");
+
+    encode_context_ptr->rc_twopass_stats_in.sz =
+        ftell(scs_ptr->static_config.input_stat_file);
+    rewind(scs_ptr->static_config.input_stat_file);
+
+    encode_context_ptr->rc_twopass_stats_in.buf =
+        malloc(encode_context_ptr->rc_twopass_stats_in.sz);
+
+    if (!encode_context_ptr->rc_twopass_stats_in.buf)
+        SVT_LOG("Failed to allocate first-pass stats buffer (%lu bytes)",
+                (unsigned int)encode_context_ptr->rc_twopass_stats_in.sz);
+
+    nbytes = fread(encode_context_ptr->rc_twopass_stats_in.buf,
+                   1,
+                   encode_context_ptr->rc_twopass_stats_in.sz,
+                   scs_ptr->static_config.input_stat_file);
+    if (nbytes != encode_context_ptr->rc_twopass_stats_in.sz)
+        SVT_LOG("Failed to read first-pass stats buffer");
+}
+static void setup_second_pass(SequenceControlSet *scs_ptr) {
+
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+
+    int num_lap_buffers = 0;
+    int size = get_stats_buf_size(num_lap_buffers, MAX_LAG_BUFFERS);
+    for (int i = 0; i < size; i++)
+        scs_ptr->twopass.frame_stats_arr[i] = &encode_context_ptr->frame_stats_buffer[i];
+
+    scs_ptr->twopass.stats_buf_ctx = &encode_context_ptr->stats_buf_context;
+    scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
+
+    const size_t packet_sz = sizeof(FIRSTPASS_STATS);
+    const int packets = (int)(encode_context_ptr->rc_twopass_stats_in.sz / packet_sz);
+
+    //if (!cpi->lap_enabled)
+    {
+        /*Re-initialize to stats buffer, populated by application in the case of
+            * two pass*/
+        scs_ptr->twopass.stats_buf_ctx->stats_in_start =
+            encode_context_ptr->rc_twopass_stats_in.buf;
+        scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
+        scs_ptr->twopass.stats_buf_ctx->stats_in_end =
+            &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
+
+        // av1_init_second_pass(cpi);
+    }
+
+}
+#else
 /******************************************************
  * Read Stat from File
  * reads StatStruct per frame from the file and stores under pcs_ptr
@@ -733,7 +793,7 @@ static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceContro
     pcs_ptr->referenced_area_has_non_zero = referenced_area_has_non_zero ? 1 : 0;
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
-
+#endif
 
 /* Resource Coordination Kernel */
 /*********************************************************************************
@@ -1243,11 +1303,20 @@ void *resource_coordination_kernel(void *input_ptr) {
             else
                 pcs_ptr->picture_number = context_ptr->picture_number_array[instance_index];
             reset_pcs_av1(pcs_ptr);
+#if TWOPASS_STAT_BUF
+            if (scs_ptr->use_input_stat_file) {
+                if (pcs_ptr->picture_number == 0) {
+                    read_stat_from_file(scs_ptr);
+                    setup_second_pass(scs_ptr);
+                }
+            }
+#else
             if (scs_ptr->use_input_stat_file && !end_of_sequence_flag)
                 read_stat_from_file(pcs_ptr, scs_ptr);
             else {
                 memset(&pcs_ptr->stat_struct, 0, sizeof(StatStruct));
             }
+#endif
             scs_ptr->encode_context_ptr->initial_picture = EB_FALSE;
 
             // Get Empty Reference Picture Object

@@ -21,6 +21,9 @@
 #include "EbAv1Structs.h"
 #include "EbEncodeContext.h"
 #include "EbObject.h"
+#if TWOPASS_RC
+#include "firstpass.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -207,6 +210,9 @@ typedef struct SequenceControlSet {
     uint32_t cdef_process_init_count;
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
+#if TWOPASS_STAT_BUF
+    TWO_PASS      twopass;
+#endif
 } SequenceControlSet;
 
 typedef struct EbSequenceControlSetInitData {
