@@ -10212,7 +10212,7 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
                     if (pcs_ptr->update_cdf) {
 
-#if !RATE_MEM_OPT && !REU_MEM_OPT
+#if !REU_MEM_OPT
                         pcs_ptr->rate_est_array[sb_index] = *pcs_ptr->md_rate_estimation_array;
 #endif
                         if (scs_ptr->seq_header.pic_based_rate_est &&

@@ -41,14 +41,18 @@ extern "C" {
 // START  BEYOND_CS2 /////////////////////////////////////////////////////////
 #define BEYOND_CS2        0 // BASED ON CS2 branch 3a19f29b789df30ef81d5bb263ce991617cbf30c
 
-#if BEYOND_CS2
-
 
 
 
 
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1
+#if FIXED_SQ_WEIGHT_PER_QP
+#define SQ_WEIGHT_PATCH_0 1
+#define SQ_WEIGHT_PATCH_1 0
+#define SQ_WEIGHT_PATCH_2 0
+#define SQ_WEIGHT_PATCH_3 0
+#endif
 #define MAR2_M8_ADOPTIONS           1
 #define MAR2_M7_ADOPTIONS           1
 #define MAR3_M2_ADOPTIONS           1
@@ -62,9 +66,17 @@ extern "C" {
 #define SHUT_ME_DISTORTION          1 //Removed the ME distortions (209 elements), and the HEVC-legacy early inter-depth decision.
 #define REST_MEM_OPT                1 //lossless memory optimization of restoration buffer (move from parent to child pcs)
 #define MULTI_STAGE_HME                   1
+#if MULTI_STAGE_HME
+#define DISABLE_HME_PRE_CHECK             1
+#define ENABLE_HME_AT_INC_SB              1
+#define NEW_HME_DISTANCE_ALGORITHM        1
+#define DISABLE_HME_OF_SAME_POC           1
+#define DISABLE_HME_L0_FOR_240P           1
+#endif
 #define HME_PRUNE_BUG_FIX                 1
-#define RATE_MEM_OPT                      0 //lossless memory optimization of rate estimation
 #define MAR10_ADOPTIONS                   1 // Adoptions for all presets
+
+#if BEYOND_CS2
 #define CLEAN_UP_SB_DATA                  1
 #define R2R_FIX                           1
 #define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
@@ -129,21 +141,6 @@ extern "C" {
 #define APR08_ADOPTIONS               1 // adoptions in all modes
 
 
-#if FIXED_SQ_WEIGHT_PER_QP
-#define SQ_WEIGHT_PATCH_0 1
-#define SQ_WEIGHT_PATCH_1 0
-#define SQ_WEIGHT_PATCH_2 0
-#define SQ_WEIGHT_PATCH_3 0
-#endif
-#if MULTI_STAGE_HME
-#define DISABLE_HME_PRE_CHECK             1
-#define ENABLE_HME_AT_INC_SB              1
-#define NEW_HME_DISTANCE_ALGORITHM        1
-#define DISABLE_HME_OF_SAME_POC           1
-#define DISABLE_HME_L0_FOR_240P           1
-#define PRUNE_HME_L0                      0
-#define PRUNE_HME_L1                      0
-#endif
 #if CLEAN_UP_SB_DATA
 #define CLEAN_UP_SB_DATA_0   1 // ref_mvs
 #define CLEAN_UP_SB_DATA_1   1

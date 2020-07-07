@@ -8351,7 +8351,7 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
                  uint32_t sb_width, // input parameter, SB pwidth - full resolution
                  uint32_t sb_height, // input parameter, SB height - full resolution
                  EbPictureBufferDesc *ref_pic_ptr, // input parameter, reference Picture Ptr
-#if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
+#if !ADD_HME_DECIMATION_SIGNAL
                  uint32_t search_region_number_in_width, // input parameter, search region
                  // number in the horizontal direction
                  uint32_t search_region_number_in_height, // input parameter, search region
@@ -8366,7 +8366,7 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
                 uint32_t hme_sr_factor_x,
                 uint32_t hme_sr_factor_y,
 #endif
- #if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
+ #if !ADD_HME_DECIMATION_SIGNAL
                  // number in the vertical direction
 #endif
                  int16_t xLevel1SearchCenter, // input parameter, best Level1 xMV
@@ -11167,7 +11167,7 @@ void hme_level2_sb(
                                     sb_width,
                                     sb_height,
                                     refPicPtr,
-#if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
+#if !ADD_HME_DECIMATION_SIGNAL
                                     search_region_number_in_width,
                                     search_region_number_in_height,
 #endif
