@@ -1947,6 +1947,20 @@ typedef enum AomCodecErr
 } AomCodecErr;
 
 //**********************************************************************************************************************//
+
+#if TWOPASS_RC
+//**********************************************************************************************************************//
+// aom_codec.h
+/*!\brief Rate control mode */
+enum aom_rc_mode {
+  AOM_VBR, /**< Variable Bit Rate (VBR) mode */
+  AOM_CBR, /**< Constant Bit Rate (CBR) mode */
+  AOM_CQ,  /**< Constrained Quality (CQ)  mode */
+  AOM_Q,   /**< Constant Quality (Q) mode */
+};
+//**********************************************************************************************************************//
+#endif
+
 // Common_data.h
 static const int32_t intra_mode_context[INTRA_MODES] = {
     0, 1, 2, 3, 4, 4, 4, 4, 3, 0, 1, 2, 0,
