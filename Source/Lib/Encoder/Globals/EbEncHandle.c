@@ -485,6 +485,11 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->static_config.logical_processors > lp_count / num_groups)
         core_count = lp_count;
 #endif
+#if ADOPT_LP2X_SETT_FOR_LPX
+    if ((scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) && (core_count != SINGLE_CORE_COUNT) && (core_count <= (CONS_CORE_COUNT >> 2))) {
+        core_count = core_count << 1;
+    }
+#endif
     int32_t return_ppcs = set_parent_pcs(&scs_ptr->static_config,
                     core_count, scs_ptr->input_resolution);
     if (return_ppcs == -1)
@@ -506,6 +511,13 @@ EbErrorType load_default_buffer_configuration_settings(
     uint32_t me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
         (((scs_ptr->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 10;
 #if PR_1275
+#if ADOPT_LP2X_SETT_FOR_LPX
+    if ((core_count != SINGLE_CORE_COUNT) && (core_count <= (CONS_CORE_COUNT >> 2)))
+    {
+        me_seg_h = MAX(1, me_seg_h / 2);
+        me_seg_w = MAX(1, me_seg_w / 2);
+    }
+#else
     if ((core_count != SINGLE_CORE_COUNT) && (core_count < (CONS_CORE_COUNT >> 2)))
     {
         //check on tiles to be removed when crash is fixed
@@ -517,6 +529,7 @@ EbErrorType load_default_buffer_configuration_settings(
         me_seg_h = MAX(1, me_seg_h / 2);
         me_seg_w = MAX(1, me_seg_w / 2);
     }
+#endif
 #endif
     // ME segments
     scs_ptr->me_segment_row_count_array[0] = me_seg_h;
@@ -688,6 +701,20 @@ EbErrorType load_default_buffer_configuration_settings(
     else
     {
 #if PR_1275
+#if ADOPT_LP2X_SETT_FOR_LPX
+        if (core_count == (SINGLE_CORE_COUNT << 2))
+        {
+            scs_ptr->input_buffer_fifo_init_count = min_input;
+            scs_ptr->picture_control_set_pool_init_count = min_parent;
+            scs_ptr->pa_reference_picture_buffer_init_count = min_paref;
+            scs_ptr->reference_picture_buffer_init_count = min_ref;
+            scs_ptr->overlay_input_picture_buffer_init_count = min_overlay;
+            scs_ptr->output_recon_buffer_fifo_init_count = scs_ptr->reference_picture_buffer_init_count;
+#if DECOUPLE_ME_RES
+            scs_ptr->me_pool_init_count = MAX(min_me, scs_ptr->picture_control_set_pool_init_count);
+#endif
+        }
+#else
         if (core_count == (SINGLE_CORE_COUNT << 1))
         {
             scs_ptr->input_buffer_fifo_init_count = min_input;
@@ -701,6 +728,7 @@ EbErrorType load_default_buffer_configuration_settings(
             scs_ptr->me_pool_init_count = MAX(min_me, scs_ptr->picture_control_set_pool_init_count);
 #endif
         }
+#endif
         else {
             scs_ptr->input_buffer_fifo_init_count = MAX(min_input, scs_ptr->input_buffer_fifo_init_count);
             scs_ptr->picture_control_set_pool_init_count = MAX(min_parent, scs_ptr->picture_control_set_pool_init_count);

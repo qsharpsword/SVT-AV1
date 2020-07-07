@@ -597,6 +597,7 @@ extern "C" {
 #define PORT_PR1265                    1 //Resolve the hang of 31B with lp=1 which is caused by lack of PA surfaces
 #define FIX_DEFAULT_SETTINGS           1
 #define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
+#define ADOPT_LP2X_SETT_FOR_LPX        1
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
