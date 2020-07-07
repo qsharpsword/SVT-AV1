@@ -612,7 +612,11 @@ static void mode_decision_candidate_buffer_dctor(EbPtr p) {
 #if !CAND_MEM_OPT
     EB_DELETE(obj->residual_quant_coeff_ptr);
 #endif
+#if MEM_OPT_RECON_COEFF_BUFFER
+    EB_DELETE(obj->recon_ptr);
+#else
     EB_DELETE(obj->recon_coeff_ptr);
+#endif
 #if !MEM_OPT_MD_BUF_DESC
     EB_DELETE(obj->recon_ptr);
 #endif
@@ -644,7 +648,11 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #endif
 #if MEM_OPT_MD_BUF_DESC
                                                 EbPictureBufferDesc *temp_residual_ptr,
+#if MEM_OPT_RECON_COEFF_BUFFER
+                                                EbPictureBufferDesc *temp_recon_coeff_ptr,
+#else
                                                 EbPictureBufferDesc *temp_recon_ptr,
+#endif
 #endif
                                                 uint64_t *fast_cost_ptr, uint64_t *full_cost_ptr,
                                                 uint64_t *full_cost_skip_ptr,
@@ -654,7 +662,9 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     EbPictureBufferDescInitData double_width_picture_buffer_desc_init_data;
 #endif
 
+#if !MEM_OPT_RECON_COEFF_BUFFER
     EbPictureBufferDescInitData thirty_two_width_picture_buffer_desc_init_data;
+#endif
 
     buffer_ptr->dctor = mode_decision_candidate_buffer_dctor;
 
@@ -696,6 +706,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     double_width_picture_buffer_desc_init_data.split_mode         = EB_FALSE;
 #endif
 
+#if !MEM_OPT_RECON_COEFF_BUFFER
 #if SB64_MEM_OPT
     thirty_two_width_picture_buffer_desc_init_data.max_width    = sb_size;
     thirty_two_width_picture_buffer_desc_init_data.max_height   = sb_size;
@@ -716,6 +727,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     thirty_two_width_picture_buffer_desc_init_data.top_padding   = 0;
     thirty_two_width_picture_buffer_desc_init_data.bot_padding   = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode    = EB_FALSE;
+#endif
 
     // Candidate Ptr
     buffer_ptr->candidate_ptr = (ModeDecisionCandidate *)EB_NULL;
@@ -746,16 +758,26 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
 #endif
+#if MEM_OPT_RECON_COEFF_BUFFER
+    EB_NEW(buffer_ptr->recon_ptr,
+           eb_picture_buffer_desc_ctor,
+           (EbPtr)&picture_buffer_desc_init_data);
+#else
     EB_NEW(buffer_ptr->recon_coeff_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
+#endif
 
 #if !MEM_OPT_MD_BUF_DESC
     EB_NEW(
         buffer_ptr->recon_ptr, eb_picture_buffer_desc_ctor, (EbPtr)&picture_buffer_desc_init_data);
 #else
     // Reuse the recon_ptr memory in MD context
+#if MEM_OPT_RECON_COEFF_BUFFER
+    buffer_ptr->recon_coeff_ptr = temp_recon_coeff_ptr;
+#else
     buffer_ptr->recon_ptr = temp_recon_ptr;
+#endif
 #endif
 
     // Costs

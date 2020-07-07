@@ -860,7 +860,11 @@ typedef struct ModeDecisionContext {
 #endif
 #if MEM_OPT_MD_BUF_DESC
     EbPictureBufferDesc* temp_residual_ptr;
+#if MEM_OPT_RECON_COEFF_BUFFER
+    EbPictureBufferDesc* temp_recon_coeff_ptr;
+#else
     EbPictureBufferDesc* temp_recon_ptr;
+#endif
 #endif
 } ModeDecisionContext;
 

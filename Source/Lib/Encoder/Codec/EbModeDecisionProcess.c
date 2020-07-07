@@ -116,7 +116,11 @@ static void mode_decision_context_dctor(EbPtr p) {
 
 #if MEM_OPT_MD_BUF_DESC
     EB_DELETE(obj->temp_residual_ptr);
+#if MEM_OPT_RECON_COEFF_BUFFER
+    EB_DELETE(obj->temp_recon_coeff_ptr);
+#else
     EB_DELETE(obj->temp_recon_ptr);
+#endif
 #endif
 }
 
@@ -535,9 +539,15 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
 
     // The temp_recon_ptr and temp_residual_ptr will be shared by all candidates
     // If you want to do something with residual or recon, you need to create one
+#if MEM_OPT_RECON_COEFF_BUFFER
+    EB_NEW(context_ptr->temp_recon_coeff_ptr,
+           eb_picture_buffer_desc_ctor,
+           (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
+#else
     EB_NEW(context_ptr->temp_recon_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
+#endif
     EB_NEW(context_ptr->temp_residual_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&double_width_picture_buffer_desc_init_data);
@@ -551,6 +561,19 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
 #else
     for (buffer_index = 0; buffer_index < MAX_NFL_BUFF_Y; ++buffer_index) {
 #endif
+#if MEM_OPT_RECON_COEFF_BUFFER
+        EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
+               mode_decision_candidate_buffer_ctor,
+               context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
+               sb_size,
+               PICTURE_BUFFER_DESC_FULL_MASK,
+               context_ptr->temp_residual_ptr,
+               context_ptr->temp_recon_coeff_ptr,
+               &(context_ptr->fast_cost_array[buffer_index]),
+               &(context_ptr->full_cost_array[buffer_index]),
+               &(context_ptr->full_cost_skip_ptr[buffer_index]),
+               &(context_ptr->full_cost_merge_ptr[buffer_index]));
+#else
         EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
                mode_decision_candidate_buffer_ctor,
                context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
@@ -562,9 +585,23 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                &(context_ptr->full_cost_array[buffer_index]),
                &(context_ptr->full_cost_skip_ptr[buffer_index]),
                &(context_ptr->full_cost_merge_ptr[buffer_index]));
+#endif
     }
 
     for (buffer_index = MAX_NFL_BUFF_Y; buffer_index < MAX_NFL_BUFF; ++buffer_index) {
+#if MEM_OPT_RECON_COEFF_BUFFER
+        EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
+               mode_decision_candidate_buffer_ctor,
+               context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
+               sb_size,
+               PICTURE_BUFFER_DESC_CHROMA_MASK,
+               context_ptr->temp_residual_ptr,
+               context_ptr->temp_recon_coeff_ptr,
+               &(context_ptr->fast_cost_array[buffer_index]),
+               &(context_ptr->full_cost_array[buffer_index]),
+               &(context_ptr->full_cost_skip_ptr[buffer_index]),
+               &(context_ptr->full_cost_merge_ptr[buffer_index]));
+#else
         EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
                mode_decision_candidate_buffer_ctor,
                context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
@@ -576,6 +613,7 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                &(context_ptr->full_cost_array[buffer_index]),
                &(context_ptr->full_cost_skip_ptr[buffer_index]),
                &(context_ptr->full_cost_merge_ptr[buffer_index]));
+#endif
     }
 #else
     for (buffer_index = 0; buffer_index < MAX_NFL_BUFF; ++buffer_index) {

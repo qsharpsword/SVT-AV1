@@ -1071,10 +1071,16 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                  1);
             txb_origin_index =
                 txb_origin_x + txb_origin_y * candidate_buffer->prediction_ptr->stride_y;
+#if MEM_OPT_RECON_COEFF_BUFFER
+            uint32_t y_has_coeff =
+                (candidate_buffer->candidate_ptr->y_has_coeff & (1 << txb_itr)) > 0;
+            if (y_has_coeff)
+#else
 #if CLEAN_UP_SB_DATA_8
             if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].y_has_coeff[txb_itr])
 #else
             if (txb_ptr->y_has_coeff)
+#endif
 #endif
                 inv_transform_recon_wrapper(
                     candidate_buffer->prediction_ptr->buffer_y,
@@ -1122,10 +1128,16 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                           ((txb_origin_y >> 3) << 3) *
                               candidate_buffer->recon_coeff_ptr->stride_cr) >>
                          1);
+#if MEM_OPT_RECON_COEFF_BUFFER
+                    uint32_t u_has_coeff =
+                        (candidate_buffer->candidate_ptr->u_has_coeff & (1 << txb_itr)) > 0;
+                    if (u_has_coeff)
+#else
 #if CLEAN_UP_SB_DATA_8
                     if (context_ptr->blk_geom->has_uv && context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].u_has_coeff[txb_index])
 #else
                     if (context_ptr->blk_geom->has_uv && txb_ptr->u_has_coeff)
+#endif
 #endif
                         inv_transform_recon_wrapper(
                             candidate_buffer->prediction_ptr->buffer_cb,
@@ -1154,10 +1166,16 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                                      chroma_txb_height,
                                      PICTURE_BUFFER_DESC_Cb_FLAG,
                                      context_ptr->hbd_mode_decision);
+#if MEM_OPT_RECON_COEFF_BUFFER
+                    uint32_t v_has_coeff =
+                        (candidate_buffer->candidate_ptr->v_has_coeff & (1 << txb_itr)) > 0;
+                    if (v_has_coeff)
+#else
 #if CLEAN_UP_SB_DATA_8
                     if (context_ptr->blk_geom->has_uv && context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].v_has_coeff[txb_index])
 #else
                     if (context_ptr->blk_geom->has_uv && txb_ptr->v_has_coeff)
+#endif
 #endif
                         inv_transform_recon_wrapper(
                             candidate_buffer->prediction_ptr->buffer_cr,
@@ -11146,6 +11164,10 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                        blk_origin_index,
                        blk_chroma_origin_index,
                        ref_fast_cost);
+#if MEM_OPT_RECON_COEFF_BUFFER
+        av1_perform_inverse_transform_recon(
+            context_ptr, candidate_buffer);
+#endif
 #if !M8_CLEAN_UP
         if (context_ptr->full_loop_escape) {
             if (pcs_ptr->slice_type != I_SLICE) {
@@ -13341,6 +13363,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 
         context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
     }
+    // Move the recon generation to stage3 to save memory buffer
+    // re-use recon_coeff_ptr for all candidates
+#if !MEM_OPT_RECON_COEFF_BUFFER
 #if REMOVE_UNUSED_CODE_PH2
     av1_perform_inverse_transform_recon(
         context_ptr, candidate_buffer);
@@ -13354,6 +13379,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         blk_ptr,
 #endif
         context_ptr->blk_geom);
+#endif
 #endif
     if (!context_ptr->blk_geom->has_uv) {
         // Store the luma data for 4x* and *x4 blocks to be used for CFL

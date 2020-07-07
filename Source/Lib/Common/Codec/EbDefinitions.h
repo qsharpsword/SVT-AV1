@@ -608,6 +608,7 @@ extern "C" {
 
 #if SVT_02_TEMP
 #define MEM_OPT_FAST_MODE_CAND_NUMBER 1 // Memory optimization of candidate_buffer for fast mode
+#define MEM_OPT_RECON_COEFF_BUFFER    1 // Memory optimization of candidate_buffer, reuse recon_coeff for all buffers
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
