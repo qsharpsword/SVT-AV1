@@ -2864,7 +2864,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
 #endif
 #if JUNE26_ADOPTIONS
-            if (pcs_ptr->enc_mode <= ENC_M6)
+            if (pcs_ptr->enc_mode <= ENC_M7)
                 pcs_ptr->mrp_level = 2;
 #else
             if (pcs_ptr->enc_mode <= ENC_M5)
