@@ -1900,13 +1900,14 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         md_sq_motion_search_ctrls->use_ssd = 0;
 
         md_sq_motion_search_ctrls->size_colocated_area                    =   2;
+
         md_sq_motion_search_ctrls->sparse_search_level_0_enabled          =   1;
         md_sq_motion_search_ctrls->sparse_search_level_0_step             =   4;
         md_sq_motion_search_ctrls->sparse_search_level_0_area_width       =  15;
         md_sq_motion_search_ctrls->sparse_search_level_0_area_height      =  15;
         md_sq_motion_search_ctrls->max_sparse_search_level_0_area_width   = 150;
         md_sq_motion_search_ctrls->max_sparse_search_level_0_area_height  = 150;
-        md_sq_motion_search_ctrls->sparse_search_level_0_multiplier       =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_0_multiplier       =   5;
 
         md_sq_motion_search_ctrls->sparse_search_level_1_enabled          =   1;
         md_sq_motion_search_ctrls->sparse_search_level_1_step             =   2;
@@ -1914,7 +1915,7 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         md_sq_motion_search_ctrls->sparse_search_level_1_area_height      =   4;
         md_sq_motion_search_ctrls->max_sparse_search_level_1_area_width   =  50;
         md_sq_motion_search_ctrls->max_sparse_search_level_1_area_height  =  50;
-        md_sq_motion_search_ctrls->sparse_search_level_1_multiplier       =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_1_multiplier       =   5;
 
         md_sq_motion_search_ctrls->sparse_search_level_2_enabled          =   1;
         md_sq_motion_search_ctrls->sparse_search_level_2_step             =   1; 
@@ -1927,6 +1928,37 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         md_sq_motion_search_ctrls->use_ssd = 0;
 
         md_sq_motion_search_ctrls->size_colocated_area                    =   2;
+
+        md_sq_motion_search_ctrls->sparse_search_level_0_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_0_step             =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_width       =  15;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_height      =  15;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_width   = 150;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_height  = 150;
+        md_sq_motion_search_ctrls->sparse_search_level_0_multiplier       =   4;
+
+        md_sq_motion_search_ctrls->sparse_search_level_1_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_1_step             =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_width       =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_height      =   4;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_width   =  50;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_height  =  50;
+        md_sq_motion_search_ctrls->sparse_search_level_1_multiplier       =   4;
+
+        md_sq_motion_search_ctrls->sparse_search_level_2_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_2_step             =   1; 
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_width       =   3;
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_height      =   3;
+
+
+        break;
+
+    case 3:
+        md_sq_motion_search_ctrls->enabled = 1;
+        md_sq_motion_search_ctrls->use_ssd = 0;
+
+        md_sq_motion_search_ctrls->size_colocated_area                    =   2;
+
         md_sq_motion_search_ctrls->sparse_search_level_0_enabled          =   1;
         md_sq_motion_search_ctrls->sparse_search_level_0_step             =   4;
         md_sq_motion_search_ctrls->sparse_search_level_0_area_width       =  15;
@@ -1947,6 +1979,7 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         md_sq_motion_search_ctrls->sparse_search_level_2_step             =   1; 
         md_sq_motion_search_ctrls->sparse_search_level_2_area_width       =   3;
         md_sq_motion_search_ctrls->sparse_search_level_2_area_height      =   3;
+
 
         break;
     default:
@@ -6484,7 +6517,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_sq_mv_search_level = 0;
     else
-        context_ptr->md_sq_mv_search_level = 1;
+        if (enc_mode <= ENC_M0)
+            context_ptr->md_sq_mv_search_level = 1;
+        else if (enc_mode <= ENC_M5)
+            context_ptr->md_sq_mv_search_level = 2;
+        else
+            context_ptr->md_sq_mv_search_level = 3;
 
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif

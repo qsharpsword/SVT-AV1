@@ -633,7 +633,7 @@ extern "C" {
 #define GLOBAL_PER_LAYER         0 
 #endif
 
-#if 0
+#if 1
 #define FIX_HIGH_MOTION            1
 #define FIX_HIGH_MOTION_NSQ        1
 #define FIX_INTRA_4X4              1
