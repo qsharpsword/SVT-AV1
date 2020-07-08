@@ -16,6 +16,7 @@
 #include "pass2_strategy.h"
 #include "EbRateControlProcess.h"
 #include "firstpass.h"
+#include "EbSequenceControlSet.h"
 
 #if 0
 #include "config/aom_config.h"
@@ -2610,18 +2611,38 @@ static void setup_target_rate(AV1_COMP *cpi) {
 
   rc->base_frame_target = target_rate;
 }
+#endif
 
-void av1_get_second_pass_params(AV1_COMP *cpi,
+//void av1_get_second_pass_params(AV1_COMP *cpi,
+void av1_get_second_pass_params(SequenceControlSet *scs_ptr,
                                 EncodeFrameParams *const frame_params,
                                 const EncodeFrameInput *const frame_input,
                                 unsigned int frame_flags) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
-  GF_GROUP *const gf_group = &cpi->gf_group;
-  const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  AV1_COMP temp_cpi, *cpi = &temp_cpi;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  //GF_GROUP *const gf_group = &cpi->gf_group;
+  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+  AV1EncoderConfig *oxcf = &cpi->oxcf;
+
+  {
+      // kelvinhack
+      oxcf->pass = 2;
+      oxcf->rc_cfg.mode == AOM_VBR;
+      oxcf->rc_cfg.cq_level = scs_ptr->static_config.qp;
+      oxcf->gf_cfg.lag_in_frames = 25; //lad?
+      oxcf->kf_cfg.sframe_dist   = 0; //?
+      oxcf->kf_cfg.sframe_mode   = 0; //?
+      oxcf->arnr_max_frames      = 0; //?
+      oxcf->enable_tpl_model     = scs_ptr->static_config.enable_tpl_la;
+  }
 
   if (is_stat_consumption_stage(cpi) && !twopass->stats_in) return;
 
+#if 0
   if (rc->frames_till_gf_update_due > 0 && !(frame_flags & FRAMEFLAGS_KEY)) {
     assert(gf_group->index < gf_group->size);
     const int update_type = gf_group->update_type[gf_group->index];
@@ -2780,23 +2801,43 @@ void av1_get_second_pass_params(AV1_COMP *cpi,
   }
 
   setup_target_rate(cpi);
-}
 #endif
+}
 
 // from aom encoder.c
 void av1_new_framerate(AV1_COMP *cpi, double framerate) {
   cpi->framerate = framerate < 0.1 ? 30 : framerate;
+  // kelvinhack
   //av1_rc_update_framerate(cpi, cpi->common.width, cpi->common.height);
 }
 
-void av1_init_second_pass(AV1_COMP *cpi) {
-  const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-  TWO_PASS *const twopass = &cpi->twopass;
+//void av1_init_second_pass(AV1_COMP *cpi)
+void av1_init_second_pass(SequenceControlSet *scs_ptr) {
+  AV1_COMP temp_cpi, *cpi = &temp_cpi;
+  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  AV1EncoderConfig *oxcf = &cpi->oxcf;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
   FRAME_INFO *const frame_info = &cpi->frame_info;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+
   double frame_rate;
   FIRSTPASS_STATS *stats;
 
   if (!twopass->stats_buf_ctx->stats_in_end) return;
+
+  {
+      //kelvinhack set cpi, frame_info and oxcf
+      cpi->framerate      = scs_ptr->static_config.frame_rate;
+      //cpi->common.width  = scs_ptr->static_config.source_width;
+      //cpi->common.height = scs_ptr->static_config.source_height;
+      frame_info->mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
+      frame_info->mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
+      oxcf->target_bandwidth = (int64_t)scs_ptr->static_config.target_bit_rate;
+      // kelvinhack should input from options
+      oxcf->two_pass_cfg.vbrmin_section = 0;
+      oxcf->two_pass_cfg.vbrmax_section = 2000;
+      oxcf->two_pass_cfg.vbrbias        = 50;
+  }
 
   stats = twopass->stats_buf_ctx->total_stats;
 
@@ -2836,10 +2877,12 @@ void av1_init_second_pass(AV1_COMP *cpi) {
   }
 
   // Reset the vbr bits off target counters
-  cpi->rc.vbr_bits_off_target = 0;
-  cpi->rc.vbr_bits_off_target_fast = 0;
-
-  cpi->rc.rate_error_estimate = 0;
+  //cpi->rc.vbr_bits_off_target = 0;
+  //cpi->rc.vbr_bits_off_target_fast = 0;
+  //cpi->rc.rate_error_estimate = 0;
+  encode_context_ptr->rc.vbr_bits_off_target = 0;
+  encode_context_ptr->rc.vbr_bits_off_target_fast = 0;
+  encode_context_ptr->rc.rate_error_estimate = 0;
 
   // Static sequence monitor variables.
   twopass->kf_zeromotion_pct = 100;

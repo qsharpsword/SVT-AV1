@@ -667,7 +667,6 @@ typedef struct PictureParentControlSet {
 #if !TWOPASS_STAT_BUF
     TWO_PASS      twopass;
 #endif
-    //RATE_CONTROL  rc;
 #endif
 #if TPL_LA
     OisMbResults **ois_mb_results;

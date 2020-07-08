@@ -724,6 +724,7 @@ static void read_stat_from_file(SequenceControlSet *scs_ptr) {
     if (nbytes != encode_context_ptr->rc_twopass_stats_in.sz)
         SVT_LOG("Failed to read first-pass stats buffer");
 }
+
 static void setup_second_pass(SequenceControlSet *scs_ptr) {
 
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -749,7 +750,7 @@ static void setup_second_pass(SequenceControlSet *scs_ptr) {
         scs_ptr->twopass.stats_buf_ctx->stats_in_end =
             &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
 
-        // av1_init_second_pass(cpi);
+        av1_init_second_pass(scs_ptr);
     }
 
 }

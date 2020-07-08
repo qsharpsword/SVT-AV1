@@ -195,6 +195,10 @@ typedef struct EncodeContext {
     EbByte  mc_flow_rec_picture_buffer_saved;
 #endif
 #endif
+#if TWOPASS_RC
+    GF_GROUP gf_group;
+    RATE_CONTROL rc;
+#endif
 #if TWOPASS_STAT_BUF
     FIRSTPASS_STATS *frame_stats_buffer;
     // Number of stats buffers required for look ahead

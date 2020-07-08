@@ -20,8 +20,6 @@
 extern "C" {
 #endif
 
-//struct AV1_COMP;
-
 // structure of accumulated stats and features in a gf group
 typedef struct {
   double gf_group_err;
@@ -56,11 +54,13 @@ typedef struct {
   double frame_tr_coded_error;
 } GF_FRAME_STATS;
 
-void av1_init_second_pass(struct AV1_COMP *cpi);
+//void av1_init_second_pass(struct AV1_COMP *cpi);
+void av1_init_second_pass(struct SequenceControlSet *scs_ptr);
 
 void av1_init_single_pass_lap(AV1_COMP *cpi);
 
-void av1_get_second_pass_params(struct AV1_COMP *cpi,
+//void av1_get_second_pass_params(struct AV1_COMP *cpi,
+void av1_get_second_pass_params(struct SequenceControlSet *scs_ptr,
                                 struct EncodeFrameParams *const frame_params,
                                 const EncodeFrameInput *const frame_input,
                                 unsigned int frame_flags);
