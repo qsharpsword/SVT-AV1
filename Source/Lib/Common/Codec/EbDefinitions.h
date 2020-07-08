@@ -76,10 +76,26 @@ extern "C" {
 #define HME_PRUNE_BUG_FIX                 1
 #define MAR10_ADOPTIONS                   1 // Adoptions for all presets
 
-#if BEYOND_CS2
 #define CLEAN_UP_SB_DATA                  1
+#if CLEAN_UP_SB_DATA
+#define CLEAN_UP_SB_DATA_0   1 // ref_mvs
+#define CLEAN_UP_SB_DATA_1   1
+#define CLEAN_UP_SB_DATA_2   1
+#define CLEAN_UP_SB_DATA_3   1
+#define CLEAN_UP_SB_DATA_4   1 // md only context
+#define CLEAN_UP_SB_DATA_5   1
+#define CLEAN_UP_SB_DATA_7   1
+#if CLEAN_UP_SB_DATA_7
+#define CLEAN_UP_SB_DATA_8   1 // tx_depth,  has_coef
+#endif
+#define CLEAN_UP_SB_DATA_9   1 // mdc ??
+#define CLEAN_UP_SB_DATA_10  1
+#define CLEAN_UP_SB_DATA_11  1 // mb
+#define CLEAN_UP_SB_DATA_12  1 // mds index
+#endif
 #define R2R_FIX                           1
 #define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
+#if BEYOND_CS2
 
 #define DEPTH_PART_CLEAN_UP               1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
 #define REMOVE_COMBINE_CLASS12            1 // remove code associated with combine_class12 feature
@@ -141,23 +157,6 @@ extern "C" {
 #define APR08_ADOPTIONS               1 // adoptions in all modes
 
 
-#if CLEAN_UP_SB_DATA
-#define CLEAN_UP_SB_DATA_0   1 // ref_mvs
-#define CLEAN_UP_SB_DATA_1   1
-#define CLEAN_UP_SB_DATA_2   1
-#define CLEAN_UP_SB_DATA_3   1
-#define CLEAN_UP_SB_DATA_4   1 // md only context
-#define CLEAN_UP_SB_DATA_5   1
-#define CLEAN_UP_SB_DATA_6   0
-#define CLEAN_UP_SB_DATA_7   1
-#if CLEAN_UP_SB_DATA_7
-#define CLEAN_UP_SB_DATA_8   1 // tx_depth,  has_coef
-#endif
-#define CLEAN_UP_SB_DATA_9   1 // mdc ??
-#define CLEAN_UP_SB_DATA_10  1
-#define CLEAN_UP_SB_DATA_11  1 // mb
-#define CLEAN_UP_SB_DATA_12  1 // mds index
-#endif
 #if MD_CFL
 #define CFL_REDUCED_ALPHA    1 // use faster libaom_short_cuts_ths
 #endif
