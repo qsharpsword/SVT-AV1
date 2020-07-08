@@ -309,6 +309,37 @@ typedef struct MdNsqMotionSearchCtrls {
 #endif
 }MdNsqMotionSearchCtrls;
 #endif
+
+#if FIX_HIGH_MOTION
+typedef struct MdSqMotionSearchCtrls {
+    uint8_t enabled;                        // 0: SQ motion search @ MD OFF; 1: SQ motion search @ MD ON
+    uint8_t use_ssd;                        // 0: search using SAD; 1: search using SSD 
+
+    int16_t size_colocated_area;                     // size_colocated_area = f(8x8)
+
+    uint8_t  sparse_search_level_0_enabled;          // 0: OFF; 1: ON
+    uint8_t  sparse_search_level_0_step;             // Sparse search step
+    uint16_t sparse_search_level_0_area_width;       // Sparse search area width
+    uint16_t sparse_search_level_0_area_height;      // Sparse search area height
+    uint16_t max_sparse_search_level_0_area_width;   // Max Sparse search area width
+    uint16_t max_sparse_search_level_0_area_height;  // Max Sparse search area height
+    int16_t sparse_search_level_0_multiplier;        // search area multiplier
+
+    uint8_t  sparse_search_level_1_enabled;          // 0: OFF; 1: ON
+    uint8_t  sparse_search_level_1_step;             // Sparse search step
+    uint16_t sparse_search_level_1_area_width;       // Sparse search area width
+    uint16_t sparse_search_level_1_area_height;      // Sparse search area height
+    uint16_t max_sparse_search_level_1_area_width;   // Max Sparse search area width
+    uint16_t max_sparse_search_level_1_area_height;  // Max Sparse search area height
+    int16_t sparse_search_level_1_multiplier;        // search area multiplier
+
+    uint8_t  sparse_search_level_2_enabled;          // 0: OFF; 1: ON
+    uint8_t  sparse_search_level_2_step;            // Sparse search step
+    uint16_t sparse_search_level_2_area_width;      // Sparse search area width
+    uint16_t sparse_search_level_2_area_height;     // Sparse search area height
+}MdSqMotionSearchCtrls;
+#endif
+
 #if PERFORM_SUB_PEL_MD
 typedef struct MdSubPelSearchCtrls {
     uint8_t enabled;                             // 0: subpel search @ MD OFF; 1: subpel search @ MD ON
@@ -722,6 +753,10 @@ typedef struct ModeDecisionContext {
     uint8_t      block_based_depth_reduction_level;
     DepthReductionCtrls depth_reduction_ctrls;
 #endif
+#if FIX_HIGH_MOTION
+    uint8_t md_sq_mv_search_level;
+    MdSqMotionSearchCtrls md_sq_motion_search_ctrls;
+#endif
 #if ADD_MD_NSQ_SEARCH
     uint8_t md_nsq_mv_search_level ;
     MdNsqMotionSearchCtrls md_nsq_motion_search_ctrls;
@@ -731,6 +766,9 @@ typedef struct ModeDecisionContext {
     MdSubPelSearchCtrls md_subpel_search_ctrls;
 #if SEARCH_TOP_N
     MdMotionSearchResults md_motion_search_best_mv[MD_MOTION_SEARCH_MAX_BEST_MV];
+#endif
+#if FIX_TOP_N_SEARCH
+    MdMotionSearchResults md_motion_search_best_mv_cand[MD_MOTION_SEARCH_MAX_BEST_MV];
 #endif
 #endif
 #if !PRUNING_PER_INTER_TYPE
@@ -861,6 +899,22 @@ typedef struct ModeDecisionContext {
 #if MEM_OPT_MD_BUF_DESC
     EbPictureBufferDesc* temp_residual_ptr;
     EbPictureBufferDesc* temp_recon_ptr;
+#endif
+#if FIX_HIGH_MOTION //---
+    uint32_t dc_distortion;
+
+    uint32_t mvp_distortion[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][PRED_ME_MAX_MVP_CANIDATES];
+    uint32_t best_mvp_distortion[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+
+    int16_t mvp_x_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][PRED_ME_MAX_MVP_CANIDATES];
+    int16_t mvp_y_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][PRED_ME_MAX_MVP_CANIDATES];
+    int8_t  mvp_count[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
+#if OPTIMIZE_SPARSE_SEARCH
+    int16_t sparse_search_level_0_start_x ;
+    int16_t sparse_search_level_0_end_x   ;
+    int16_t sparse_search_level_0_start_y ;
+    int16_t sparse_search_level_0_end_y   ;
 #endif
 } ModeDecisionContext;
 

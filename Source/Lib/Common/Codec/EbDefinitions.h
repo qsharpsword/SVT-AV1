@@ -608,6 +608,44 @@ extern "C" {
 
 #if SVT_02_TEMP
 
+
+
+
+
+
+
+
+
+
+#define SHUT_GLOBAL           0
+#define GM_MV_BUG_FIX         0
+#if 0 
+#define SHUT_GLOBAL_ID        1
+#define GLOBAL_SEARCH_ALL_REF 1
+#define INJECT_GLOBAL_CAND    1
+
+#define REMOVE_RESTRICTION    1
+#define GLOBAL_OFF_LAST_2_LAST_3 0
+#define GLOBAL_PER_LAYER         0 
+#endif
+
+#if 0
+#define FIX_HIGH_MOTION            1
+#define FIX_HIGH_MOTION_NSQ        1
+#define FIX_INTRA_4X4              1
+
+#define OPTIMIZE_SPARSE_SEARCH     1
+#define FIX_TOP_N_SEARCH           1
+#define FURTHER_TUNING             1
+
+#define MVP_DISTORTION             0
+#define CHECK_DC_DISTORTION        0
+
+#define HEAVY_SEARCH 0
+#if HEAVY_SEARCH
+#define SPARSE_VARIANCE            0
+#endif
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
