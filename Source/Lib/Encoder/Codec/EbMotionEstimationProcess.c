@@ -1105,6 +1105,18 @@ EbErrorType signal_derivation_me_kernel_oq(
     }
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+
+#if SHUT_GLOBAL
+    context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#endif
+
+#if GLOBAL_PER_LAYER
+    if(pcs_ptr->temporal_layer_index > 2)
+        context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+    else
+        context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
+#endif
+
 #if !SHUT_ME_NSQ_SEARCH
     // Me nsq search levels.
     // 0: feature off -> perform nsq_search.

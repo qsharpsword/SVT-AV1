@@ -1885,6 +1885,76 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
     }
 }
 #endif
+#if FIX_HIGH_MOTION
+void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_search_level) {
+
+    MdSqMotionSearchCtrls *md_sq_motion_search_ctrls = &mdctxt->md_sq_motion_search_ctrls;
+
+    switch (md_sq_mv_search_level)
+    {
+    case 0:
+        md_sq_motion_search_ctrls->enabled = 0;
+        break;
+    case 1:
+        md_sq_motion_search_ctrls->enabled = 1;
+        md_sq_motion_search_ctrls->use_ssd = 0;
+
+        md_sq_motion_search_ctrls->size_colocated_area                    =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_0_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_0_step             =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_width       =  15;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_height      =  15;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_width   = 150;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_height  = 150;
+        md_sq_motion_search_ctrls->sparse_search_level_0_multiplier       =   2;
+
+        md_sq_motion_search_ctrls->sparse_search_level_1_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_1_step             =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_width       =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_height      =   4;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_width   =  50;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_height  =  50;
+        md_sq_motion_search_ctrls->sparse_search_level_1_multiplier       =   2;
+
+        md_sq_motion_search_ctrls->sparse_search_level_2_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_2_step             =   1; 
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_width       =   3;
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_height      =   3;
+
+        break; 
+    case 2:
+        md_sq_motion_search_ctrls->enabled = 1;
+        md_sq_motion_search_ctrls->use_ssd = 0;
+
+        md_sq_motion_search_ctrls->size_colocated_area                    =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_0_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_0_step             =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_width       =  15;
+        md_sq_motion_search_ctrls->sparse_search_level_0_area_height      =  15;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_width   = 150;
+        md_sq_motion_search_ctrls->max_sparse_search_level_0_area_height  = 150;
+        md_sq_motion_search_ctrls->sparse_search_level_0_multiplier       =   3;
+
+        md_sq_motion_search_ctrls->sparse_search_level_1_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_1_step             =   2;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_width       =   4;
+        md_sq_motion_search_ctrls->sparse_search_level_1_area_height      =   4;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_width   =  50;
+        md_sq_motion_search_ctrls->max_sparse_search_level_1_area_height  =  50;
+        md_sq_motion_search_ctrls->sparse_search_level_1_multiplier       =   3;
+
+        md_sq_motion_search_ctrls->sparse_search_level_2_enabled          =   1;
+        md_sq_motion_search_ctrls->sparse_search_level_2_step             =   1; 
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_width       =   3;
+        md_sq_motion_search_ctrls->sparse_search_level_2_area_height      =   3;
+
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 #if PERFORM_SUB_PEL_MD
 #if REMOVE_MR_MACRO
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode) {
@@ -4075,6 +4145,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->global_mv_injection = 0;
 
+#if SHUT_GLOBAL
+    context_ptr->global_mv_injection = 0;
+#endif
+#if GLOBAL_PER_LAYER
+    if (pcs_ptr->temporal_layer_index > 2)
+        context_ptr->global_mv_injection = 0;
+    else
+        context_ptr->global_mv_injection = 1;
+#endif
     if (pd_pass == PD_PASS_0)
         context_ptr->new_nearest_injection = 0;
     else if (pd_pass == PD_PASS_1)
@@ -6323,6 +6402,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->block_based_depth_reduction_level = 0;
 #endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
+#endif
+#if FIX_HIGH_MOTION //-------------- here
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_sq_mv_search_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_sq_mv_search_level = 0;
+    else
+        context_ptr->md_sq_mv_search_level = 1;
+
+    md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif
 #if ADD_MD_NSQ_SEARCH
     if (pd_pass == PD_PASS_0)
