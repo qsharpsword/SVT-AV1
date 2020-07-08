@@ -5125,9 +5125,11 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                             context_ptr->blk_geom->bsize);
                 }
 
-
+#if INJECT_GLOBAL_CAND
+                if (inside_tile) {
+#else
                 if (inside_tile && gm_params_0->wmtype > TRANSLATION && gm_params_1->wmtype > TRANSLATION ){
-  
+#endif
 
                     uint8_t to_inject_ref_type = av1_ref_frame_type(rf);
 
