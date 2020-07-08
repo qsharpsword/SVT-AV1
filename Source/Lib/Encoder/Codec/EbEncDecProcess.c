@@ -4237,7 +4237,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->global_mv_injection = 0;
 #endif
 #if GLOBAL_PER_LAYER
-    if (pcs_ptr->temporal_layer_index > 2)
+    if (!pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
         context_ptr->global_mv_injection = 0;
     else
         context_ptr->global_mv_injection = 1;

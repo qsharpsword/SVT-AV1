@@ -1111,7 +1111,7 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 
 #if GLOBAL_PER_LAYER
-    if(pcs_ptr->temporal_layer_index > 2)
+    if (!pcs_ptr->is_used_as_reference_flag)
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
