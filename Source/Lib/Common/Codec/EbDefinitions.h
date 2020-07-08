@@ -630,7 +630,7 @@ extern "C" {
 
 #define REMOVE_RESTRICTION    1
 #define GLOBAL_OFF_LAST_2_LAST_3 0
-#define GLOBAL_PER_LAYER         1 
+#define GLOBAL_PER_LAYER         0 
 #endif
 
 #if 0
