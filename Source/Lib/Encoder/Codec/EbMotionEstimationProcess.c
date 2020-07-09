@@ -2213,7 +2213,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     else
                         global_motion_estimation_level = 3;
 
-                    printf("%d\t%d\t%d\n", pcs_ptr->picture_number, global_motion_estimation_level, average_me_sad);
+                    //printf("%d\t%d\t%d\n", pcs_ptr->picture_number, global_motion_estimation_level, average_me_sad);
 
                     if(global_motion_estimation_level)
                     global_motion_estimation(
