@@ -17,6 +17,7 @@
 #include "EbRateControlProcess.h"
 #include "firstpass.h"
 #include "EbSequenceControlSet.h"
+#include "EbEntropyCoding.h"
 
 #if 0
 #include "config/aom_config.h"
@@ -68,7 +69,7 @@ static double calculate_active_area(const FRAME_INFO *frame_info,
 #define ACT_AREA_CORRECTION 0.5
 static double calculate_modified_err(const FRAME_INFO *frame_info,
                                      const TWO_PASS *twopass,
-                                     const AV1EncoderConfig *oxcf,
+                                     const TwoPassCfg *two_pass_cfg,
                                      const FIRSTPASS_STATS *this_frame) {
   const FIRSTPASS_STATS *const stats = twopass->stats_buf_ctx->total_stats;
   if (stats == NULL) {
@@ -79,7 +80,7 @@ static double calculate_modified_err(const FRAME_INFO *frame_info,
   double modified_error =
       av_err * pow(this_frame->coded_error * this_frame->weight /
                        DOUBLE_DIVIDE_CHECK(av_err),
-                   oxcf->two_pass_cfg.vbrbias / 100.0);
+                   two_pass_cfg->vbrbias / 100.0);
 
   // Correction for active area. Frames with a reduced active area
   // (eg due to formatting bars) have a higher error per mb for the
@@ -98,6 +99,7 @@ static double calculate_modified_err(const FRAME_INFO *frame_info,
 static void reset_fpf_position(TWO_PASS *p, const FIRSTPASS_STATS *position) {
   p->stats_in = position;
 }
+#endif
 
 static int input_stats(TWO_PASS *p, FIRSTPASS_STATS *fps) {
   if (p->stats_in >= p->stats_buf_ctx->stats_in_end) return EOF;
@@ -107,6 +109,7 @@ static int input_stats(TWO_PASS *p, FIRSTPASS_STATS *fps) {
   return 1;
 }
 
+#if 0
 static int input_stats_lap(TWO_PASS *p, FIRSTPASS_STATS *fps) {
   if (p->stats_in >= p->stats_buf_ctx->stats_in_end) return EOF;
 
@@ -128,6 +131,7 @@ static const FIRSTPASS_STATS *read_frame_stats(const TWO_PASS *p, int offset) {
 
   return &p->stats_in[offset];
 }
+#endif
 
 static void subtract_stats(FIRSTPASS_STATS *section,
                            const FIRSTPASS_STATS *frame) {
@@ -156,6 +160,7 @@ static void subtract_stats(FIRSTPASS_STATS *section,
   section->duration -= frame->duration;
 }
 
+#if 0
 // This function returns the maximum target rate per frame.
 static int frame_max_bits(const RATE_CONTROL *rc,
                           const AV1EncoderConfig *oxcf) {
@@ -169,6 +174,7 @@ static int frame_max_bits(const RATE_CONTROL *rc,
 
   return (int)max_bits;
 }
+#endif
 
 static const double q_pow_term[(QINDEX_RANGE >> 5) + 1] = { 0.65, 0.70, 0.75,
                                                             0.80, 0.85, 0.90,
@@ -194,7 +200,6 @@ static void twopass_update_bpm_factor(TWO_PASS *twopass) {
   twopass->bpm_factor *= (3.0 + last_group_rate_err) / 4.0;
   twopass->bpm_factor = AOMMAX(0.25, AOMMIN(4.0, twopass->bpm_factor));
 }
-
 static int qbpm_enumerator(int rate_err_tol) {
   return 1250000 + ((300000 * AOMMIN(75, AOMMAX(rate_err_tol - 25, 0))) / 75);
 }
@@ -212,7 +217,7 @@ static int find_qindex_by_rate_with_correction(
   while (low < high) {
     const int mid = (low + high) >> 1;
     const double mid_factor = calc_correction_factor(error_per_mb, mid);
-    const double q = av1_convert_qindex_to_q(mid, bit_depth);
+    const double q = eb_av1_convert_qindex_to_q(mid, bit_depth);
     const int enumerator = qbpm_enumerator(rate_err_tol);
     const int mid_bits_per_mb =
         (int)((enumerator * mid_factor * group_weight_factor) / q);
@@ -226,21 +231,33 @@ static int find_qindex_by_rate_with_correction(
   return low;
 }
 
-static int get_twopass_worst_quality(AV1_COMP *cpi, const double section_err,
+// Bits Per MB at different Q (Multiplied by 512)
+#define BPER_MB_NORMBITS 9
+
+//static int get_twopass_worst_quality(AV1_COMP *cpi, const double section_err,
+static int get_twopass_worst_quality(PictureControlSet *pcs_ptr, const double section_err,
                                      double inactive_zone,
                                      int section_target_bandwidth,
                                      double group_weight_factor) {
-  const RATE_CONTROL *const rc = &cpi->rc;
-  const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-  const RateControlCfg *const rc_cfg = &oxcf->rc_cfg;
+  //const RATE_CONTROL *const rc = &cpi->rc;
+  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  //const RateControlCfg *const rc_cfg = &oxcf->rc_cfg;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  RATE_CONTROL *const rc = encode_context_ptr->rc;
+  const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
+  const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
+  const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
   inactive_zone = fclamp(inactive_zone, 0.0, 1.0);
 
   if (section_target_bandwidth <= 0) {
     return rc->worst_quality;  // Highest value allowed
   } else {
-    const int num_mbs = (oxcf->resize_cfg.resize_mode != RESIZE_NONE)
-                            ? cpi->initial_mbs
-                            : cpi->common.mi_params.MBs;
+    const int num_mbs = mb_cols * mb_rows;
+                        //(oxcf->resize_cfg.resize_mode != RESIZE_NONE)
+                        //    ? cpi->initial_mbs
+                        //    : cpi->common.mi_params.MBs;
     const int active_mbs = AOMMAX(1, num_mbs - (int)(num_mbs * inactive_zone));
     const double av_err_per_mb = section_err / active_mbs;
     const int target_norm_bits_per_mb =
@@ -248,20 +265,21 @@ static int get_twopass_worst_quality(AV1_COMP *cpi, const double section_err,
         active_mbs;
     int rate_err_tol = AOMMIN(rc_cfg->under_shoot_pct, rc_cfg->over_shoot_pct);
 
-    twopass_update_bpm_factor(&cpi->twopass);
+    twopass_update_bpm_factor(twopass);
     // Try and pick a max Q that will be high enough to encode the
     // content at the given rate.
     int q = find_qindex_by_rate_with_correction(
-        target_norm_bits_per_mb, cpi->common.seq_params.bit_depth,
+        target_norm_bits_per_mb, scs_ptr->encoder_bit_depth,
         av_err_per_mb, group_weight_factor, rate_err_tol, rc->best_quality,
         rc->worst_quality);
 
     // Restriction on active max q for constrained quality mode.
-    if (rc_cfg->mode == AOM_CQ) q = AOMMAX(q, rc_cfg->cq_level);
+    //if (rc_cfg->mode == AOM_CQ) q = AOMMAX(q, rc_cfg->cq_level);
     return q;
   }
 }
 
+#if 0
 #define SR_DIFF_PART 0.0015
 #define MOTION_AMP_PART 0.003
 #define INTRA_PART 0.005
@@ -2503,6 +2521,7 @@ static int is_skippable_frame(const AV1_COMP *cpi) {
               1 &&
           twopass->stats_in->pcnt_inter - twopass->stats_in->pcnt_motion == 1);
 }
+#endif
 
 #define ARF_STATS_OUTPUT 0
 #if ARF_STATS_OUTPUT
@@ -2510,41 +2529,52 @@ unsigned int arf_count = 0;
 #endif
 #define DEFAULT_GRP_WEIGHT 1.0
 
-static int get_section_target_bandwidth(AV1_COMP *cpi) {
-  AV1_COMMON *const cm = &cpi->common;
-  CurrentFrame *const current_frame = &cm->current_frame;
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
+//static int get_section_target_bandwidth(AV1_COMP *cpi)
+static int get_section_target_bandwidth(PictureControlSet *pcs_ptr) {
+  //AV1_COMMON *const cm = &cpi->common;
+  //CurrentFrame *const current_frame = &cm->current_frame;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  RATE_CONTROL *const rc = encode_context_ptr->rc;
   int section_target_bandwidth;
   const int frames_left = (int)(twopass->stats_buf_ctx->total_stats->count -
-                                current_frame->frame_number);
-  if (cpi->lap_enabled)
+                                pcs_ptr->picture_number/*current_frame->frame_number*/);
+  if (0/*cpi->lap_enabled*/)
     section_target_bandwidth = (int)rc->avg_frame_bandwidth;
   else
     section_target_bandwidth = (int)(twopass->bits_left / frames_left);
   return section_target_bandwidth;
 }
 
-static void process_first_pass_stats(AV1_COMP *cpi,
+//static void process_first_pass_stats(AV1_COMP *cpi,
+static void process_first_pass_stats(PictureControlSet *pcs_ptr,
                                      FIRSTPASS_STATS *this_frame) {
-  AV1_COMMON *const cm = &cpi->common;
-  CurrentFrame *const current_frame = &cm->current_frame;
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
+  //AV1_COMMON *const cm = &cpi->common;
+  //CurrentFrame *const current_frame = &cm->current_frame;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  RATE_CONTROL *const rc = encode_context_ptr->rc;
+  const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
+  const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
+  const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
 
-  if (cpi->oxcf.rc_cfg.mode != AOM_Q && current_frame->frame_number == 0 &&
-      cpi->twopass.stats_buf_ctx->total_stats &&
-      cpi->twopass.stats_buf_ctx->total_left_stats) {
-    if (cpi->lap_enabled) {
+  if (/*cpi->oxcf.rc_cfg.mode != AOM_Q*/ /*&& current_frame->frame_number*/pcs_ptr->picture_number == 0 &&
+      twopass->stats_buf_ctx->total_stats &&
+      twopass->stats_buf_ctx->total_left_stats) {
+    if (0/*cpi->lap_enabled*/) {
       /*
        * Accumulate total_stats using available limited number of stats,
        * and assign it to total_left_stats.
        */
-      *cpi->twopass.stats_buf_ctx->total_left_stats =
-          *cpi->twopass.stats_buf_ctx->total_stats;
+      *twopass->stats_buf_ctx->total_left_stats =
+          *twopass->stats_buf_ctx->total_stats;
     }
     // Special case code for first frame.
-    const int section_target_bandwidth = get_section_target_bandwidth(cpi);
+    const int section_target_bandwidth = get_section_target_bandwidth(pcs_ptr);
     const double section_length =
         twopass->stats_buf_ctx->total_left_stats->count;
     const double section_error =
@@ -2554,32 +2584,33 @@ static void process_first_pass_stats(AV1_COMP *cpi,
         section_length;
     const double section_inactive_zone =
         (twopass->stats_buf_ctx->total_left_stats->inactive_zone_rows * 2) /
-        ((double)cm->mi_params.mb_rows * section_length);
+        ((double)/*cm->mi_params.*/mb_rows * section_length);
     const int tmp_q = get_twopass_worst_quality(
-        cpi, section_error, section_intra_skip + section_inactive_zone,
+        pcs_ptr, section_error, section_intra_skip + section_inactive_zone,
         section_target_bandwidth, DEFAULT_GRP_WEIGHT);
 
     rc->active_worst_quality = tmp_q;
     rc->ni_av_qi = tmp_q;
     rc->last_q[INTER_FRAME] = tmp_q;
-    rc->avg_q = av1_convert_qindex_to_q(tmp_q, cm->seq_params.bit_depth);
+    rc->avg_q = eb_av1_convert_qindex_to_q(tmp_q, scs_ptr->encoder_bit_depth);
     rc->avg_frame_qindex[INTER_FRAME] = tmp_q;
-    rc->last_q[KEY_FRAME] = (tmp_q + cpi->oxcf.rc_cfg.best_allowed_q) / 2;
+    rc->last_q[KEY_FRAME] = (tmp_q + rc_cfg->best_allowed_q) / 2;
     rc->avg_frame_qindex[KEY_FRAME] = rc->last_q[KEY_FRAME];
   }
 
   int err = 0;
-  if (cpi->lap_enabled) {
-    err = input_stats_lap(twopass, this_frame);
-  } else {
+  //if (cpi->lap_enabled) {
+  //  err = input_stats_lap(twopass, this_frame);
+  //} else {
     err = input_stats(twopass, this_frame);
-  }
+  //}
   if (err == EOF) return;
 
   {
-    const int num_mbs = (cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
-                            ? cpi->initial_mbs
-                            : cm->mi_params.MBs;
+    const int num_mbs = mb_cols * mb_rows;
+                        //(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
+                        //    ? cpi->initial_mbs
+                        //    : cm->mi_params.MBs;
     // The multiplication by 256 reverses a scaling factor of (>> 8)
     // applied when combining MB error values for the frame.
     twopass->mb_av_energy = log((this_frame->intra_error / num_mbs) + 1.0);
@@ -2598,6 +2629,7 @@ static void process_first_pass_stats(AV1_COMP *cpi,
     twopass->fr_content_type = FC_NORMAL;
 }
 
+#if 0
 static void setup_target_rate(AV1_COMP *cpi) {
   RATE_CONTROL *const rc = &cpi->rc;
   GF_GROUP *const gf_group = &cpi->gf_group;
@@ -2614,33 +2646,42 @@ static void setup_target_rate(AV1_COMP *cpi) {
 #endif
 
 //void av1_get_second_pass_params(AV1_COMP *cpi,
-void av1_get_second_pass_params(SequenceControlSet *scs_ptr,
+void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
                                 EncodeFrameParams *const frame_params,
                                 const EncodeFrameInput *const frame_input,
                                 unsigned int frame_flags) {
-  AV1_COMP temp_cpi, *cpi = &temp_cpi;
+  //AV1_COMP temp_cpi, *cpi = &temp_cpi;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   //RATE_CONTROL *const rc = &cpi->rc;
-  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  RATE_CONTROL *const rc = encode_context_ptr->rc;
   //TWO_PASS *const twopass = &cpi->twopass;
   TWO_PASS *const twopass = &scs_ptr->twopass;
   //GF_GROUP *const gf_group = &cpi->gf_group;
   GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
-  AV1EncoderConfig *oxcf = &cpi->oxcf;
+  //AV1EncoderConfig *oxcf = &cpi->oxcf;
 
+  int is_src_frame_alt_ref, refresh_golden_frame, refresh_alt_ref_frame, is_intrl_arf_boost, rf_level;
+  is_src_frame_alt_ref  = 0;
+  refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
+  refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
+  is_intrl_arf_boost    = (pcs_ptr->parent_pcs_ptr->temporal_layer_index > 0 &&
+                           pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+                           ? 1
+                           : 0;
   {
       // kelvinhack
-      oxcf->pass = 2;
-      oxcf->rc_cfg.mode == AOM_VBR;
-      oxcf->rc_cfg.cq_level = scs_ptr->static_config.qp;
-      oxcf->gf_cfg.lag_in_frames = 25; //lad?
-      oxcf->kf_cfg.sframe_dist   = 0; //?
-      oxcf->kf_cfg.sframe_mode   = 0; //?
-      oxcf->arnr_max_frames      = 0; //?
-      oxcf->enable_tpl_model     = scs_ptr->static_config.enable_tpl_la;
+      //oxcf->pass = 2;
+      //oxcf->rc_cfg.mode == AOM_VBR;
+      //oxcf->rc_cfg.cq_level = scs_ptr->static_config.qp;
+      //oxcf->gf_cfg.lag_in_frames = 25; //lad?
+      //oxcf->kf_cfg.sframe_dist   = 0; //?
+      //oxcf->kf_cfg.sframe_mode   = 0; //?
+      //oxcf->arnr_max_frames      = 0; //?
+      //oxcf->enable_tpl_model     = scs_ptr->static_config.enable_tpl_la;
   }
 
-  if (is_stat_consumption_stage(cpi) && !twopass->stats_in) return;
+  if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
 #if 0
   if (rc->frames_till_gf_update_due > 0 && !(frame_flags & FRAMEFLAGS_KEY)) {
@@ -2661,29 +2702,31 @@ void av1_get_second_pass_params(SequenceControlSet *scs_ptr,
 
       // Do the firstpass stats indicate that this frame is skippable for the
       // partition search?
-      if (cpi->sf.part_sf.allow_partition_search_skip && oxcf->pass == 2) {
+      if (cpi->sf.part_sf.allow_partition_search_skip /*&& oxcf->pass == 2*/) {
         cpi->partition_search_skippable_frame = is_skippable_frame(cpi);
       }
 
       return;
     }
   }
+#endif
 
   aom_clear_system_state();
 
-  if (oxcf->rc_cfg.mode == AOM_Q)
-    rc->active_worst_quality = oxcf->rc_cfg.cq_level;
+  //if (oxcf->rc_cfg.mode == AOM_Q)
+  //  rc->active_worst_quality = oxcf->rc_cfg.cq_level;
   FIRSTPASS_STATS this_frame;
   av1_zero(this_frame);
   // call above fn
-  if (is_stat_consumption_stage(cpi)) {
-    process_first_pass_stats(cpi, &this_frame);
-  } else {
-    rc->active_worst_quality = oxcf->rc_cfg.cq_level;
-  }
+  //if (is_stat_consumption_stage(cpi)) {
+    process_first_pass_stats(pcs_ptr, &this_frame);
+  //} else {
+  //  rc->active_worst_quality = oxcf->rc_cfg.cq_level;
+  //}
 
+#if 0
   // Keyframe and section processing.
-  if (rc->frames_to_key <= 0 || (frame_flags & FRAMEFLAGS_KEY)) {
+  if (rc->frames_to_key <= 0 || frame_is_intra_only(pcs_ptr->parent_pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
     assert(rc->frames_to_key >= -1);
     FIRSTPASS_STATS this_frame_copy;
     this_frame_copy = this_frame;
@@ -2805,20 +2848,18 @@ void av1_get_second_pass_params(SequenceControlSet *scs_ptr,
 }
 
 // from aom encoder.c
-void av1_new_framerate(AV1_COMP *cpi, double framerate) {
-  cpi->framerate = framerate < 0.1 ? 30 : framerate;
+void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
+  //cpi->framerate = framerate < 0.1 ? 30 : framerate;
+  scs_ptr->static_config.frame_rate = framerate < 0.1 ? 30 : framerate;
   // kelvinhack
   //av1_rc_update_framerate(cpi, cpi->common.width, cpi->common.height);
 }
 
 //void av1_init_second_pass(AV1_COMP *cpi)
 void av1_init_second_pass(SequenceControlSet *scs_ptr) {
-  AV1_COMP temp_cpi, *cpi = &temp_cpi;
-  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-  AV1EncoderConfig *oxcf = &cpi->oxcf;
   TWO_PASS *const twopass = &scs_ptr->twopass;
-  FRAME_INFO *const frame_info = &cpi->frame_info;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
 
   double frame_rate;
   FIRSTPASS_STATS *stats;
@@ -2826,17 +2867,16 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
   if (!twopass->stats_buf_ctx->stats_in_end) return;
 
   {
-      //kelvinhack set cpi, frame_info and oxcf
-      cpi->framerate      = scs_ptr->static_config.frame_rate;
-      //cpi->common.width  = scs_ptr->static_config.source_width;
-      //cpi->common.height = scs_ptr->static_config.source_height;
+      //kelvinhack init frame_info and two_pass_cfg
+      frame_info->frame_width  = scs_ptr->seq_header.max_frame_width;
+      frame_info->frame_height = scs_ptr->seq_header.max_frame_height;
       frame_info->mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
       frame_info->mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
-      oxcf->target_bandwidth = (int64_t)scs_ptr->static_config.target_bit_rate;
+      frame_info->num_mbs = frame_info->mb_cols * frame_info->mb_rows;
       // kelvinhack should input from options
-      oxcf->two_pass_cfg.vbrmin_section = 0;
-      oxcf->two_pass_cfg.vbrmax_section = 2000;
-      oxcf->two_pass_cfg.vbrbias        = 50;
+      encode_context_ptr->two_pass_cfg.vbrmin_section = 0;
+      encode_context_ptr->two_pass_cfg.vbrmax_section = 2000;
+      encode_context_ptr->two_pass_cfg.vbrbias        = 50;
   }
 
   stats = twopass->stats_buf_ctx->total_stats;
@@ -2850,9 +2890,9 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
   // encoded in the second pass is a guess. However, the sum duration is not.
   // It is calculated based on the actual durations of all frames from the
   // first pass.
-  av1_new_framerate(cpi, frame_rate);
+  av1_new_framerate(scs_ptr, frame_rate);
   twopass->bits_left =
-      (int64_t)(stats->duration * oxcf->target_bandwidth / 10000000.0);
+      (int64_t)(stats->duration * (int64_t)scs_ptr->static_config.target_bit_rate / 10000000.0);
 
   // This variable monitors how far behind the second ref update is lagging.
   twopass->sr_update_lag = 1;
@@ -2865,24 +2905,21 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
     const FIRSTPASS_STATS *s = twopass->stats_in;
     double modified_error_total = 0.0;
     twopass->modified_error_min =
-        (avg_error * oxcf->two_pass_cfg.vbrmin_section) / 100;
+        (avg_error * encode_context_ptr->two_pass_cfg.vbrmin_section) / 100;
     twopass->modified_error_max =
-        (avg_error * oxcf->two_pass_cfg.vbrmax_section) / 100;
+        (avg_error * encode_context_ptr->two_pass_cfg.vbrmax_section) / 100;
     while (s < twopass->stats_buf_ctx->stats_in_end) {
       modified_error_total +=
-          calculate_modified_err(frame_info, twopass, oxcf, s);
+          calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), s);
       ++s;
     }
     twopass->modified_error_left = modified_error_total;
   }
 
   // Reset the vbr bits off target counters
-  //cpi->rc.vbr_bits_off_target = 0;
-  //cpi->rc.vbr_bits_off_target_fast = 0;
-  //cpi->rc.rate_error_estimate = 0;
-  encode_context_ptr->rc.vbr_bits_off_target = 0;
-  encode_context_ptr->rc.vbr_bits_off_target_fast = 0;
-  encode_context_ptr->rc.rate_error_estimate = 0;
+  encode_context_ptr->rc->vbr_bits_off_target = 0;
+  encode_context_ptr->rc->vbr_bits_off_target_fast = 0;
+  encode_context_ptr->rc->rate_error_estimate = 0;
 
   // Static sequence monitor variables.
   twopass->kf_zeromotion_pct = 100;

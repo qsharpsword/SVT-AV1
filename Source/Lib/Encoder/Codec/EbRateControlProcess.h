@@ -142,6 +142,11 @@ typedef struct {
     float_t arf_boost_factor;
     // Q index used for ALT frame
     int arf_q;
+#if TWOPASS_RC
+    int active_worst_quality;
+    //int active_best_quality[MAX_ARF_LAYERS + 1];
+    int base_layer_qp;
+#endif
 } RATE_CONTROL;
 
 #endif //TWOPASS_RC
@@ -225,6 +230,10 @@ typedef struct RateControlLayerContext {
 /**************************************
  * Extern Function Declarations
  **************************************/
+#if TWOPASS_RC
+double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
+#endif
+
 EbErrorType rate_control_context_ctor(EbThreadContext *  thread_context_ptr,
                                       const EbEncHandle *enc_handle_ptr);
 

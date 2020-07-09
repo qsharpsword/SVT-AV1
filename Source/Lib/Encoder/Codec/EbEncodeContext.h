@@ -21,6 +21,9 @@
 #include "EbPredictionStructure.h"
 #include "EbRateControlTables.h"
 #include "EbObject.h"
+#if TWOPASS_RC
+#include "encoder.h"
+#endif
 #if TWOPASS_STAT_BUF
 #include "firstpass.h"
 #endif
@@ -196,8 +199,11 @@ typedef struct EncodeContext {
 #endif
 #endif
 #if TWOPASS_RC
+    FRAME_INFO frame_info;
+    TwoPassCfg two_pass_cfg; // two pass datarate control
+    RATE_CONTROL *rc;
+    RateControlCfg rc_cfg;
     GF_GROUP gf_group;
-    RATE_CONTROL rc;
 #endif
 #if TWOPASS_STAT_BUF
     FIRSTPASS_STATS *frame_stats_buffer;
