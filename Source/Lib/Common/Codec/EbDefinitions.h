@@ -623,13 +623,13 @@ extern "C" {
 
 #define SHUT_GLOBAL           0
 #define GM_MV_BUG_FIX         0
-#if 1 
+#if 0 
 #define SHUT_GLOBAL_ID        1
 #define GLOBAL_SEARCH_ALL_REF 1
 #define COMPLEXITY_BASED_GMV  1
 #endif
 
-#if 0
+#if 1
 #define FIX_HIGH_MOTION            1
 #define FIX_HIGH_MOTION_NSQ        1
 #define FIX_INTRA_4X4              1
@@ -645,6 +645,7 @@ extern "C" {
 #if HEAVY_SEARCH
 #define SPARSE_VARIANCE            0
 #endif
+#define TUNING_1 1
 #endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
