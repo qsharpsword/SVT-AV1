@@ -2202,9 +2202,27 @@ void *motion_estimation_kernel(void *input_ptr) {
                         total_me_sad += pcs_ptr->rc_me_distortion[sb_index];
                     }
                     uint32_t average_me_sad = total_me_sad / (input_picture_ptr->width * input_picture_ptr->height);
+                    // Derive global_motion_estimation level
+#define ME_SAD_LOW_THRESHOLD1 15 // Low sad_ threshold1 for me distortion (very low)
+#define ME_SAD_LOW_THRESHOLD2 25 // Low sad_ threshold2 for me distortion (low)
+#define ME_SAD_HIGH_THRESHOLD 80 // High sad_ threshold2 for me distortion (high)
 
+                    uint8_t global_motion_estimation_level;
+                    if (average_me_sad < ME_SAD_LOW_THRESHOLD1)
+                        global_motion_estimation_level = 0;
+                    else if (average_me_sad < ME_SAD_LOW_THRESHOLD2)
+                        global_motion_estimation_level = 1;
+                    else if (average_me_sad < ME_SAD_HIGH_THRESHOLD)
+                        global_motion_estimation_level = 2;
+                    else
+                        global_motion_estimation_level = 3;
+#if COMPLEXITY_BASED_GMV
+                    global_motion_estimation(
+                        pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr, global_motion_estimation_level);
+#else
                     global_motion_estimation(
                         pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
+#endif
                 }
             }
 #endif

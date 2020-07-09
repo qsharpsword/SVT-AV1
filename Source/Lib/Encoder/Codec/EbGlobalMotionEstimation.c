@@ -24,9 +24,13 @@
 #include "EbUtility.h"
 #include "global_motion.h"
 #include "corner_detect.h"
-
+#if COMPLEXITY_BASED_GMV
+void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
+    EbPictureBufferDesc *input_picture_ptr, uint8_t global_motion_estimation_level) {
+#else
 void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr) {
+#endif
     // Get downsampled pictures with a downsampling factor of 2 in each dimension
     EbPaReferenceObject *pa_reference_object;
     EbPictureBufferDesc *quarter_ref_pic_ptr;

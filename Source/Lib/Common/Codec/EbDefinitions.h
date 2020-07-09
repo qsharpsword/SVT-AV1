@@ -631,7 +631,7 @@ extern "C" {
 #define GLOBAL_OFF_LAST_2_LAST_3 0
 #define GLOBAL_PER_LAYER         0 
 
-#define COMPLEXITY_BASED_GMV  0
+#define COMPLEXITY_BASED_GMV  1
 #endif
 
 #if 0
