@@ -83,6 +83,13 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
         // Limit the global motion search to the first frame types of ref lists
         num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
 #endif
+#if COMPLEXITY_BASED_GMV
+        // We should not get here if (global_motion_estimation_level == 0), and if (global_motion_estimation_level == 3) then search all references
+        if(global_motion_estimation_level == 1)
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 1);
+        else if (global_motion_estimation_level == 2)
+            num_of_ref_pic_to_search = MIN(num_of_ref_pic_to_search, 2);
+#endif
         // Ref Picture Loop
         for (uint32_t ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search;
              ++ref_pic_index) {
