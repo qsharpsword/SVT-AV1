@@ -2197,7 +2197,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     uint32_t average_me_sad = total_me_sad / (input_picture_ptr->width * input_picture_ptr->height);
                     // Derive global_motion_estimation level
                     uint8_t global_motion_estimation_level;
-#if 0 // COMPLEXITY_FIRST_SET
+#if 1 // COMPLEXITY_FIRST_SET
                     if (average_me_sad == 0)
                         global_motion_estimation_level = 0;
                     else if (average_me_sad < 5)
@@ -2221,7 +2221,7 @@ void *motion_estimation_kernel(void *input_ptr) {
 #endif
 
 
-#if 1 // option_2
+#if 0 // option_2
                     if (average_me_sad < 10)
                         global_motion_estimation_level = 0;
                     else if (average_me_sad < 15)
