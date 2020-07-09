@@ -2027,7 +2027,7 @@ void *motion_estimation_kernel(void *input_ptr) {
         if (in_results_ptr->task_type == 0) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
-
+#if !COMPLEXITY_BASED_GMV
             // Global motion estimation
             // Compute only for the first fragment.
             // TODO: create an other kernel ?
@@ -2041,7 +2041,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     global_motion_estimation(
                         pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
             }
-
+#endif
             // Segments
             segment_index = in_results_ptr->segment_index;
             pic_width_in_sb =
@@ -2185,6 +2185,29 @@ void *motion_estimation_kernel(void *input_ptr) {
                     }
                 }
             }
+#if COMPLEXITY_BASED_GMV
+            // Global motion estimation
+            // Compute only for the first fragment.
+            // TODO: create an other kernel ?
+#if GM_DOWN_16
+            if (pcs_ptr->gm_level == GM_FULL || pcs_ptr->gm_level == GM_DOWN || pcs_ptr->gm_level == GM_DOWN16) {
+#else
+            if (pcs_ptr->gm_level == GM_FULL || pcs_ptr->gm_level == GM_DOWN) {
+#endif
+                if (context_ptr->me_context_ptr->compute_global_motion &&
+                    in_results_ptr->segment_index == pcs_ptr->me_segments_total_count - 1) {// @ last segment only (to make surethat ME is ready for the whole input) 
+
+                    uint32_t total_me_sad=0;
+                    for (sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index) {
+                        total_me_sad += pcs_ptr->rc_me_distortion[sb_index];
+                    }
+                    uint32_t average_me_sad = total_me_sad / (input_picture_ptr->width * input_picture_ptr->height);
+
+                    global_motion_estimation(
+                        pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
+                }
+            }
+#endif
 #if !REMOVE_UNUSED_CODE_PH2
             if (pcs_ptr->intra_pred_mode > 4)
             // *** OPEN LOOP INTRA CANDIDATE SEARCH CODE ***

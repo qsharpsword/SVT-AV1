@@ -4972,10 +4972,7 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                         mi_row,
                         context_ptr->blk_geom->bsize);
 
-                if (inside_tile &&
-                    (((gm_params->wmtype > TRANSLATION && context_ptr->blk_geom->bwidth >= 8 &&
-                        context_ptr->blk_geom->bheight >= 8) ||
-                        gm_params->wmtype <= TRANSLATION))) {
+                if (inside_tile && (((gm_params->wmtype > TRANSLATION && context_ptr->blk_geom->bwidth >= 8 && context_ptr->blk_geom->bheight >= 8) || gm_params->wmtype <= TRANSLATION))) {
 
                     uint8_t inter_type;
                     uint8_t is_ii_allowed = svt_is_interintra_allowed(
@@ -5125,12 +5122,8 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                             context_ptr->blk_geom->bsize);
                 }
 
-#if INJECT_GLOBAL_CAND
-                if (inside_tile) {
-#else
-                if (inside_tile && gm_params_0->wmtype > TRANSLATION && gm_params_1->wmtype > TRANSLATION ){
-#endif
 
+                if (inside_tile && gm_params_0->wmtype > TRANSLATION && gm_params_1->wmtype > TRANSLATION ){
                     uint8_t to_inject_ref_type = av1_ref_frame_type(rf);
 
                     // Warped prediction is only compatible with MD_COMP_AVG and MD_COMP_DIST.

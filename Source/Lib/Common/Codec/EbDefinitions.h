@@ -628,9 +628,10 @@ extern "C" {
 #define GLOBAL_SEARCH_ALL_REF 1
 #define INJECT_GLOBAL_CAND    1
 
-#define REMOVE_RESTRICTION    1
 #define GLOBAL_OFF_LAST_2_LAST_3 0
 #define GLOBAL_PER_LAYER         0 
+
+#define COMPLEXITY_BASED_GMV  0
 #endif
 
 #if 0
