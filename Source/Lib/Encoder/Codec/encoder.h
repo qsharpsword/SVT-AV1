@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-#define FRAME_TYPE int 
+#define FRAME_TYPE int
 
 //struct AV1LevelParams;
 

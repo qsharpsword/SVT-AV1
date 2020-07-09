@@ -2118,11 +2118,13 @@ void *initial_rate_control_kernel(void *input_ptr) {
                 // Give the new Reference a nominal live_count of 1
                 eb_object_inc_live_count(pcs_ptr->reference_picture_wrapper_ptr, 1);
 #endif
+#if !TWOPASS_CLEANUP
                 pcs_ptr->stat_struct_first_pass_ptr =
                     pcs_ptr->is_used_as_reference_flag ? &((EbReferenceObject *)pcs_ptr->reference_picture_wrapper_ptr->object_ptr)->stat_struct
                     : &pcs_ptr->stat_struct;
                 if (scs_ptr->use_output_stat_file)
                     memset(pcs_ptr->stat_struct_first_pass_ptr, 0, sizeof(StatStruct));
+#endif
 
                 // Get Empty Results Object
                 eb_get_empty_object(
@@ -2323,7 +2325,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                                     ->reference_picture_wrapper_ptr,
                                 1);
                         }
-
+#if !TWOPASS_CLEANUP
                         pcs_ptr->stat_struct_first_pass_ptr =
                             pcs_ptr->is_used_as_reference_flag
                                 ? &((EbReferenceObject *)
@@ -2332,6 +2334,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                                 : &pcs_ptr->stat_struct;
                         if (scs_ptr->use_output_stat_file)
                             memset(pcs_ptr->stat_struct_first_pass_ptr, 0, sizeof(StatStruct));
+#endif
 #if TPL_LA
                         if (scs_ptr->static_config.look_ahead_distance != 0 &&
                             scs_ptr->static_config.enable_tpl_la &&

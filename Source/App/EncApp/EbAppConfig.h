@@ -196,7 +196,9 @@ typedef struct EbConfig {
      *****************************************/
 #if 1//REMOVE_MR_MACRO
     int8_t  enc_mode;
+#if !TWOPASS_CLEANUP
     int8_t  snd_pass_enc_mode;
+#endif
 #else
     uint8_t  enc_mode;
     uint8_t  snd_pass_enc_mode;

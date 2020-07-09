@@ -4871,6 +4871,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 #if !REMOVE_UNUSED_CODE_PH2
                         }
 #endif
+#if !TWOPASS_CLEANUP
                         // Collect the referenced area per 64x64
                         if (scs_ptr->use_output_stat_file) {
 #if CLEAN_UP_SB_DATA_10
@@ -5121,6 +5122,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 eb_release_mutex(ref_obj_1->referenced_area_mutex);
                             }
                         }
+#endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
                     context_ptr->tot_coef_coded_area += blk_ptr->block_has_coeff ? blk_geom->bwidth * blk_geom->bheight : 0;
 #endif

@@ -1726,6 +1726,63 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
     return return_error;
 }
+
+#if FIRST_PASS_SETUP
+
+/******************************************************
+* Derive Mode Decision Config Settings for first pass
+Input   : encoder mode and tune
+Output  : EncDec Kernel signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_mode_decision_config_kernel(
+    SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    ModeDecisionConfigurationContext *context_ptr) {
+
+    EbErrorType return_error = EB_ErrorNone;
+
+    // ADP
+    context_ptr->adp_level = pcs_ptr->parent_pcs_ptr->enc_mode;
+
+    // CDF
+    pcs_ptr->update_cdf = 0;
+
+    // Filter INTRA
+    // pic_filter_intra_level specifies whether filter intra would be active
+    // for a given picture.
+    // pic_filter_intra_level | Settings
+    // 0                      | OFF
+    // 1                      | ON
+    pcs_ptr->pic_filter_intra_level = 0;
+
+    // High Precision
+    FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+    frm_hdr->allow_high_precision_mv = 0;
+
+    // Warped
+    frm_hdr->allow_warped_motion = 0;
+    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+
+    // pic_obmc_level - pic_obmc_level is used to define md_pic_obmc_level.
+    // The latter determines the OBMC settings in the function set_obmc_controls.
+    // Please check the definitions of the flags/variables in the function
+    // set_obmc_controls corresponding to the pic_obmc_level settings.
+    //  pic_obmc_level  |              Default Encoder Settings             |     Command Line Settings
+    //         0        | OFF subject to possible constraints               | OFF everywhere in encoder
+    //         1        | ON subject to possible constraints                | Fully ON in PD_PASS_2
+    //         2        | Faster level subject to possible constraints      | Level 2 everywhere in PD_PASS_2
+    //         3        | Even faster level subject to possible constraints | Level 3 everywhere in PD_PASS_3
+    pcs_ptr->parent_pcs_ptr->pic_obmc_level = 0;
+
+    // Switchable Motion Mode
+    frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+
+    // HBD Mode
+    pcs_ptr->hbd_mode_decision = EB_8_BIT_MD; //anaghdin to check for 10 bit
+
+    return return_error;
+}
+#endif
 #if !DEPTH_PART_CLEAN_UP
 void forward_sq_non4_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     uint32_t sb_index;
@@ -2117,7 +2174,14 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             av1_setup_motion_field(pcs_ptr->parent_pcs_ptr->av1_cm, pcs_ptr);
         frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
         // Mode Decision Configuration Kernel Signal(s) derivation
+#if FIRST_PASS_SETUP
+        if (scs_ptr->use_output_stat_file)
+            first_pass_signal_derivation_mode_decision_config_kernel(scs_ptr, pcs_ptr, context_ptr);
+        else
+            signal_derivation_mode_decision_config_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
+#else
         signal_derivation_mode_decision_config_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
+#endif
         context_ptr->qp = pcs_ptr->picture_qp;
         pcs_ptr->parent_pcs_ptr->average_qp = 0;
         pcs_ptr->intra_coded_area           = 0;

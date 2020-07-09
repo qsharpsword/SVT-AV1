@@ -16,6 +16,7 @@ extern "C" {
 #include <stdio.h>
 
 #define TPL_LA 1
+#define TWOPASS_CLEANUP 1
 //***HME***
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
@@ -77,7 +78,9 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is defined as MAX_ENC_PRESET. */
 #if 1//REMOVE_MR_MACRO
+#if !TWOPASS_CLEANUP
     int8_t snd_pass_enc_mode;
+#endif
 #else
     uint8_t snd_pass_enc_mode;
 #endif

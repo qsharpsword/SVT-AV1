@@ -722,7 +722,7 @@ static void update_firstpass_stats(PictureParentControlSet *pcs_ptr, //AV1_COMP 
 #else
   TWO_PASS *twopass = &pcs_ptr->twopass;
   SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
-#endif  
+#endif
   const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
   const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
   //AV1_COMMON *const cm = &cpi->common;

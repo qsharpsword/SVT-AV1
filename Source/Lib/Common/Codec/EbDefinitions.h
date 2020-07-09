@@ -610,6 +610,8 @@ extern "C" {
 #define TWOPASS_RC 1 // port 2pass RC code
 #define TWOPASS_STAT_BUF 1 //
 
+#define FIRST_PASS_SETUP 1
+#define TWOPASS_CLEANUP 1
 #define MAX_LAG_BUFFERS 35
 // Function return size of frame stats buffer
 static int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
@@ -617,6 +619,7 @@ static int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
     /* if lookahead is enabled return num_lap_buffers else num_lag_buffers */
     return (num_lap_buffer > 0 ? num_lap_buffer + 1 : num_lag_buffer);
 }
+#define LOW_DELAY_TUNE 1
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////

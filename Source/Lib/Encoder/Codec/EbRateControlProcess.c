@@ -5091,7 +5091,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
     *active_best = active_best_quality;
     *active_worst = active_worst_quality;
 }
-
+#if !TWOPASS_CLEANUP
 /******************************************************
  * adaptive_qindex_calc_tpl_la
  * Assign the q_index per frame.
@@ -5270,7 +5270,7 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
 
     return q;
 }
-
+#endif
 /******************************************************
  * cqp_qindex_calc_tpl_la
  * Assign the q_index per frame.
@@ -5436,7 +5436,7 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
 }
 #endif
 #endif
-
+#if !TWOPASS_CLEANUP
 /******************************************************
  * adaptive_qindex_calc_two_pass
  * assigns the q_index per frame using average reference area per frame.
@@ -5573,6 +5573,7 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
 
     return q;
 }
+#endif
 #define DEFAULT_KF_BOOST 2700
 #define DEFAULT_GF_BOOST 1350
 /******************************************************
@@ -5656,6 +5657,7 @@ static int cqp_qindex_calc(
 
     return q;
 }
+#if !TWOPASS_CLEANUP
 /******************************************************
  * sb_qp_derivation_two_pass
  * Calculates the QP per SB based on the referenced area
@@ -5831,7 +5833,7 @@ static void sb_qp_derivation_two_pass(PictureControlSet *pcs_ptr) {
         }
     }
 }
-
+#endif
 #if TPL_LA
 #if TPL_LA_LAMBDA_SCALING
 static void sb_setup_lambda(PictureControlSet *pcs_ptr,
@@ -6225,6 +6227,7 @@ void *rate_control_kernel(void *input_ptr) {
 #endif
                         ) {
                         // Content adaptive qp assignment
+#if !TWOPASS_CLEANUP
 #if TPL_LA && TPL_LA_QPS
                         // 2pass QPS with tpl_la
                         if (scs_ptr->use_input_stat_file &&
@@ -6236,15 +6239,20 @@ void *rate_control_kernel(void *input_ptr) {
                             new_qindex = adaptive_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
                         else
 #endif
+
                         if (scs_ptr->use_input_stat_file &&
 #if !UNIFY_SC_NSC
                             !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
 #endif
                             pcs_ptr->parent_pcs_ptr->referenced_area_has_non_zero)
                             new_qindex = adaptive_qindex_calc_two_pass(pcs_ptr, &rc, qindex);
+#endif
 #if TPL_LA && TPL_LA_QPS
                         // 1pass QPS with tpl_la
-                        else if (!scs_ptr->use_input_stat_file &&
+#if !TWOPASS_CLEANUP
+                        else
+#endif
+                            if (!scs_ptr->use_input_stat_file &&
 #if !TPL_SC_ON
                                  !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
 #endif
@@ -6386,6 +6394,7 @@ void *rate_control_kernel(void *input_ptr) {
                 sb_qp_derivation_tpl_la(pcs_ptr);
             else
 #endif
+#if !TWOPASS_CLEANUP
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
 #if !TPL_SW_UPDATE
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
@@ -6401,7 +6410,9 @@ void *rate_control_kernel(void *input_ptr) {
                     sb_qp_derivation_two_pass(pcs_ptr);
                 else
                     sb_qp_derivation(pcs_ptr);
-            else {
+            else
+#endif
+            {
                 pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present = 0;
                 SuperBlock *sb_ptr;
                 pcs_ptr->parent_pcs_ptr->average_qp = 0;

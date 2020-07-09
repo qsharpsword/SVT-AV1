@@ -2889,6 +2889,184 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     return return_error;
 }
+#if FIRST_PASS_SETUP
+/******************************************************
+* Derive Multi-Processes Settings for first pass
+Input   : encoder mode and tune
+Output  : Multi-Processes signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_multi_processes(
+    SequenceControlSet *scs_ptr,
+    PictureParentControlSet *pcs_ptr,
+    PictureDecisionContext *context_ptr) {
+
+    EbErrorType return_error = EB_ErrorNone;
+    FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
+    // If enabled here, the hme enable flags should also be enabled in ResourceCoordinationProcess
+    // to ensure that resources are allocated for the downsampled pictures used in HME
+    pcs_ptr->enable_hme_flag = 1;
+    pcs_ptr->enable_hme_level0_flag = 1;
+    pcs_ptr->enable_hme_level1_flag = 1;
+    pcs_ptr->enable_hme_level2_flag = 1;
+
+
+    pcs_ptr->tf_enable_hme_flag = 0;
+    pcs_ptr->tf_enable_hme_level0_flag = 0;
+    pcs_ptr->tf_enable_hme_level1_flag = 0;
+    pcs_ptr->tf_enable_hme_level2_flag = 0;
+
+    // Set the Multi-Pass PD level
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+
+    // Set disallow_nsq
+    pcs_ptr->disallow_nsq = EB_TRUE;
+
+    pcs_ptr->max_number_of_pus_per_sb = SQUARE_PU_COUNT;
+    pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
+
+    // Set disallow_all_nsq_blocks_below_16x16: 16x8, 8x16, 16x4, 4x16
+    pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
+
+    pcs_ptr->disallow_all_nsq_blocks_below_64x64 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_below_32x32 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_above_64x64 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_TRUE;
+    // disallow_all_nsq_blocks_above_16x16
+    pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_TRUE;
+
+    pcs_ptr->disallow_HVA_HVB_HV4 = EB_TRUE;
+    pcs_ptr->disallow_HV4 = EB_TRUE;
+
+    // Set disallow_all_non_hv_nsq_blocks_below_16x16
+    pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16 = EB_TRUE;
+
+    // Set disallow_all_h4_v4_blocks_below_16x16
+    pcs_ptr->disallow_all_h4_v4_blocks_below_16x16 = EB_TRUE;
+
+    frm_hdr->allow_screen_content_tools = 0;
+    frm_hdr->allow_intrabc = 0;
+
+    // Palette Modes:
+    //    0:OFF
+    //    1:Slow    NIC=7/4/4
+    //    2:        NIC=7/2/2
+    //    3:        NIC=7/2/2 + No K means for non ref
+    //    4:        NIC=4/2/1
+    //    5:        NIC=4/2/1 + No K means for Inter frame
+    //    6:        Fastest NIC=4/2/1 + No K means for non base + step for non base for most dominent
+    pcs_ptr->palette_mode = 0;
+    // Loop filter Level                            Settings
+    // 0                                            OFF
+    // 1                                            CU-BASED
+    // 2                                            LIGHT FRAME-BASED
+    // 3                                            FULL FRAME-BASED
+    pcs_ptr->loop_filter_mode = 0;
+
+    // CDEF Level                                   Settings
+    // 0                                            OFF
+    // 1                                            1 step refinement
+    // 2                                            4 step refinement
+    // 3                                            8 step refinement
+    // 4                                            16 step refinement
+    // 5                                            64 step refinement
+    pcs_ptr->cdef_filter_mode = 0;
+
+    // SG Level                                    Settings
+    // 0                                            OFF
+    // 1                                            0 step refinement
+    // 2                                            1 step refinement
+    // 3                                            4 step refinement
+    // 4                                            16 step refinement
+    Av1Common *cm = pcs_ptr->av1_cm;
+    cm->sg_filter_mode = 0;
+
+    // WN Level                                     Settings
+    // 0                                            OFF
+    // 1                                            3-Tap luma/ 3-Tap chroma
+    // 2                                            5-Tap luma/ 5-Tap chroma
+    // 3                                            7-Tap luma/ 5-Tap chroma
+    cm->wn_filter_mode = 0;
+
+    // Intra prediction modes                       Settings
+    // 0                                            FULL
+    // 1                                            LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
+    // 2                                            OFF per block : disable_angle_prediction for 64/32/4
+    // 3                                            OFF : disable_angle_prediction
+    // 4                                            OIS based Intra
+    // 5                                            Light OIS based Intra
+    pcs_ptr->intra_pred_mode = 3;
+
+    // Set Tx Search     Settings
+    // 0                 OFF
+    // 1                 ON
+    pcs_ptr->tx_size_search_mode = 0;
+
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+    pcs_ptr->txs_in_inter_classes = 0;
+
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+    pcs_ptr->enable_inter_intra = 0;
+
+    // Set compound mode      Settings
+    // 0                      OFF: No compond mode search : AVG only
+    // 1                      ON: Full
+    // 2                      ON: Fast : similar based disable
+    // 3                      ON: Fast : MRP pruning/ similar based disable
+    pcs_ptr->compound_mode = 0;
+
+    // Set frame end cdf update mode      Settings
+    // 0                                  OFF
+    // 1                                  ON
+    if (scs_ptr->static_config.frame_end_cdf_update == DEFAULT)
+        pcs_ptr->frame_end_cdf_update_mode = 1;
+    else
+        pcs_ptr->frame_end_cdf_update_mode =
+        scs_ptr->static_config.frame_end_cdf_update;
+
+     pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
+
+    // Global motion level                        Settings
+    // GM_FULL                                    Exhaustive search mode.
+    // GM_DOWN                                    Downsampled resolution with a
+    // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
+    // using ME MV.
+    pcs_ptr->gm_level = GM_DOWN;
+
+    // Exit TX size search when all coefficients are zero
+    // 0: OFF
+    // 1: ON
+    pcs_ptr->tx_size_early_exit = 1;
+
+
+    context_ptr->tf_level = 0;
+    set_tf_controls(context_ptr, context_ptr->tf_level);
+    // MRP control
+    // 0: OFF (1,1)  ; override features
+    // 1: FULL (4,3) ; override features
+    // 2: (4,3) ; No-override features
+    // 3: (3,3) ; No-override features
+    // 4: (3,2) ; No-override features
+    // 5: (2,3) ; No-override features
+    // 6: (2,2) ; No-override features
+    // 7: (2,1) ; No-override features
+    // 8: (1,2) ; No-override features
+    // 9: (1,1) ; No-override features
+    // Level 0 , 1  : set ref_list0_count_try and ref_list1_count_try and Override MRP-related features
+    // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
+    pcs_ptr->mrp_level = 3;
+
+    pcs_ptr->tpl_opt_flag = 1;
+    return return_error;
+}
+#endif
+
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 //set the ref frame types used for this picture,
 #if  !REMOVE_MRP_MODE || !MRP_CTRL
@@ -3026,7 +3204,6 @@ static void set_all_ref_frame_type(PictureParentControlSet  *parent_pcs_ptr, MvR
     }
 #endif
 }
-
 static void prune_refs(PredictionStructureEntry *pred_position_ptr, Av1RpsNode *av1_rps)
 {
     if (pred_position_ptr->ref_list0.reference_list_count < 4) {
@@ -6714,10 +6891,17 @@ void* picture_decision_kernel(void *input_ptr)
                                 // TODO: put this in EbMotionEstimationProcess?
                                 // ME Kernel Multi-Processes Signal(s) derivation
 #if TF_LEVELS
+#if FIRST_PASS_SETUP
+                                if (scs_ptr->use_output_stat_file)
+                                    first_pass_signal_derivation_multi_processes(scs_ptr, pcs_ptr, context_ptr);
+                                else
+                                    signal_derivation_multi_processes_oq(scs_ptr, pcs_ptr, context_ptr);
+#else
                                 signal_derivation_multi_processes_oq(
                                     scs_ptr,
                                     pcs_ptr,
                                     context_ptr);
+#endif
 #else
                                 signal_derivation_multi_processes_oq(
                                 scs_ptr,
