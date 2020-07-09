@@ -645,7 +645,8 @@ extern "C" {
 #if HEAVY_SEARCH
 #define SPARSE_VARIANCE            0
 #endif
-#define TUNING_1 1
+#define TUNING_1 0
+#define TUNING_2 1
 #endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
