@@ -4929,7 +4929,7 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                           &cand_total_cnt);
 
     if (context_ptr->global_mv_injection) {
-#if INJECT_GLOBAL_CAND
+#if GLOBAL_SEARCH_ALL_REF
         for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
 
             MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];

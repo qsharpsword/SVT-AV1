@@ -4236,12 +4236,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SHUT_GLOBAL
     context_ptr->global_mv_injection = 0;
 #endif
-#if GLOBAL_PER_LAYER
-    if (!pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-        context_ptr->global_mv_injection = 0;
-    else
-        context_ptr->global_mv_injection = 1;
-#endif
+
     if (pd_pass == PD_PASS_0)
         context_ptr->new_nearest_injection = 0;
     else if (pd_pass == PD_PASS_1)

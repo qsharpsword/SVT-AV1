@@ -626,11 +626,6 @@ extern "C" {
 #if 1 
 #define SHUT_GLOBAL_ID        1
 #define GLOBAL_SEARCH_ALL_REF 1
-#define INJECT_GLOBAL_CAND    1
-
-#define GLOBAL_OFF_LAST_2_LAST_3 0
-#define GLOBAL_PER_LAYER         0 
-
 #define COMPLEXITY_BASED_GMV  1
 #endif
 

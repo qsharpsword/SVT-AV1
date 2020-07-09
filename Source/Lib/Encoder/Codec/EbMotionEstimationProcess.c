@@ -1110,13 +1110,6 @@ EbErrorType signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
 #endif
 
-#if GLOBAL_PER_LAYER
-    if (!pcs_ptr->is_used_as_reference_flag)
-        context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
-    else
-        context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
-#endif
-
 #if !SHUT_ME_NSQ_SEARCH
     // Me nsq search levels.
     // 0: feature off -> perform nsq_search.
@@ -2204,6 +2197,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     uint32_t average_me_sad = total_me_sad / (input_picture_ptr->width * input_picture_ptr->height);
                     // Derive global_motion_estimation level
                     uint8_t global_motion_estimation_level;
+#if 0 // COMPLEXITY_FIRST_SET
                     if (average_me_sad == 0)
                         global_motion_estimation_level = 0;
                     else if (average_me_sad < 5)
@@ -2212,6 +2206,19 @@ void *motion_estimation_kernel(void *input_ptr) {
                         global_motion_estimation_level = 2;
                     else
                         global_motion_estimation_level = 3;
+#endif
+
+
+#if 1 // option_1
+                    if (average_me_sad < 5)
+                        global_motion_estimation_level = 0;
+                    else if (average_me_sad < 10)
+                        global_motion_estimation_level = 1;
+                    else if (average_me_sad < 15)
+                        global_motion_estimation_level = 2;
+                    else
+                        global_motion_estimation_level = 3;
+#endif
 
                     //printf("%d\t%d\t%d\n", pcs_ptr->picture_number, global_motion_estimation_level, average_me_sad);
 
