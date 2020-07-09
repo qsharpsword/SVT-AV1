@@ -2209,12 +2209,24 @@ void *motion_estimation_kernel(void *input_ptr) {
 #endif
 
 
-#if 1 // option_1
+#if 0 // option_1
                     if (average_me_sad < 5)
                         global_motion_estimation_level = 0;
                     else if (average_me_sad < 10)
                         global_motion_estimation_level = 1;
                     else if (average_me_sad < 15)
+                        global_motion_estimation_level = 2;
+                    else
+                        global_motion_estimation_level = 3;
+#endif
+
+
+#if 1 // option_2
+                    if (average_me_sad < 10)
+                        global_motion_estimation_level = 0;
+                    else if (average_me_sad < 15)
+                        global_motion_estimation_level = 1;
+                    else if (average_me_sad < 20)
                         global_motion_estimation_level = 2;
                     else
                         global_motion_estimation_level = 3;
