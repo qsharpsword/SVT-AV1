@@ -216,6 +216,9 @@ typedef struct  AMdCycleRControls {
     uint16_t nics_th;  // Threshold to adjust nics <the higher th the higher speed>
     uint16_t mrp_th;  // Threshold to adjust mrp <the higher th the higher speed>
     uint16_t compound_th;  // Threshold to adjust compound <the higher th the higher speed>
+#if SKIP_DEPTH_ACTION
+     uint16_t skip_depth_th;  // Threshold to bypass depth <the higher th the higher speed>
+#endif
 }AMdCycleRControls;
 #endif
 #if DEPTH_CYCLES_REDUCTION

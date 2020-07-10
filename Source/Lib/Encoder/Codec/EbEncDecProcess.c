@@ -2592,6 +2592,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 1:
@@ -2601,6 +2604,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
@@ -2614,6 +2620,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 3:
@@ -2626,6 +2635,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 4:
@@ -2638,6 +2650,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 5:
@@ -2650,6 +2665,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if TUNE_ADAPTIVE_MD_CR_TH
 #if IMPROVED_MD_ADAPTIVE_CYCLES
@@ -2663,6 +2681,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 7:
@@ -2675,6 +2696,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 8:
@@ -2687,6 +2711,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 9:
@@ -2699,6 +2726,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 10:
@@ -2711,6 +2741,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     case 11:
@@ -2720,6 +2753,22 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 1500;
         adaptive_md_cycles_red_ctrls->mrp_th = 1500;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 0;
+#endif
+        break;
+#endif
+#if SKIP_DEPTH_ACTION
+         case 12:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 2000;
+        adaptive_md_cycles_red_ctrls->nics_th = 1500;
+        adaptive_md_cycles_red_ctrls->mrp_th = 1500;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SKIP_DEPTH_ACTION
+        adaptive_md_cycles_red_ctrls->skip_depth_th = 2000;
+#endif
         break;
 #endif
 #else
@@ -5723,7 +5772,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
+#if SKIP_DEPTH_ACTION
+    {
+#else
     if (pd_pass == PD_PASS_2) {
+#endif
         if (enc_mode <= ENC_M0)
             adaptive_md_cycles_level = 0;
         else if (enc_mode <= ENC_M3)
@@ -5732,8 +5785,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 3 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 5 : 5;
         else if (enc_mode <= ENC_M5)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 5 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 7 : 8;
+#if SKIP_DEPTH_ACTION
+        else if (enc_mode <= ENC_M7)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 7 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 11 : 11;
+        else
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 12 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 12 : 12;
+#else
         else
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 7 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 11 : 11;
+#endif
+
     }
 #endif
     adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
@@ -9914,6 +9975,45 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = MAX(s_depth, addj_s_depth);
                             e_depth = MIN(e_depth, addj_e_depth);
                         }
+#endif
+#endif
+#if SKIP_DEPTH_ACTION
+                        AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+                        if (adaptive_md_cycles_red_ctrls->enabled) {
+                            int8_t addj_s_depth = 0;
+                            int8_t addj_e_depth = 0;
+                            uint32_t depth_m1_prob = 0;
+                            uint32_t depth_prob = 0;
+                            uint32_t depth_p1_prob = 0;
+                            for (uint8_t part = 0; part < 9; part++) {
+                                depth_m1_prob += context_ptr->ad_md_prob[0][part];
+                                depth_m1_prob += context_ptr->ad_md_prob[1][part];
+                                depth_prob += context_ptr->ad_md_prob[2][part];
+                                depth_p1_prob += context_ptr->ad_md_prob[3][part];
+                                depth_p1_prob += context_ptr->ad_md_prob[4][part];
+                            }
+
+                            // if (adaptive_md_cycles_red_ctrls->skip_depth_th) {
+                            //     if (depth_p1_prob > depth_prob) {
+                            //         addj_s_depth = 0;
+                            //     }
+                            //    addj_s_depth = (depth_p1_prob > depth_prob) && (depth_m1_prob < adaptive_md_cycles_red_ctrls->skip_depth_th) ? 0 : -1;
+                            //    addj_e_depth = (depth_m1_prob > depth_prob) && (depth_p1_prob < adaptive_md_cycles_red_ctrls->skip_depth_th) ? 0 :  1;
+                            //    s_depth = MAX(s_depth, addj_s_depth);
+                            //    e_depth = MIN(e_depth, addj_e_depth);
+                            //}
+                            if (adaptive_md_cycles_red_ctrls->skip_depth_th) {
+                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ?  2 : 1;
+                                addj_s_depth = depth_m1_prob < adaptive_md_cycles_red_ctrls->skip_depth_th ? 0 : -1;
+                                addj_e_depth = depth_p1_prob < adaptive_md_cycles_red_ctrls->skip_depth_th ? 0 :  1;
+                                s_depth = MAX(s_depth, addj_s_depth);
+                                e_depth = MIN(e_depth, addj_e_depth);
+                            }
+                        }
+#if DEPTH_ONLY
+                        s_depth = 0;
+                        e_depth = 0;
 #endif
 #endif
                     } else if (context_ptr->pd_pass == PD_PASS_1) {

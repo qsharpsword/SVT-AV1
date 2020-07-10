@@ -610,7 +610,9 @@ extern "C" {
 #define RDOQ_CLI            1 // CLI support for RDOQ
 #if IMPROVED_MD_ADAPTIVE_CYCLES
 #define DISALLOW_NSQ_DEPTH   1 // Disable nsq_cycles_reduction and the depth_cycles_reduction
+#define SKIP_DEPTH_ACTION    1
 #endif
+#define DEPTH_ONLY           1
 #define SSSE_CLI            1 // Improve CLI Support for Spatial SSE
 #define PALETTE_CLI         1 // CLI Support for Palette
 #endif
