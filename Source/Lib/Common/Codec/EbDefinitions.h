@@ -620,7 +620,7 @@ static int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
     return (num_lap_buffer > 0 ? num_lap_buffer + 1 : num_lag_buffer);
 }
 #define LOW_DELAY_TUNE 1
-
+#define FORCED_BLK_SIZE 16
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

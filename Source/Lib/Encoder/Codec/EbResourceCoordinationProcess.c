@@ -153,7 +153,7 @@ EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet *     s
     scs_ptr->seq_header.enable_restoration = 0;
     scs_ptr->seq_header.enable_cdef = 0;
 
-    scs_ptr->seq_header.enable_warped_motion = 1;//anaghdin to fix
+    scs_ptr->seq_header.enable_warped_motion = 0;//anaghdin to fix
 
     return return_error;
 }

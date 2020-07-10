@@ -2916,7 +2916,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(
     pcs_ptr->tf_enable_hme_level2_flag = 0;
 
     // Set the Multi-Pass PD level
-    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
 
     // Set disallow_nsq
     pcs_ptr->disallow_nsq = EB_TRUE;
