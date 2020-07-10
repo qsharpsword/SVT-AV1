@@ -492,8 +492,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                     // If the picture is complete, terminate the slice
                     if (pcs_ptr->entropy_coding_info[tile_idx]->entropy_coding_current_row ==
                         pcs_ptr->entropy_coding_info[tile_idx]->entropy_coding_row_count) {
+#if !TWOPASS_CLEANUP
                         uint32_t ref_idx;
-
+#endif
                         EbBool pic_ready = EB_TRUE;
 
                         // Current tile ready
@@ -510,7 +511,7 @@ void *entropy_coding_kernel(void *input_ptr) {
                             }
                         }
                         eb_release_mutex(pcs_ptr->entropy_coding_pic_mutex);
-
+#if !TWOPASS_CLEANUP
                         //Jing, two pass doesn't work with multi-tile right now
                         // for Non Reference frames
                         if (scs_ptr->use_output_stat_file && tile_cnt == 1 &&
@@ -518,7 +519,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                             write_stat_to_file(scs_ptr,
                                                *pcs_ptr->parent_pcs_ptr->stat_struct_first_pass_ptr,
                                                pcs_ptr->parent_pcs_ptr->picture_number);
+#endif
                         if (pic_ready) {
+#if !TWOPASS_CLEANUP
                             // Release the List 0 Reference Pictures
                             for (ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count;
                                  ++ref_idx) {
@@ -563,6 +566,7 @@ void *entropy_coding_kernel(void *input_ptr) {
                                 if (pcs_ptr->ref_pic_ptr_array[1][ref_idx] != EB_NULL)
                                     eb_release_object(pcs_ptr->ref_pic_ptr_array[1][ref_idx]);
                             }
+#endif
 
 #if PAL_MEM_OPT
                             //free palette data

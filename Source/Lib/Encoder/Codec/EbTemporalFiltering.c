@@ -2976,6 +2976,7 @@ static EbErrorType produce_temporally_filtered_pic(
                                         ? 3
                                         : 4;
 #endif
+#if !TWOPASS_CLEANUP
 #if QPS_UPDATE
                 if (picture_control_set_ptr_central->scs_ptr->use_input_stat_file &&
                     picture_control_set_ptr_central->temporal_layer_index == 0 &&
@@ -2992,6 +2993,7 @@ static EbErrorType produce_temporally_filtered_pic(
                         decay_control--;
                     }
                 }
+#endif
 #endif
                 // Decrease the filter strength for low QPs
                 if (picture_control_set_ptr_central->scs_ptr->static_config.qp <= ALT_REF_QP_THRESH)
@@ -3195,6 +3197,7 @@ static void adjust_filter_strength(PictureParentControlSet *picture_control_set_
             noiselevel_adj = 0;
         else
             noiselevel_adj = 1;
+#if !TWOPASS_CLEANUP
         if (picture_control_set_ptr_central->scs_ptr->use_input_stat_file &&
 #if UNIFY_SC_NSC
             picture_control_set_ptr_central->temporal_layer_index == 0) {
@@ -3212,6 +3215,7 @@ static void adjust_filter_strength(PictureParentControlSet *picture_control_set_
                     noiselevel_adj = 0;
             }
         }
+#endif
         adj_strength += noiselevel_adj;
     }
 

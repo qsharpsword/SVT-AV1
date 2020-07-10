@@ -2212,6 +2212,10 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
 
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
+#if FIRST_PASS_SETUP
+    if (scs_ptr->use_output_stat_file)
+        scs_ptr->static_config.hierarchical_levels = 0;
+#endif
     // Configure the padding
     scs_ptr->left_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->top_padding = BLOCK_SIZE_64 + 4;
@@ -2381,8 +2385,9 @@ void copy_api_from_app(
     printf("Going to Run M%i \n", scs_ptr->static_config.enc_mode);
 #endif
 
-
+#if !TWOPASS_CLEANUP
     scs_ptr->static_config.snd_pass_enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->snd_pass_enc_mode;
+#endif
     scs_ptr->intra_period_length = scs_ptr->static_config.intra_period_length;
     scs_ptr->intra_refresh_type = scs_ptr->static_config.intra_refresh_type;
     scs_ptr->max_temporal_layers = scs_ptr->static_config.hierarchical_levels;
@@ -2727,10 +2732,12 @@ static EbErrorType verify_settings(
 #endif
         return_error = EB_ErrorBadParameter;
     }
+#if !TWOPASS_CLEANUP
     if (config->snd_pass_enc_mode > MAX_ENC_PRESET + 1) {
         SVT_LOG("Error instance %u: Second pass encoder mode must be in the range of [0-%d]\n", channel_number + 1, MAX_ENC_PRESET + 1);
         return_error = EB_ErrorBadParameter;
     }
+#endif
     if (config->ext_block_flag > 1) {
         SVT_LOG("Error instance %u: ExtBlockFlag must be [0-1]\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -3335,7 +3342,9 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->max_qp_allowed = 63;
     config_ptr->min_qp_allowed = 10;
     config_ptr->enc_mode = MAX_ENC_PRESET;
+#if !TWOPASS_CLEANUP
     config_ptr->snd_pass_enc_mode = MAX_ENC_PRESET + 1;
+#endif
     config_ptr->intra_period_length = -2;
     config_ptr->intra_refresh_type = 1;
     config_ptr->hierarchical_levels = 4;

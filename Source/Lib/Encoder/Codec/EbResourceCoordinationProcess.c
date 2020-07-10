@@ -127,7 +127,38 @@ EbErrorType resource_coordination_context_ctor(EbThreadContext *thread_contxt_pt
 
     return EB_ErrorNone;
 }
+#if FIRST_PASS_SETUP
+/******************************************************
+* Derive Pre-Analysis settings for first pass
+Input   : encoder mode and tune
+Output  : Pre-Analysis signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet *     scs_ptr,
+    PictureParentControlSet *pcs_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
+    // Derive HME Flag
+    pcs_ptr->enable_hme_flag = 1;
+    pcs_ptr->enable_hme_level0_flag = 1;
+    pcs_ptr->enable_hme_level1_flag = 1;
+    pcs_ptr->enable_hme_level2_flag = 1;
 
+    //// Set here to allocate resources for the downsampled pictures used in HME (generated in PictureAnalysis)
+    //// Will be later updated for SC/NSC in PictureDecisionProcess
+    pcs_ptr->tf_enable_hme_flag = 0;
+    pcs_ptr->tf_enable_hme_level0_flag = 0;
+    pcs_ptr->tf_enable_hme_level1_flag = 0;
+    pcs_ptr->tf_enable_hme_level2_flag = 0;
+    scs_ptr->seq_header.enable_intra_edge_filter = 0;
+    scs_ptr->seq_header.pic_based_rate_est = 0;
+    scs_ptr->seq_header.enable_restoration = 0;
+    scs_ptr->seq_header.enable_cdef = 0;
+
+    scs_ptr->seq_header.enable_warped_motion = 1;//anaghdin to fix
+
+    return return_error;
+}
+
+#endif
 /******************************************************
 * Derive Pre-Analysis settings for OQ
 Input   : encoder mode and tune
@@ -1256,11 +1287,13 @@ void *resource_coordination_kernel(void *input_ptr) {
             } else
                 pcs_ptr->enc_mode = (EbEncMode)scs_ptr->static_config.enc_mode;
             //  If the mode of the second pass is not set from CLI, it is set to enc_mode
+#if !TWOPASS_CLEANUP
             pcs_ptr->snd_pass_enc_mode =
                 (scs_ptr->use_output_stat_file &&
                  scs_ptr->static_config.snd_pass_enc_mode != MAX_ENC_PRESET + 1)
                     ? (EbEncMode)scs_ptr->static_config.snd_pass_enc_mode
                     : pcs_ptr->enc_mode;
+#endif
 
             // Set the SCD Mode
             scs_ptr->scd_mode =
@@ -1270,7 +1303,14 @@ void *resource_coordination_kernel(void *input_ptr) {
             scs_ptr->block_mean_calc_prec = BLOCK_MEAN_PREC_SUB;
 
             // Pre-Analysis Signal(s) derivation
+#if FIRST_PASS_SETUP
+            if(scs_ptr->use_output_stat_file)
+                first_pass_signal_derivation_pre_analysis(scs_ptr, pcs_ptr);
+            else
+                signal_derivation_pre_analysis_oq(scs_ptr, pcs_ptr);
+#else
             signal_derivation_pre_analysis_oq(scs_ptr, pcs_ptr);
+#endif
             pcs_ptr->filtered_sse    = 0;
             pcs_ptr->filtered_sse_uv = 0;
             // Rate Control

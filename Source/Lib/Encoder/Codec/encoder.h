@@ -33,7 +33,7 @@ extern "C" {
 // Number of frames required to test for scene cut detection
 #define SCENE_CUT_KEY_TEST_INTERVAL 16
 
-#define FRAME_TYPE int 
+#define FRAME_TYPE int
 
 enum {
   DISABLE_SCENECUT,        // For LAP, lag_in_frames < 19

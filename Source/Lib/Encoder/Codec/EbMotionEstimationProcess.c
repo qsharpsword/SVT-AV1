@@ -848,8 +848,12 @@ EbErrorType signal_derivation_me_kernel_oq(
     MotionEstimationContext_t   *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 #if REMOVE_MR_MACRO
+#if TWOPASS_CLEANUP
+    EbEncMode enc_mode = pcs_ptr->enc_mode;
+#else
     EbEncMode enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#endif
 #else
     uint8_t  enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;

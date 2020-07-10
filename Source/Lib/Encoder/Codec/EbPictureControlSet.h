@@ -716,7 +716,9 @@ typedef struct PictureParentControlSet {
 
     // MD
     EbEncMode         enc_mode;
+#if !TWOPASS_CLEANUP
     EbEncMode         snd_pass_enc_mode;
+#endif
     EB_SB_DEPTH_MODE *sb_depth_mode_array;
 
     // Multi-modes signal(s)
@@ -890,10 +892,12 @@ typedef struct PictureParentControlSet {
 #else
     uint8_t           pic_obmc_mode;
 #endif
+#if !TWOPASS_CLEANUP
     StatStruct *      stat_struct_first_pass_ptr; // pointer to stat_struct in the first pass
     struct StatStruct stat_struct; // stat_struct used in the second pass
     uint64_t          referenced_area_avg; // average referenced area per frame
     uint8_t           referenced_area_has_non_zero;
+#endif
     uint8_t gm_level;
     uint8_t tx_size_early_exit;
 

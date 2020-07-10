@@ -300,9 +300,11 @@ static void set_output_stat_file(const char *value, EbConfig *cfg) {
     if (cfg->output_stat_file) { fclose(cfg->output_stat_file); }
     FOPEN(cfg->output_stat_file, value, "wb");
 };
+#if !TWOPASS_CLEANUP
 static void set_snd_pass_enc_mode(const char *value, EbConfig *cfg) {
     cfg->snd_pass_enc_mode = (uint8_t)strtoul(value, NULL, 0);
 };
+#endif
 static void set_cfg_stat_file(const char *value, EbConfig *cfg) {
     if (cfg->stat_file) { fclose(cfg->stat_file); }
     FOPEN(cfg->stat_file, value, "wb");
@@ -895,10 +897,12 @@ ConfigEntry config_entry_2p[] = {
      INPUT_STAT_FILE_TOKEN,
      "Input the first pass output to the second pass",
      set_input_stat_file},
+#if !TWOPASS_CLEANUP
     {SINGLE_INPUT,
      ENCMODE2P_TOKEN,
      "Use Hme/Me settings of the second pass'encoder mode in the first pass",
      set_snd_pass_enc_mode},
+#endif
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
 ConfigEntry config_entry_intra_refresh[] = {
@@ -1288,7 +1292,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, NUMBER_OF_PICTURES_TOKEN, "FrameToBeEncoded", set_cfg_frames_to_be_encoded},
     {SINGLE_INPUT, BUFFERED_INPUT_TOKEN, "BufferedInput", set_buffered_input},
     {SINGLE_INPUT, ENCMODE_TOKEN, "EncoderMode", set_enc_mode},
+#if !TWOPASS_CLEANUP
     {SINGLE_INPUT, ENCMODE2P_TOKEN, "EncoderMode2p", set_snd_pass_enc_mode},
+#endif
     {SINGLE_INPUT, INTRA_PERIOD_TOKEN, "IntraPeriod", set_cfg_intra_period},
     {SINGLE_INPUT, INTRA_REFRESH_TYPE_TOKEN, "IntraRefreshType", set_cfg_intra_refresh_type},
     {SINGLE_INPUT, FRAME_RATE_TOKEN, "FrameRate", set_frame_rate},
@@ -1623,7 +1629,9 @@ void eb_config_ctor(EbConfig *config_ptr) {
 
     config_ptr->enable_adaptive_quantization              = 2;
     config_ptr->enc_mode                                  = MAX_ENC_PRESET;
+#if !TWOPASS_CLEANUP
     config_ptr->snd_pass_enc_mode                         = MAX_ENC_PRESET + 1;
+#endif
     config_ptr->intra_period                              = -2;
     config_ptr->intra_refresh_type                        = 1;
     config_ptr->hierarchical_levels                       = 4;
