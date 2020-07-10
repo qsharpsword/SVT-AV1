@@ -23,6 +23,25 @@ extern EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlS
                                     uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
                                     ModeDecisionContext *context_ptr);
 
+extern EbErrorType PD0_I_SLICE(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+    uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+    ModeDecisionContext *context_ptr);
+
+extern EbErrorType PD2_I_SLICE(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+    uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+    ModeDecisionContext *context_ptr);
+
+extern EbErrorType PD0_B_SLICE(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+    uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+    ModeDecisionContext *context_ptr);
+
+extern EbErrorType PD2_B_SLICE(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
+    uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
+    ModeDecisionContext *context_ptr);
 uint8_t get_skip_tx_search_flag(int32_t sq_size, uint64_t ref_fast_cost, uint64_t cu_cost,
                                 uint64_t weight);
 

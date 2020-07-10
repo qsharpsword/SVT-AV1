@@ -11042,7 +11042,8 @@ void *enc_dec_kernel(void *input_ptr) {
 
                         // PD0 MD Tool(s) : Best ME candidate only as INTER candidate(s), DC only as INTRA candidate(s), Chroma blind, Spatial SSE,
                         // no MVP table generation, no fast rate @ full cost derivation, Md-Stage 0 and Md-Stage 2 using count=1 (i.e. only best md-stage-0 candidate)
-                        mode_decision_sb(scs_ptr,
+                        if (pcs_ptr->slice_type == I_SLICE)
+                        PD0_I_SLICE(scs_ptr,
                                          pcs_ptr,
                                          mdc_ptr,
                                          sb_ptr,
@@ -11050,6 +11051,15 @@ void *enc_dec_kernel(void *input_ptr) {
                                          sb_origin_y,
                                          sb_index,
                                          context_ptr->md_context);
+                        else
+                            PD0_B_SLICE(scs_ptr,
+                                pcs_ptr,
+                                mdc_ptr,
+                                sb_ptr,
+                                sb_origin_x,
+                                sb_origin_y,
+                                sb_index,
+                                context_ptr->md_context);
 #if SB_CLASSIFIER
 #if ADAPTIVE_DEPTH_CR
                         if (1) {
@@ -11168,8 +11178,8 @@ void *enc_dec_kernel(void *input_ptr) {
                     // Output: md_blk_arr_nsq reduced set of block(s)
 
                     // PD2 MD Tool(s): default MD Tool(s)
-
-                    mode_decision_sb(scs_ptr,
+                    if (pcs_ptr->slice_type == I_SLICE)
+                    PD2_I_SLICE(scs_ptr,
                                      pcs_ptr,
                                      mdc_ptr,
                                      sb_ptr,
@@ -11177,6 +11187,16 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
+                    else
+                        PD2_B_SLICE(scs_ptr,
+                            pcs_ptr,
+                            mdc_ptr,
+                            sb_ptr,
+                            sb_origin_x,
+                            sb_origin_y,
+                            sb_index,
+                            context_ptr->md_context);
+
 #if ADAPTIVE_NSQ_CR
                     generate_statistics_nsq(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 #endif
