@@ -1206,9 +1206,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_2;
+#if !DEPTH_PART_CLEAN_UP
     // If ADP then set multi_pass_pd_level to INVALID
     if(pcs_ptr->adp_level != ADP_OFF)
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
+#endif
 #endif
 
 
