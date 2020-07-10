@@ -664,6 +664,7 @@ typedef struct PictureParentControlSet {
 #endif
 #if TWOPASS_RC
     FirstPassData firstpass_data;
+    int internal_altref_allowed;
 #if !TWOPASS_STAT_BUF
     TWO_PASS      twopass;
 #endif

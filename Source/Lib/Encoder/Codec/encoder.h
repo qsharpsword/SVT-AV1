@@ -27,7 +27,19 @@
 extern "C" {
 #endif
 
+// TODO(yunqing, any): Added suppression tag to quiet Doxygen warnings. Need to
+// adjust it while we work on documentation.
+/*!\cond */
+// Number of frames required to test for scene cut detection
+#define SCENE_CUT_KEY_TEST_INTERVAL 16
+
 #define FRAME_TYPE int 
+
+enum {
+  DISABLE_SCENECUT,        // For LAP, lag_in_frames < 19
+  ENABLE_SCENECUT_MODE_1,  // For LAP, lag_in_frames >=19 and < 33
+  ENABLE_SCENECUT_MODE_2   // For twopass and LAP - lag_in_frames >=33
+} UENUM1BYTE(SCENECUT_MODE);
 
 //struct AV1LevelParams;
 
@@ -910,6 +922,19 @@ typedef struct AV1_COMP {
    */
   uint8_t *consec_zero_mv;
 } AV1_COMP;
+
+#define MAX_GFUBOOST_FACTOR 10.0
+#define MIN_GFUBOOST_FACTOR 4.0
+
+/*!\cond */
+static INLINE int is_lossless_requested(const RateControlCfg *const rc_cfg) {
+  return rc_cfg->best_allowed_q == 0 && rc_cfg->worst_allowed_q == 0;
+}
+
+#define ALT_MIN_LAG 3
+static INLINE int is_altref_enabled(int lag_in_frames, bool enable_auto_arf) {
+  return lag_in_frames >= ALT_MIN_LAG && enable_auto_arf;
+}
 
 // Check if statistics consumption stage
 static INLINE int is_stat_consumption_stage_twopass(const AV1_COMP *const cpi) {

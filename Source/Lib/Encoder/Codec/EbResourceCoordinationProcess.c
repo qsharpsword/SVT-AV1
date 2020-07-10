@@ -740,7 +740,7 @@ static void setup_second_pass(SequenceControlSet *scs_ptr) {
     const size_t packet_sz = sizeof(FIRSTPASS_STATS);
     const int packets = (int)(encode_context_ptr->rc_twopass_stats_in.sz / packet_sz);
 
-    //if (!cpi->lap_enabled)
+    if (!scs_ptr->lap_enabled)
     {
         /*Re-initialize to stats buffer, populated by application in the case of
             * two pass*/

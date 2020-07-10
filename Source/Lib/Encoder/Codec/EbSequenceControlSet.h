@@ -211,6 +211,7 @@ typedef struct SequenceControlSet {
     uint32_t rest_process_init_count;
     uint32_t total_process_init_count;
 #if TWOPASS_STAT_BUF
+    int32_t       lap_enabled;
     TWO_PASS      twopass;
 #endif
 } SequenceControlSet;

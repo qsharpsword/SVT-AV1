@@ -34,6 +34,24 @@
 #define RC_QPMOD_MAXQP 54
 
 #if TWOPASS_RC
+// Threshold used to define if a KF group is static (e.g. a slide show).
+// Essentially, this means that no frame in the group has more than 1% of MBs
+// that are not marked as coded with 0,0 motion in the first pass.
+#define STATIC_KF_GROUP_THRESH 99
+#define STATIC_KF_GROUP_FLOAT_THRESH 0.99
+
+// Minimum and maximum height for the new pyramid structure.
+// (Old structure supports height = 1, but does NOT support height = 4).
+#define MIN_PYRAMID_LVL 0
+#define MAX_PYRAMID_LVL 4
+
+#define MIN_GF_INTERVAL 4
+#define MAX_GF_INTERVAL 32
+//#define FIXED_GF_INTERVAL 8  // Used in some testing modes only
+#define MAX_GF_LENGTH_LAP 16
+
+#define MAX_NUM_GF_INTERVALS 15
+
 enum {
     KF_UPDATE            = 0,
     LF_UPDATE            = 1,
@@ -146,6 +164,26 @@ typedef struct {
     int active_worst_quality;
     //int active_best_quality[MAX_ARF_LAYERS + 1];
     int base_layer_qp;
+
+    // number of determined gf group length left
+    int intervals_till_gf_calculate_due;
+    // stores gf group length intervals
+    int gf_intervals[MAX_NUM_GF_INTERVALS];
+    // the current index in gf_intervals
+    int cur_gf_index;
+
+    // gop bit budget
+    int64_t gf_group_bits;
+
+    // Total number of stats used only for kf_boost calculation.
+    int num_stats_used_for_kf_boost;
+    // Total number of stats used only for gfu_boost calculation.
+    int num_stats_used_for_gfu_boost;
+    // Total number of stats required by gfu_boost calculation.
+    int num_stats_required_for_gfu_boost;
+    int enable_scenecut_detection;
+    int use_arf_in_this_kf_group;
+    int next_is_fwd_key;
 #endif
 } RATE_CONTROL;
 
