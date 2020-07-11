@@ -133,32 +133,9 @@ extern "C" {
 #define ADOPT_SQ_ME_SEARCH_AREA    1 // Adopt a square search area for ME (all modes)
 #define MAR20_ADOPTIONS            1 // Adoptions affecting all modes
 #define MD_CONFIG_SB               1
-#if BEYOND_CS2
-#define USE_M8_IN_PD1              0
 #define MAR23_ADOPTIONS            1 // Adoptions for all modes.  Make ME/HME SR square for TF and normal
 #define CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL 1 // lossless
 #define MD_REFERENCE_MASKING       1 // ref pruning @ MD
-#define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
-#define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
-#define PASS1_FIX                  1 // Fix bugs related to pass 1
-#define QPS_UPDATE                 1 // 2 PASS QPS improvement
-#define BUG_FIX_INV_TRANSFORM      1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
-#define OVERLAY_R2R_FIX            1
-#define INCOMPLETE_SB_FIX          1 // Enable the block_is_allowed for some block sizes,//which were removed due to lack of intrinsics
-#define INTRA_COMPOUND_OPT         1  // new fast mode
-#define ME_REFACTOR_FOR_CLEANUP    1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
-#define MAR30_ADOPTIONS            1 // Adoptions in all modes; create a new M1
-#define REDUCE_COMPLEX_CLIP_CYCLES    0 // Add picture classifier
-#define BLOCK_REDUCTION_ALGORITHM_1   1 // block_based_depth_reduction (1)
-#define BLOCK_REDUCTION_ALGORITHM_2   1 // block_based_depth_reduction (2)
-#define REMOVE_SQ_WEIGHT_QP_CHECK     1
-#define SHUT_SQ_WEIGHT_COEFF_FILTER   0
-#define SHUT_SQ_WEIGHT_INTRA_FILTER   1
-#define SHUT_SQ_WEIGHT_H4_V4_FILTER   0
-#define APR02_ADOPTIONS               1 // adoptions in all modes
-#define APR08_ADOPTIONS               1 // adoptions in all modes
-
-
 #if MD_REFERENCE_MASKING
 #define NEW_MV_REF_MASKING 1
 #define UNIPRED_3x3_REF_MASKING 1
@@ -168,11 +145,31 @@ extern "C" {
 #define NEAREST_NEAR_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
+#define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
+#define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
+#define PASS1_FIX                  1 // Fix bugs related to pass 1
+#define QPS_UPDATE                 1 // 2 PASS QPS improvement
+#define BUG_FIX_INV_TRANSFORM      1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
+#define OVERLAY_R2R_FIX            1
+#define INCOMPLETE_SB_FIX          1 // Enable the block_is_allowed for some block sizes,//which were removed due to lack of intrinsics
+#define INTRA_COMPOUND_OPT         1  // new fast mode
+#define ME_REFACTOR_FOR_CLEANUP    1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
 #if ME_REFACTOR_FOR_CLEANUP
 #define REFACTOR_ME_HME           1 // Refactor the HME/ME search code
 #define ADD_HME_DECIMATION_SIGNAL 1 // Add a signal to control the number of HME levels used
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
+#define MAR30_ADOPTIONS            1 // Adoptions in all modes; create a new M1
+#define REDUCE_COMPLEX_CLIP_CYCLES    0 // Add picture classifier
+#define BLOCK_REDUCTION_ALGORITHM_1   1 // block_based_depth_reduction (1)
+#define BLOCK_REDUCTION_ALGORITHM_2   1 // block_based_depth_reduction (2)
+#define REMOVE_SQ_WEIGHT_QP_CHECK     1
+#define SHUT_SQ_WEIGHT_INTRA_FILTER   1
+#define APR02_ADOPTIONS               1 // adoptions in all modes
+#define APR08_ADOPTIONS               1 // adoptions in all modes
+#if BEYOND_CS2
+
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
