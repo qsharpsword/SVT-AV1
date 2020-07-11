@@ -6013,6 +6013,39 @@ void set_mrp_controls(PictureParentControlSet *pcs_ptr) {
     assert(mrp_ctrls->ref_list1_count_try <= pcs_ptr->ref_list1_count);
 }
 #endif
+
+#if NEW_DELAY
+void print_pd_reord_queue(EncodeContext *ctxt)
+{
+    uint32_t idx = ctxt->picture_decision_reorder_queue_head_index;
+    PictureDecisionReorderEntry   *queue_entry = ctxt->picture_decision_reorder_queue[idx];
+    SVT_LOG("Pic-Decision: ");
+    while (queue_entry->parent_pcs_wrapper_ptr != EB_NULL) {
+
+        PictureParentControlSet *pcs = (PictureParentControlSet*)queue_entry->parent_pcs_wrapper_ptr->object_ptr;
+
+        SVT_LOG("%I64u ", pcs->picture_number);
+
+        queue_entry = ctxt->picture_decision_reorder_queue[++idx];
+    }
+    SVT_LOG("\n");
+}
+
+uint32_t  get_reord_q_size(EncodeContext *ctxt)
+{
+    uint32_t size = 0;
+    uint32_t idx = ctxt->picture_decision_reorder_queue_head_index;
+    PictureDecisionReorderEntry   *queue_entry = ctxt->picture_decision_reorder_queue[idx];  
+    while (queue_entry->parent_pcs_wrapper_ptr != EB_NULL) {
+        PictureParentControlSet *pcs = (PictureParentControlSet*)queue_entry->parent_pcs_wrapper_ptr->object_ptr;     
+        queue_entry = ctxt->picture_decision_reorder_queue[++idx];
+        size++;
+    }
+    return size;
+}
+#endif
+
+
 /* Picture Decision Kernel */
 
 /***************************************************************************************************
@@ -6182,6 +6215,9 @@ void* picture_decision_kernel(void *input_ptr)
         encode_context_ptr = (EncodeContext*)scs_ptr->encode_context_ptr;
         loop_count++;
 
+        printf("PD-IN POC:%I64u \n",pcs_ptr->picture_number);
+
+
         // Input Picture Analysis Results into the Picture Decision Reordering Queue
         // P.S. Since the prior Picture Analysis processes stage is multithreaded, inputs to the Picture Decision Process
         // can arrive out-of-display-order, so a the Picture Decision Reordering Queue is used to enforce processing of
@@ -6203,6 +6239,19 @@ void* picture_decision_kernel(void *input_ptr)
 
             pcs_ptr->pic_decision_reorder_queue_idx = queue_entry_index;
         }
+
+
+
+#if  NEW_DELAY   
+        print_pd_reord_queue(encode_context_ptr);    
+        uint8_t qsize = get_reord_q_size(encode_context_ptr);
+        printf("Q size:%i \n", qsize);
+
+        if (qsize < 24)
+            goto SKIP_ALL_AND_RET;
+#endif
+
+
         // Process the head of the Picture Decision Reordering Queue (Entry N)
         // P.S. The Picture Decision Reordering Queue should be parsed in the display order to be able to construct a pred structure
         queue_entry_ptr = encode_context_ptr->picture_decision_reorder_queue[encode_context_ptr->picture_decision_reorder_queue_head_index];
@@ -6229,7 +6278,11 @@ void* picture_decision_kernel(void *input_ptr)
 
                 parent_pcs_window[0] = queue_entry_ptr->picture_number > 0 ? (PictureParentControlSet *)encode_context_ptr->picture_decision_reorder_queue[previous_entry_index]->parent_pcs_wrapper_ptr->object_ptr : NULL;
                 parent_pcs_window[1] = (PictureParentControlSet *)encode_context_ptr->picture_decision_reorder_queue[encode_context_ptr->picture_decision_reorder_queue_head_index]->parent_pcs_wrapper_ptr->object_ptr;
+#if NEW_DELAY     
+                for (window_index = 0; window_index < 0; window_index++) {
+#else
                 for (window_index = 0; window_index < scs_ptr->scd_delay; window_index++) {
+#endif
                     entry_index = QUEUE_GET_NEXT_SPOT(encode_context_ptr->picture_decision_reorder_queue_head_index, window_index + 1);
                     if (encode_context_ptr->picture_decision_reorder_queue[entry_index]->parent_pcs_wrapper_ptr == NULL) {
                         window_avail = EB_FALSE;
@@ -6343,6 +6396,14 @@ void* picture_decision_kernel(void *input_ptr)
                     (pcs_ptr->pred_structure == EB_PRED_LOW_DELAY_P) ||
                     (pcs_ptr->pred_structure == EB_PRED_LOW_DELAY_B))
                 {
+
+                    if(encode_context_ptr->pre_assignment_buffer_intra_count > 0)
+                       printf("PRE-ASSIGN INTRA   (%i pictures)  POC:%I64u \n", encode_context_ptr->pre_assignment_buffer_count, pcs_ptr->picture_number);
+                    if (encode_context_ptr->pre_assignment_buffer_count == (uint32_t)(1 << scs_ptr->static_config.hierarchical_levels))
+                        printf("PRE-ASSIGN COMPLETE   (%i pictures)  POC:%I64u \n", encode_context_ptr->pre_assignment_buffer_count, pcs_ptr->picture_number);
+                    if((encode_context_ptr->pre_assignment_buffer_eos_flag == EB_TRUE))
+                        printf("PRE-ASSIGN EOS   (%i pictures)  POC:%I64u \n", encode_context_ptr->pre_assignment_buffer_count, pcs_ptr->picture_number);
+
                     // Initialize Picture Block Params
                     context_ptr->mini_gop_start_index[0] = 0;
                     context_ptr->mini_gop_end_index[0] = encode_context_ptr->pre_assignment_buffer_count - 1;
@@ -7387,6 +7448,8 @@ void* picture_decision_kernel(void *input_ptr)
 
                             pcs_ptr->pa_me_data = (MotionEstimationData *)me_wrapper_ptr->object_ptr;
 
+                            printf("PD-OUT  POC:%I64u \n",  pcs_ptr->picture_number);
+
                             for (uint32_t segment_index = 0; segment_index < pcs_ptr->me_segments_total_count; ++segment_index) {
                                 // Get Empty Results Object
                                 eb_get_empty_object(
@@ -7451,6 +7514,9 @@ void* picture_decision_kernel(void *input_ptr)
                 break;
         }
 
+#if  NEW_DELAY        
+      SKIP_ALL_AND_RET:
+#endif
         // Release the Input Results
         eb_release_object(in_results_wrapper_ptr);
     }

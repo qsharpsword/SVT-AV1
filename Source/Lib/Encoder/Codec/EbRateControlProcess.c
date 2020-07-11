@@ -6129,7 +6129,11 @@ void *rate_control_kernel(void *input_ptr) {
 
         // Modify these for different temporal layers later
         switch (task_type) {
+#if INL_ME
+        case RC_INPUT:
+#else
         case RC_PICTURE_MANAGER_RESULT:
+#endif
 
             pcs_ptr = (PictureControlSet *)rate_control_tasks_ptr->pcs_wrapper_ptr->object_ptr;
             scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
@@ -6138,6 +6142,9 @@ void *rate_control_kernel(void *input_ptr) {
             pcs_ptr->parent_pcs_ptr->blk_lambda_tuning = EB_FALSE;
 #endif
 
+#if 1
+            printf("RC-IN  POC:%I64u  \n", pcs_ptr->picture_number);
+#endif
             if (pcs_ptr->picture_number == 0) {
                 //init rate control parameters
                 init_rc(context_ptr, pcs_ptr, scs_ptr);

@@ -206,6 +206,9 @@ typedef struct SequenceControlSet {
     uint32_t dlf_process_init_count;
     uint32_t cdef_process_init_count;
     uint32_t rest_process_init_count;
+#if INL_ME
+    uint32_t inlme_process_init_count;
+#endif
     uint32_t total_process_init_count;
 } SequenceControlSet;
 

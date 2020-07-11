@@ -103,8 +103,13 @@ EbErrorType picture_manager_context_ctor(EbThreadContext *  thread_context_ptr,
 
     context_ptr->picture_input_fifo_ptr =
         eb_system_resource_get_consumer_fifo(enc_handle_ptr->picture_demux_results_resource_ptr, 0);
+#if INL_ME
+    context_ptr->picture_manager_output_fifo_ptr = eb_system_resource_get_producer_fifo(
+        enc_handle_ptr->pic_mgr_res_srm, 0);
+#else
     context_ptr->picture_manager_output_fifo_ptr = eb_system_resource_get_producer_fifo(
         enc_handle_ptr->rate_control_tasks_resource_ptr, rate_control_index);
+#endif
     context_ptr->picture_control_set_fifo_ptr = eb_system_resource_get_producer_fifo(
         enc_handle_ptr->picture_control_set_pool_ptr_array[0], 0); //The Child PCS Pool here
 
@@ -1175,7 +1180,7 @@ void *picture_manager_kernel(void *input_ptr) {
 
                         // Update pcs_ptr->mi_stride
                         child_pcs_ptr->mi_stride = pic_width_in_sb * (scs_ptr->sb_size_pix >> MI_SIZE_LOG2);
-                        assert(child_pcs_ptr->mi_stride == entry_pcs_ptr->av1_cm->mi_stride);
+//                        assert(child_pcs_ptr->mi_stride == entry_pcs_ptr->av1_cm->mi_stride);
 
                         // copy buffer info from the downsampled picture to the input frame 16 bit buffer
                         if(entry_pcs_ptr->frame_superres_enabled && scs_ptr->static_config.encoder_bit_depth > EB_8BIT){
@@ -1532,6 +1537,27 @@ void *picture_manager_kernel(void *input_ptr) {
                                                      1);
                         }
 
+#if INL_ME
+
+#if 1
+                        printf("pic-MGR out  POC:%I64u  \n", child_pcs_ptr->picture_number);
+#endif
+                        for (uint32_t segment_index = 0; segment_index < pcs_ptr->me_segments_total_count; ++segment_index) {
+                            EbObjectWrapper               *out_results_wrapper_ptr;
+                            // Get Empty Results Object
+                            eb_get_empty_object(
+                                context_ptr->picture_manager_output_fifo_ptr,
+                                &out_results_wrapper_ptr);
+
+                            PictureManagerResults   *out_results_ptr = (PictureManagerResults*)out_results_wrapper_ptr->object_ptr;                           
+                            out_results_ptr->pcs_wrapper_ptr = child_pcs_wrapper_ptr;
+                            out_results_ptr->segment_index = segment_index;
+                            out_results_ptr->task_type = 0;
+                            // Post the Full Results Object
+                            eb_post_full_object(out_results_wrapper_ptr);
+                        }
+
+#else
                         // Get Empty Results Object
                         eb_get_empty_object(context_ptr->picture_manager_output_fifo_ptr,
                                             &output_wrapper_ptr);
@@ -1542,6 +1568,7 @@ void *picture_manager_kernel(void *input_ptr) {
 
                         // Post the Full Results Object
                         eb_post_full_object(output_wrapper_ptr);
+#endif
 
                         // Remove the Input Entry from the Input Queue
                         input_entry_ptr->input_object_ptr = (EbObjectWrapper *)EB_NULL;

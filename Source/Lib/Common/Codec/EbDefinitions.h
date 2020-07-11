@@ -608,6 +608,10 @@ extern "C" {
 
 #if SVT_02_TEMP
 
+#define INL_ME  0 //In-Loop ME 
+
+#define NEW_DELAY  0
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

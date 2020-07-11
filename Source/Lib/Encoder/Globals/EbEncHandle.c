@@ -608,7 +608,9 @@ EbErrorType load_default_buffer_configuration_settings(
     //Future frames window in Scene Change Detection (SCD) / TemporalFiltering
     scs_ptr->scd_delay =
         scs_ptr->static_config.enable_altrefs || scs_ptr->static_config.scene_change_detection ? SCD_LAD : 0;
-
+#if 0//NEW_DELAY
+    scs_ptr->scd_delay = 0;
+#endif
     // bistream buffer will be allocated at run time. app will free the buffer once written to file.
     scs_ptr->output_stream_buffer_fifo_init_count = PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH;
 
@@ -742,6 +744,9 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->total_process_init_count += (scs_ptr->picture_analysis_process_init_count            = MAX(MIN(15, core_count >> 1), core_count / 6));
         scs_ptr->total_process_init_count += (scs_ptr->motion_estimation_process_init_count =  MAX(MIN(20, core_count >> 1), core_count / 3));//1);//
         scs_ptr->total_process_init_count += (scs_ptr->source_based_operations_process_init_count     = MAX(MIN(3, core_count >> 1), core_count / 12));
+#if INL_ME
+        scs_ptr->total_process_init_count += (scs_ptr->inlme_process_init_count = 1); 
+#endif
         scs_ptr->total_process_init_count += (scs_ptr->mode_decision_configuration_process_init_count = MAX(MIN(3, core_count >> 1), core_count / 12));
         scs_ptr->total_process_init_count += (scs_ptr->enc_dec_process_init_count                     = MAX(MIN(40, core_count >> 1), core_count));
         scs_ptr->total_process_init_count += (scs_ptr->entropy_coding_process_init_count              = MAX(MIN(3, core_count >> 1), core_count / 12));
@@ -759,6 +764,9 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->total_process_init_count += (scs_ptr->motion_estimation_process_init_count           = 1);
         scs_ptr->total_process_init_count += (scs_ptr->source_based_operations_process_init_count     = 1);
         scs_ptr->total_process_init_count += (scs_ptr->mode_decision_configuration_process_init_count = 1);
+#if INL_ME
+        scs_ptr->total_process_init_count += (scs_ptr->inlme_process_init_count                       = 1);
+#endif
         scs_ptr->total_process_init_count += (scs_ptr->enc_dec_process_init_count                     = 1);
         scs_ptr->total_process_init_count += (scs_ptr->entropy_coding_process_init_count              = 1);
         scs_ptr->total_process_init_count += (scs_ptr->dlf_process_init_count                         = 1);
@@ -782,7 +790,11 @@ EbErrorType load_default_buffer_configuration_settings(
 }
  // Rate Control
 static RateControlPorts rate_control_ports[] = {
+#if INL_ME
+    {RATE_CONTROL_INPUT_PORT_INLME,       0},
+#else
     {RATE_CONTROL_INPUT_PORT_PICTURE_MANAGER,       0},
+#endif
     {RATE_CONTROL_INPUT_PORT_PACKETIZATION,         0},
     {RATE_CONTROL_INPUT_PORT_ENTROPY_CODING,        0},
     {RATE_CONTROL_INPUT_PORT_INVALID,               0}
@@ -1269,7 +1281,11 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
 
     // Rate Control
+#if INL_ME
+    rate_control_ports[0].count = enc_handle_ptr->scs_instance_array[0]->scs_ptr->inlme_process_init_count;
+#else
     rate_control_ports[0].count = EB_PictureManagerProcessInitCount;
+#endif
     rate_control_ports[1].count = EB_PacketizationProcessInitCount;
     rate_control_ports[2].count = enc_handle_ptr->scs_instance_array[0]->scs_ptr->entropy_coding_process_init_count;
     rate_control_ports[3].count = 0;
@@ -1539,6 +1555,23 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
 
     }
 
+#if INL_ME
+    // Picture Mgr Results
+    {
+        PictureManagerResultInitData picture_manager_result_init_data;
+        EB_NEW(
+            enc_handle_ptr->pic_mgr_res_srm,
+            eb_system_resource_ctor,
+            300,//enc_handle_ptr->scs_instance_array[0]->scs_ptr->picture_demux_fifo_init_count,
+            1, // One Producer = PicMgr
+            enc_handle_ptr->scs_instance_array[0]->scs_ptr->inlme_process_init_count,
+            picture_manager_result_creator,
+            &picture_manager_result_init_data,
+            NULL);
+
+    }
+#endif
+
     // Rate Control Tasks
     {
         RateControlTasksInitData rate_control_tasks_init_data;
@@ -1738,11 +1771,34 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     }
 
     // Picture Manager Context
+#if INL_ME
+    EB_NEW(
+        enc_handle_ptr->picture_manager_context_ptr,
+        picture_manager_context_ctor,
+        enc_handle_ptr,
+        0);
+#else
     EB_NEW(
         enc_handle_ptr->picture_manager_context_ptr,
         picture_manager_context_ctor,
         enc_handle_ptr,
         rate_control_port_lookup(RATE_CONTROL_INPUT_PORT_PICTURE_MANAGER, 0));
+#endif
+
+
+#if INL_ME
+    // In-Loop ME Context
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->inlme_context_ptr_array, enc_handle_ptr->scs_instance_array[0]->scs_ptr->inlme_process_init_count);
+
+    for (process_index = 0; process_index < enc_handle_ptr->scs_instance_array[0]->scs_ptr->inlme_process_init_count; ++process_index) {
+        EB_NEW(
+            enc_handle_ptr->inlme_context_ptr_array[process_index],
+            ime_context_ctor,
+            enc_handle_ptr,
+            process_index);
+    }
+#endif
+
 
     // Rate Control Context
     EB_NEW(
@@ -1875,6 +1931,12 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     // Picture Manager
     EB_CREATE_THREAD(enc_handle_ptr->picture_manager_thread_handle, picture_manager_kernel, enc_handle_ptr->picture_manager_context_ptr);
 
+#if INL_ME
+    // Motion Estimation
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->ime_thread_handle_array, control_set_ptr->inlme_process_init_count,
+        inloop_me_kernel,
+        enc_handle_ptr->inlme_context_ptr_array);
+#endif
     // Rate Control
     EB_CREATE_THREAD(enc_handle_ptr->rate_control_thread_handle, rate_control_kernel, enc_handle_ptr->rate_control_context_ptr);
 
