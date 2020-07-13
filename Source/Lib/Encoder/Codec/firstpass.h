@@ -20,6 +20,7 @@
 #include "EbRateControlProcess.h"
 #include "EbPictureControlSet.h"
 
+#if TWOPASS_RC
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -359,4 +360,5 @@ void av1_accumulate_stats(FIRSTPASS_STATS *section,
 }  // extern "C"
 #endif
 
+#endif  // TWOPASS_RC
 #endif  // AOM_AV1_ENCODER_FIRSTPASS_H_

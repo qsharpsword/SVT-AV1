@@ -19,6 +19,7 @@
 #include "EbSequenceControlSet.h"
 #include "EbEntropyCoding.h"
 
+#if TWOPASS_RC
 #if 0
 #include "config/aom_config.h"
 #include "config/aom_scale_rtcd.h"
@@ -40,6 +41,8 @@
 #include "av1/encoder/use_flat_gop_model_params.h"
 #include "av1/encoder/encode_strategy.h"
 #endif
+
+#define INT_MAX 0x7fffffff
 
 #define DEFAULT_KF_BOOST 2300
 #define DEFAULT_GF_BOOST 2000
@@ -548,13 +551,12 @@ static double calc_frame_boost(const RATE_CONTROL *rc,
   return AOMMIN(frame_boost, max_boost * boost_q_correction);
 }
 
-#if 0
 static double calc_kf_frame_boost(const RATE_CONTROL *rc,
                                   const FRAME_INFO *frame_info,
                                   const FIRSTPASS_STATS *this_frame,
                                   double *sr_accumulator, double max_boost) {
   double frame_boost;
-  const double lq = av1_convert_qindex_to_q(rc->avg_frame_qindex[INTER_FRAME],
+  const double lq = eb_av1_convert_qindex_to_q(rc->avg_frame_qindex[INTER_FRAME],
                                             frame_info->bit_depth);
   const double boost_q_correction = AOMMIN((0.50 + (lq * 0.015)), 2.00);
   const double active_area = calculate_active_area(frame_info, this_frame);
@@ -583,7 +585,6 @@ static double calc_kf_frame_boost(const RATE_CONTROL *rc,
 
   return AOMMIN(frame_boost, max_boost * boost_q_correction);
 }
-#endif
 
 static int get_projected_gfu_boost(const RATE_CONTROL *rc, int gfu_boost,
                                    int frames_to_project,
@@ -760,7 +761,6 @@ static int64_t calculate_total_gf_group_bits(PictureControlSet *pcs_ptr,
   return total_group_bits;
 }
 
-#if 0
 // Calculate the number of bits to assign to boosted frames in a group.
 static int calculate_boost_bits(int frame_count, int boost,
                                 int64_t total_group_bits) {
@@ -785,6 +785,7 @@ static int calculate_boost_bits(int frame_count, int boost,
                 0);
 }
 
+#if 0
 // Calculate the boost factor based on the number of bits assigned, i.e. the
 // inverse of calculate_boost_bits().
 static int calculate_boost_factor(int frame_count, int bits,
@@ -2074,26 +2075,33 @@ static int detect_app_forced_key(PictureControlSet *pcs_ptr) {
   return num_frames_to_app_forced_key;
 }
 
-#if 0
-static int get_projected_kf_boost(AV1_COMP *cpi) {
+static AOM_INLINE double av1_get_kf_boost_projection_factor(int frame_count) {
+  double factor = sqrt((double)frame_count);
+  factor = AOMMIN(factor, 10.0);
+  factor = AOMMAX(factor, 4.0);
+  factor = (75.0 + 14.0 * factor);
+  return factor;
+}
+
+//static int get_projected_kf_boost(AV1_COMP *cpi)
+static int get_projected_kf_boost(RATE_CONTROL *const rc) {
   /*
    * If num_stats_used_for_kf_boost >= frames_to_key, then
    * all stats needed for prior boost calculation are available.
    * Hence projecting the prior boost is not needed in this cases.
    */
-  if (cpi->rc.num_stats_used_for_kf_boost >= cpi->rc.frames_to_key)
-    return cpi->rc.kf_boost;
+  if (rc->num_stats_used_for_kf_boost >= rc->frames_to_key)
+    return rc->kf_boost;
 
   // Get the current tpl factor (number of frames = frames_to_key).
-  double tpl_factor = av1_get_kf_boost_projection_factor(cpi->rc.frames_to_key);
+  double tpl_factor = av1_get_kf_boost_projection_factor(rc->frames_to_key);
   // Get the tpl factor when number of frames = num_stats_used_for_kf_boost.
   double tpl_factor_num_stats =
-      av1_get_kf_boost_projection_factor(cpi->rc.num_stats_used_for_kf_boost);
+      av1_get_kf_boost_projection_factor(rc->num_stats_used_for_kf_boost);
   int projected_kf_boost =
-      (int)rint((tpl_factor * cpi->rc.kf_boost) / tpl_factor_num_stats);
+      (int)rint((tpl_factor * rc->kf_boost) / tpl_factor_num_stats);
   return projected_kf_boost;
 }
-#endif
 
 //static int define_kf_interval(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame,
 static int define_kf_interval(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_frame,
@@ -2235,13 +2243,20 @@ static double get_kf_group_avg_error(TWO_PASS *twopass,
 
   return (kf_group_avg_error);
 }
+#endif
 
-static int64_t get_kf_group_bits(AV1_COMP *cpi, double kf_group_err,
+//static int64_t get_kf_group_bits(AV1_COMP *cpi, double kf_group_err,
+static int64_t get_kf_group_bits(PictureControlSet *pcs_ptr, double kf_group_err,
                                  double kf_group_avg_error) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
   int64_t kf_group_bits;
-  if (cpi->lap_enabled) {
+#if 0
+  if (scs_ptr->lap_enabled) {
     kf_group_bits = (int64_t)rc->frames_to_key * rc->avg_frame_bandwidth;
     if (cpi->oxcf.vbr_corpus_complexity_lap) {
       const int num_mbs = (cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
@@ -2255,7 +2270,9 @@ static int64_t get_kf_group_bits(AV1_COMP *cpi, double kf_group_err,
       kf_group_bits = (int64_t)(
           kf_group_bits * (kf_group_avg_error / vbr_corpus_complexity_lap));
     }
-  } else {
+  } else
+#endif
+  {
     kf_group_bits = (int64_t)(twopass->bits_left *
                               (kf_group_err / twopass->modified_error_left));
   }
@@ -2263,9 +2280,14 @@ static int64_t get_kf_group_bits(AV1_COMP *cpi, double kf_group_err,
   return kf_group_bits;
 }
 
-static int calc_avg_stats(AV1_COMP *cpi, FIRSTPASS_STATS *avg_frame_stat) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
+//static int calc_avg_stats(AV1_COMP *cpi, FIRSTPASS_STATS *avg_frame_stat)
+static int calc_avg_stats(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *avg_frame_stat) {
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
   FIRSTPASS_STATS cur_frame;
   av1_zero(cur_frame);
   int num_frames = 0;
@@ -2310,24 +2332,31 @@ static int calc_avg_stats(AV1_COMP *cpi, FIRSTPASS_STATS *avg_frame_stat) {
   return num_frames;
 }
 
-static double get_kf_boost_score(AV1_COMP *cpi, double kf_raw_err,
+//static double get_kf_boost_score(AV1_COMP *cpi, double kf_raw_err,
+static double get_kf_boost_score(PictureControlSet *pcs_ptr, double kf_raw_err,
                                  double *zero_motion_accumulator,
                                  double *sr_accumulator, int use_avg_stat) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
-  FRAME_INFO *const frame_info = &cpi->frame_info;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  //FRAME_INFO *const frame_info = &cpi->frame_info;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
   FIRSTPASS_STATS frame_stat;
   av1_zero(frame_stat);
   int i = 0, num_stat_used = 0;
   double boost_score = 0.0;
   const double kf_max_boost =
-      cpi->oxcf.rc_cfg.mode == AOM_Q
+      rc_cfg->mode == AOM_Q
           ? AOMMIN(AOMMAX(rc->frames_to_key * 2.0, KF_MIN_FRAME_BOOST),
                    KF_MAX_FRAME_BOOST)
           : KF_MAX_FRAME_BOOST;
 
   // Calculate the average using available number of stats.
-  if (use_avg_stat) num_stat_used = calc_avg_stats(cpi, &frame_stat);
+  if (use_avg_stat) num_stat_used = calc_avg_stats(pcs_ptr, &frame_stat);
 
   for (i = num_stat_used; i < (rc->frames_to_key - 1); ++i) {
     if (!use_avg_stat && EOF == input_stats(twopass, &frame_stat)) break;
@@ -2360,15 +2389,26 @@ static double get_kf_boost_score(AV1_COMP *cpi, double kf_raw_err,
   return boost_score;
 }
 
-static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  TWO_PASS *const twopass = &cpi->twopass;
-  GF_GROUP *const gf_group = &cpi->gf_group;
-  FRAME_INFO *const frame_info = &cpi->frame_info;
-  AV1_COMMON *const cm = &cpi->common;
-  CurrentFrame *const current_frame = &cm->current_frame;
-  const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-  const KeyFrameCfg *const kf_cfg = &oxcf->kf_cfg;
+//static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame)
+static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_frame) {
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //TWO_PASS *const twopass = &cpi->twopass;
+  //GF_GROUP *const gf_group = &cpi->gf_group;
+  //FRAME_INFO *const frame_info = &cpi->frame_info;
+  //AV1_COMMON *const cm = &cpi->common;
+  //CurrentFrame *const current_frame = &cm->current_frame;
+  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  //const KeyFrameCfg *const kf_cfg = &oxcf->kf_cfg;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+  CurrentFrame *const current_frame = &pcs_ptr->parent_pcs_ptr->av1_cm->current_frame;
+  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  const KeyFrameCfg *const kf_cfg = &encode_context_ptr->kf_cfg;
+  const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
+  const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
   const FIRSTPASS_STATS first_frame = *this_frame;
   FIRSTPASS_STATS next_frame;
   av1_zero(next_frame);
@@ -2376,7 +2416,7 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   rc->frames_since_key = 0;
   // Use arfs if possible.
   rc->use_arf_in_this_kf_group = is_altref_enabled(
-      oxcf->gf_cfg.lag_in_frames, oxcf->gf_cfg.enable_auto_arf);
+      gf_cfg->lag_in_frames, gf_cfg->enable_auto_arf);
 
   // Reset the GF group data structures.
   av1_zero(*gf_group);
@@ -2390,6 +2430,7 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
 
   rc->frames_to_key = 1;
 
+#if 0
   if (has_no_stats_stage(cpi)) {
     int num_frames_to_app_forced_key = detect_app_forced_key(cpi);
     rc->this_key_frame_forced =
@@ -2404,6 +2445,7 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
     gf_group->update_type[0] = KF_UPDATE;
     return;
   }
+#endif
   int i;
   const FIRSTPASS_STATS *const start_position = twopass->stats_in;
   int kf_bits = 0;
@@ -2422,17 +2464,19 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   twopass->kf_group_error_left = 0;  // Group modified error score.
 
   kf_raw_err = this_frame->intra_error;
-  kf_mod_err = calculate_modified_err(frame_info, twopass, oxcf, this_frame);
+  kf_mod_err = calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), this_frame);
 
   frames_to_key =
-      define_kf_interval(cpi, this_frame, &kf_group_err, kf_cfg->key_freq_max);
+      define_kf_interval(pcs_ptr, this_frame, &kf_group_err, kf_cfg->key_freq_max);
 
   if (frames_to_key != -1)
     rc->frames_to_key = AOMMIN(kf_cfg->key_freq_max, frames_to_key);
   else
     rc->frames_to_key = kf_cfg->key_freq_max;
 
-  if (cpi->lap_enabled) correct_frames_to_key(cpi);
+#if 0
+  if (scs_ptr->lap_enabled) correct_frames_to_key(cpi);
+#endif
 
   // If there is a max kf interval set by the user we must obey it.
   // We already breakout of the loop above at 2x max.
@@ -2451,12 +2495,12 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
     // Rescan to get the correct error data for the forced kf group.
     for (i = 0; i < rc->frames_to_key; ++i) {
       kf_group_err +=
-          calculate_modified_err(frame_info, twopass, oxcf, &tmp_frame);
+          calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), &tmp_frame);
       if (EOF == input_stats(twopass, &tmp_frame)) break;
     }
     rc->next_key_frame_forced = 1;
-  } else if ((twopass->stats_in == twopass->stats_buf_ctx->stats_in_end &&
-              is_stat_consumption_stage_twopass(cpi)) ||
+  } else if ((twopass->stats_in == twopass->stats_buf_ctx->stats_in_end/* &&
+              is_stat_consumption_stage_twopass(cpi)*/) ||
              rc->frames_to_key >= kf_cfg->key_freq_max) {
     rc->next_key_frame_forced = 1;
   } else {
@@ -2469,27 +2513,30 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   if (twopass->stats_in >= twopass->stats_buf_ctx->stats_in_end) {
     // Accumulate kf group error.
     kf_group_err +=
-        calculate_modified_err(frame_info, twopass, oxcf, this_frame);
+        calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), this_frame);
   }
 
   // Calculate the number of bits that should be assigned to the kf group.
   if ((twopass->bits_left > 0 && twopass->modified_error_left > 0.0) ||
-      (cpi->lap_enabled && oxcf->rc_cfg.mode != AOM_Q)) {
+      (scs_ptr->lap_enabled && rc_cfg->mode != AOM_Q)) {
     // Maximum number of bits for a single normal frame (not key frame).
-    const int max_bits = frame_max_bits(rc, oxcf);
+    const int max_bits = frame_max_bits(rc, encode_context_ptr);
 
     // Maximum number of bits allocated to the key frame group.
     int64_t max_grp_bits;
 
+#if 0
+    /* Average corpus complexity is supported only in the case of single pass VBR */
     if (oxcf->vbr_corpus_complexity_lap) {
       kf_group_avg_error = get_kf_group_avg_error(
           twopass, &first_frame, start_position, rc->frames_to_key);
     }
+#endif
 
     // Default allocation based on bits left and relative
     // complexity of the section.
     twopass->kf_group_bits =
-        get_kf_group_bits(cpi, kf_group_err, kf_group_avg_error);
+        get_kf_group_bits(pcs_ptr, kf_group_err, kf_group_avg_error);
     // Clip based on maximum per frame rate defined by the user.
     max_grp_bits = (int64_t)max_bits * (int64_t)rc->frames_to_key;
     if (twopass->kf_group_bits > max_grp_bits)
@@ -2504,7 +2551,7 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
 
   // Scan through the kf group collating various stats used to determine
   // how many bits to spend on it.
-  boost_score = get_kf_boost_score(cpi, kf_raw_err, &zero_motion_accumulator,
+  boost_score = get_kf_boost_score(pcs_ptr, kf_raw_err, &zero_motion_accumulator,
                                    &sr_accumulator, 0);
   reset_fpf_position(twopass, start_position);
   // Store the zero motion percentage
@@ -2516,13 +2563,13 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
 
   rc->kf_boost = (int)boost_score;
 
-  if (cpi->lap_enabled) {
-    if (oxcf->rc_cfg.mode == AOM_Q) {
-      rc->kf_boost = get_projected_kf_boost(cpi);
+  if (scs_ptr->lap_enabled) {
+    if (rc_cfg->mode == AOM_Q) {
+      rc->kf_boost = get_projected_kf_boost(rc);
     } else {
       // TODO(any): Explore using average frame stats for AOM_Q as well.
       boost_score = get_kf_boost_score(
-          cpi, kf_raw_err, &zero_motion_accumulator, &sr_accumulator, 1);
+          pcs_ptr, kf_raw_err, &zero_motion_accumulator, &sr_accumulator, 1);
       reset_fpf_position(twopass, start_position);
       rc->kf_boost += (int)boost_score;
     }
@@ -2547,8 +2594,11 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
                                  twopass->kf_group_bits);
   // printf("kf boost = %d kf_bits = %d kf_zeromotion_pct = %d\n", rc->kf_boost,
   //        kf_bits, twopass->kf_zeromotion_pct);
+#if 0
+  // skip it for always no operating_point_idc
   kf_bits = adjust_boost_bits_for_target_level(cpi, rc, kf_bits,
                                                twopass->kf_group_bits, 0);
+#endif
 
   twopass->kf_group_bits -= kf_bits;
 
@@ -2565,6 +2615,7 @@ static void find_next_key_frame(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame) {
   twopass->modified_error_left -= kf_group_err;
 }
 
+#if 0
 //static int is_skippable_frame(const AV1_COMP *cpi)
 static int is_skippable_frame(PictureControlSet *pcs_ptr) {
   SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
@@ -2747,10 +2798,9 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
       //oxcf->pass = 2;
       //oxcf->rc_cfg.mode == AOM_VBR;
       //oxcf->rc_cfg.cq_level = scs_ptr->static_config.qp;
-      //oxcf->gf_cfg.lag_in_frames = 25; //lad?
-      //oxcf->kf_cfg.sframe_dist   = 0; //?
-      //oxcf->kf_cfg.sframe_mode   = 0; //?
-      //oxcf->arnr_max_frames      = 0; //?
+      //encode_context_ptr->gf_cfg.lag_in_frames = 25; //lad?
+      //encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
+      //encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
   }
 
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
@@ -2760,12 +2810,12 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
     assert(gf_group->index < gf_group->size);
     const int update_type = gf_group->update_type[gf_group->index];
 
-    setup_target_rate(cpi);
+    setup_target_rate(pcs_ptr);
 
     // If this is an arf frame then we dont want to read the stats file or
     // advance the input pointer as we already have what we need.
     if (update_type == ARF_UPDATE || update_type == INTNL_ARF_UPDATE) {
-      if (cpi->no_show_kf) {
+      if (0/*cpi->no_show_kf*/) {
         assert(update_type == ARF_UPDATE);
         frame_params->frame_type = KEY_FRAME;
       } else {
@@ -2802,10 +2852,8 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
     FIRSTPASS_STATS this_frame_copy;
     this_frame_copy = this_frame;
     frame_params->frame_type = KEY_FRAME;
-#if 0 //kelvinTODO
     // Define next KF group and assign bits to it.
-    find_next_key_frame(cpi, &this_frame);
-#endif
+    find_next_key_frame(pcs_ptr, &this_frame);
     this_frame = this_frame_copy;
   } else {
     frame_params->frame_type = INTER_FRAME;
@@ -3175,3 +3223,5 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
   }
 }
 #endif
+
+#endif //TWOPASS_RC

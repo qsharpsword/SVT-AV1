@@ -15,6 +15,7 @@
 //#include "av1/encoder/level.h"
 #include "level.h"
 
+#if TWOPASS_RC
 #if 0
 static INLINE int is_valid_seq_level_idx(AV1_LEVEL seq_level_idx) {
   return seq_level_idx == SEQ_LEVEL_MAX ||
@@ -1199,3 +1200,4 @@ aom_codec_err_t av1_get_seq_level_idx(const SequenceHeader *seq_params,
   return AOM_CODEC_OK;
 }
 #endif
+#endif  // TWOPASS_RC

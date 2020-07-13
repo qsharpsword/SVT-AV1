@@ -19,6 +19,7 @@
 #include "EbSequenceControlSet.h"
 #include "EbPictureControlSet.h"
 #include "firstpass.h"
+#if TWOPASS_RC
 #if 0
 #include "config/aom_scale_rtcd.h"
 
@@ -1238,3 +1239,4 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
   ++current_frame->frame_number;
 #endif
 }
+#endif  // TWOPASS_RC

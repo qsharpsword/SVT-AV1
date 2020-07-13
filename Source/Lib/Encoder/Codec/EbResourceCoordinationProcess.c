@@ -780,8 +780,9 @@ static void setup_second_pass(SequenceControlSet *scs_ptr) {
         scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
         scs_ptr->twopass.stats_buf_ctx->stats_in_end =
             &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
-
+#if TWOPASS_RC
         av1_init_second_pass(scs_ptr);
+#endif
     }
 
 }
@@ -793,6 +794,7 @@ static void setup_second_pass(SequenceControlSet *scs_ptr) {
 static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceControlSet *scs_ptr) {
     eb_block_on_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 
+#if !TWOPASS_CLEANUP
     int32_t fseek_return_value = fseek(scs_ptr->static_config.input_stat_file,
                                        (long)pcs_ptr->picture_number * sizeof(StatStruct),
                                        SEEK_SET);
@@ -823,6 +825,7 @@ static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceContro
             referenced_area_avg * (scs_ptr->intra_period_length + 1) / TWO_PASS_IR_THRSHLD;
     pcs_ptr->referenced_area_avg          = referenced_area_avg;
     pcs_ptr->referenced_area_has_non_zero = referenced_area_has_non_zero ? 1 : 0;
+#endif
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
 #endif
@@ -1355,7 +1358,9 @@ void *resource_coordination_kernel(void *input_ptr) {
             if (scs_ptr->use_input_stat_file && !end_of_sequence_flag)
                 read_stat_from_file(pcs_ptr, scs_ptr);
             else {
+#if !TWOPASS_CLEANUP
                 memset(&pcs_ptr->stat_struct, 0, sizeof(StatStruct));
+#endif
             }
 #endif
             scs_ptr->encode_context_ptr->initial_picture = EB_FALSE;

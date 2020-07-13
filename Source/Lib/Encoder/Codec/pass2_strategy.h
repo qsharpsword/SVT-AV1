@@ -16,6 +16,7 @@
 #include "encoder.h"
 #include "Av1Common.h"
 
+#if TWOPASS_RC
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -75,4 +76,5 @@ void av1_gop_bit_allocation(const AV1_COMP *cpi, RATE_CONTROL *const rc,
 }  // extern "C"
 #endif
 
+#endif  // TWOPASS_RC
 #endif  // AOM_AV1_ENCODER_PASS2_STRATEGY_H_

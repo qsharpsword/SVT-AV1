@@ -613,12 +613,6 @@ extern "C" {
 #define FIRST_PASS_SETUP 1
 #define TWOPASS_CLEANUP 1
 #define MAX_LAG_BUFFERS 35
-// Function return size of frame stats buffer
-static int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
-    //static INLINE int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
-    /* if lookahead is enabled return num_lap_buffers else num_lag_buffers */
-    return (num_lap_buffer > 0 ? num_lap_buffer + 1 : num_lag_buffer);
-}
 #define LOW_DELAY_TUNE 1
 #define FORCED_BLK_SIZE 16
 #endif
@@ -1959,19 +1953,6 @@ typedef enum AomCodecErr
 } AomCodecErr;
 
 //**********************************************************************************************************************//
-
-#if TWOPASS_RC
-//**********************************************************************************************************************//
-// aom_codec.h
-/*!\brief Rate control mode */
-enum aom_rc_mode {
-  AOM_VBR, /**< Variable Bit Rate (VBR) mode */
-  AOM_CBR, /**< Constant Bit Rate (CBR) mode */
-  AOM_CQ,  /**< Constrained Quality (CQ)  mode */
-  AOM_Q,   /**< Constant Quality (Q) mode */
-};
-//**********************************************************************************************************************//
-#endif
 
 // Common_data.h
 static const int32_t intra_mode_context[INTRA_MODES] = {

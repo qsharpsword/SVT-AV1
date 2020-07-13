@@ -15,6 +15,7 @@
 //#include "av1/common/enums.h"
 #include "EbDefinitions.h"
 
+#if TWOPASS_RC
 struct AV1_COMP;
 
 enum {
@@ -245,4 +246,5 @@ void av1_get_max_tiles_for_level(AV1_LEVEL level_index, int *const max_tiles,
 double av1_get_min_cr_for_level(AV1_LEVEL level_index, int tier,
                                 int is_still_picture);
 #endif
+#endif  // TWOPASS_RC
 #endif  // AOM_AV1_ENCODER_LEVEL_H_

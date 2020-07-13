@@ -23,6 +23,7 @@
 #include "EbRateControlProcess.h"
 #include "level.h"
 
+#if TWOPASS_RC
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -34,6 +35,17 @@ extern "C" {
 #define SCENE_CUT_KEY_TEST_INTERVAL 16
 
 #define FRAME_TYPE int
+
+//**********************************************************************************************************************//
+// aom_codec.h
+/*!\brief Rate control mode */
+enum aom_rc_mode {
+  AOM_VBR, /**< Variable Bit Rate (VBR) mode */
+  AOM_CBR, /**< Constant Bit Rate (CBR) mode */
+  AOM_CQ,  /**< Constrained Quality (CQ)  mode */
+  AOM_Q,   /**< Constant Quality (Q) mode */
+};
+//**********************************************************************************************************************//
 
 enum {
   DISABLE_SCENECUT,        // For LAP, lag_in_frames < 19
@@ -926,6 +938,12 @@ typedef struct AV1_COMP {
 #define MAX_GFUBOOST_FACTOR 10.0
 #define MIN_GFUBOOST_FACTOR 4.0
 
+// Function return size of frame stats buffer
+static INLINE int get_stats_buf_size(int num_lap_buffer, int num_lag_buffer) {
+    /* if lookahead is enabled return num_lap_buffers else num_lag_buffers */
+    return (num_lap_buffer > 0 ? num_lap_buffer + 1 : num_lag_buffer);
+}
+
 /*!\cond */
 static INLINE int is_lossless_requested(const RateControlCfg *const rc_cfg) {
   return rc_cfg->best_allowed_q == 0 && rc_cfg->worst_allowed_q == 0;
@@ -948,9 +966,9 @@ static INLINE int is_stat_consumption_stage(const AV1_COMP *const cpi) {
            cpi->lap_enabled));
 }
 
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
 
+#endif  // TWOPASS_RC
 #endif  // AOM_AV1_ENCODER_ENCODER_H_
