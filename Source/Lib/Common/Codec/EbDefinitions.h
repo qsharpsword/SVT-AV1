@@ -178,7 +178,6 @@ extern "C" {
 
 #define MAY2020        0 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22
 
-#if MAY2020
 #define FIX_RC_SB_SIZE                       1 // Force SB size to 64x64 when rate control is on
 #define ADOPT_SKIPPING_PD1                   1 // Skip PD1 for all modes; remove the PD0 thresholds
 #define ADD_MAX_HME_SIGNAL                   1 // Add a signal for MAX HME size
@@ -189,8 +188,6 @@ extern "C" {
 #define SHUT_PALETTE_BC_PD_PASS_0_1          1 // shut Palette/BlockCopy @ PD0/PD1
 #define OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL   1 // over_boundary_block_mode=1 for all presets
 #define TXT_CONTROL                          1 // Add TXT search optimizations
-#define FIX_HME_LOAD                         1 //fix to ENABLE_HME_AT_INC_SB
-
 #if TXT_CONTROL
 #define MAX_TX_WEIGHT        500
 #define SB_CLASSIFIER          1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
@@ -198,6 +195,9 @@ extern "C" {
 #define SB_CLASSIFIER_R2R_FIX 1
 #endif
 #endif
+#if MAY2020
+#define FIX_HME_LOAD                         1 //fix to ENABLE_HME_AT_INC_SB
+
 #define PRESETS_SHIFT         1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
 #define OPT_BLOCK_INDICES_GEN 1 // Optimized block indices derivation towards less overhead when looping over a subset of blocks (e.g. when enabling disallow_nsq)
 #if OPT_BLOCK_INDICES_GEN
