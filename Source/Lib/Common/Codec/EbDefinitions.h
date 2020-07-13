@@ -195,7 +195,6 @@ extern "C" {
 #define SB_CLASSIFIER_R2R_FIX 1
 #endif
 #endif
-#if MAY2020
 #define FIX_HME_LOAD                         1 //fix to ENABLE_HME_AT_INC_SB
 
 #define PRESETS_SHIFT         1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
@@ -237,6 +236,8 @@ extern "C" {
 #define M8_HME_ME      1 // Done
 #define M8_MPPD        1 // Done
 #endif
+#if MAY2020
+
 #define M8_CLEAN_UP             1 // remove useless code: energy, full loop escape
 #define ME_HME_PRUNING_CLEANUP  1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
 #define ADOPT_SC_HME_PRUNING    1 // Adopt HME-based ref pruning in SC
