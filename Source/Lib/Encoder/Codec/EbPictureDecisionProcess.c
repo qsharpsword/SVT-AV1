@@ -2489,7 +2489,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
 #endif
 #endif
-#if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
+#if  NEW_M1_CAND
 #if UNIFY_SC_NSC
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 1 :
                                             pcs_ptr->enc_mode <= ENC_M3 ? 3 : 0;

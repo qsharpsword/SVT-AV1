@@ -236,22 +236,13 @@ extern "C" {
 #define M8_HME_ME      1 // Done
 #define M8_MPPD        1 // Done
 #endif
-#if MAY2020
-
 #define M8_CLEAN_UP             1 // remove useless code: energy, full loop escape
 #define ME_HME_PRUNING_CLEANUP  1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
 #define ADOPT_SC_HME_PRUNING    1 // Adopt HME-based ref pruning in SC
 #define ENABLE_SC_DETECTOR      1 // turn on the SC detector by default; move SC settings to be set after detection
+
 #define APR22_ADOPTIONS         1 // New M0
 #define APR23_ADOPTIONS         1
-
-#define M1_COMBO_1 0
-#define M1_COMBO_2 0
-#define M1_COMBO_3 0
-#define M2_COMBO_1 0
-#define M2_COMBO_2 0
-#define M2_COMBO_3 0
-
 #define UPGRADE_M8 1 // Upgrade M8
 #define UPDATE_TXT_LEVEL  1
 #define M5_I  1  //change M5 presets to M8 for I slice--
@@ -271,29 +262,17 @@ extern "C" {
 #define PR_1286 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 #define UPGRADE_M6_M7_M8               1
-
-#define MR_I   0 //Use MR setting in M0 for I slice
-#if MR_I
-#define MR_I_TXT       1
-#define MR_I_CP        1
-#define MR_I_COEFF_RED 1
-#define MR_I_NIC       1
-#define MR_I_UV_LAST   1
-#endif
-
 #define NEW_M1_CAND               1 // applying the new M1 settings based on overnight tests
 #define APR23_ADOPTIONS_2         1 // Adoptions based on daytime tests
 #define ALLOW_NSQ_M6              1
 #define ALLOW_CFL_M8              1
 #define ALLOW_HME_L1L2_REFINEMENT 1
-
 #define M5_I_IBC   1
 #define M5_I_RDOQ  1
 #define M5_I_CDF   1
 #define M5_I_CDEF  1
 #define M5_I_SG    1
 #define M5_I_4x4   1
-
 #define FIXED_LAST_STAGE_SC   1 // Refactor last stage TH
 #define ADD_TXT_LEVEL5        1
 #define SHIFT_M3_SC_TO_M1     1
@@ -303,24 +282,13 @@ extern "C" {
 #define APR24_ADOPTIONS_M6_M7 1
 #define MRP_ADOPTIONS         1
 #define APR25_12AM_ADOPTIONS  1
-
 #define OPT_BLOCK_INDICES_GEN_4  1 // Fix block indices generation for PD_PASS OFF (lossless)
-// (M8 + non - Green OFF) versus M8
-#if 0
-#define REVERT_WHITE 1
-#define REVERT_YELLOW 1
-#define REVERT_BLUE 1
-#endif
-// (M8 + non - Green OFF + Non - yellow) versus M8
+//
+
 #if 1 // Adopt this for M8
 #define REVERT_WHITE 1
 #define REVERT_BLUE 1
 #endif
-// (M8 + non - Green OFF + Non - yellow + Non - Cyan) versus M8
-#if 0
-#define REVERT_WHITE 1
-#endif
-
 #define APR25_3AM_ADOPTIONS    1
 #define SHIFT_M6_SC_TO_M5      1
 #define APR23_4AM_M6_ADOPTIONS 1
@@ -329,15 +297,14 @@ extern "C" {
 #define APR25_1PM_ADOPTIONS    1
 #define NO_NSQ_B32             1  //disallow nsq in 32x32 and below; in 64x64 and  below
 #define NEW_M5_HME_ME          1
-
 #define NO_NSQ_ABOVE           1  //disallow nsq in 32x32 and above; in 64x64 and  above
 #define NSQ_OFF_IN_M6_M7_ME    1
 #define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4
-
-#define REMAP_MODES         0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
 #define R2R_FIX_PADDING     1
 #define QP2QINDEX           1 // switch QP to qindex for MD
+#if MAY2020
+
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

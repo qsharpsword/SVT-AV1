@@ -4240,7 +4240,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if JUNE11_ADOPTIONS
         else if (enc_mode <= ENC_M1)
 #else
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
         else if (enc_mode <= ENC_M0)
 #else
         else if (enc_mode <= ENC_M2)
@@ -4375,7 +4375,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     if (MR_MODE)
 #else
 #if MAR10_ADOPTIONS
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
                     if (enc_mode <= ENC_M0)
 #else
                     if (enc_mode <= ENC_M1)
@@ -5119,7 +5119,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
 #if PRESETS_SHIFT
-#if M1_COMBO_2 || M2_COMBO_3 || NEW_M1_CAND
+#if NEW_M1_CAND
 #if MAY12_ADOPTIONS
         else if (enc_mode <= ENC_M2 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -5631,7 +5631,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR10_ADOPTIONS
 #if MAR30_ADOPTIONS
 #if APR02_ADOPTIONS
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
                 if (enc_mode <= ENC_M0)
 #else
                 if (enc_mode <= ENC_M1)
@@ -5664,13 +5664,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
 #endif
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
 #if M1_C2_ADOPTIONS
                 100;
 #else
-#if M1_COMBO_3 || NEW_M1_CAND
+#if NEW_M1_CAND
 #if COEFF_BASED_BYPASS_NSQ && !REMOVE_SQ_WEIGHT_TOGGLING
                 (uint32_t)~0;
 #else
@@ -6097,7 +6097,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M0)
 #else
 #if PRESETS_SHIFT
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
         else if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         else if (enc_mode <= ENC_M2 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -6109,7 +6109,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 #if !MAY19_ADOPTIONS
-#if M1_COMBO_1 || NEW_M1_CAND
+#if  NEW_M1_CAND
         else if (enc_mode <= ENC_M1)
             context_ptr->inter_inter_distortion_based_reference_pruning = 3;
 #endif
