@@ -1699,6 +1699,7 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
         rc->use_arf_in_this_kf_group && (i < gf_cfg->lag_in_frames) &&
         (i >= MIN_GF_INTERVAL) && (gf_cfg->gf_max_pyr_height > MIN_PYRAMID_LVL);
 
+#if 0
     // TODO(urvang): Improve and use model for VBR, CQ etc as well.
     if (use_alt_ref && rc_cfg->mode == AOM_Q && rc_cfg->cq_level <= 200) {
       aom_clear_system_state();
@@ -1706,13 +1707,12 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
       get_features_from_gf_stats(
           &gf_stats, &first_frame_stats, &last_frame_stats, num_mbs,
           rc->constrained_gf_group, twopass->kf_zeromotion_pct, i, features);
-#if 0
       // Infer using ML model.
       float score;
       av1_nn_predict(features, &av1_use_flat_gop_nn_config, 1, &score);
       use_alt_ref = (score <= 0.0);
-#endif
     }
+#endif
   } else {
     assert(gf_cfg->gf_max_pyr_height > MIN_PYRAMID_LVL);
     use_alt_ref =
@@ -2466,6 +2466,8 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   kf_raw_err = this_frame->intra_error;
   kf_mod_err = calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), this_frame);
 
+  //kelvinhack force frames_to_key first
+#if 0
   frames_to_key =
       define_kf_interval(pcs_ptr, this_frame, &kf_group_err, kf_cfg->key_freq_max);
 
@@ -2474,8 +2476,9 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   else
     rc->frames_to_key = kf_cfg->key_freq_max;
 
-#if 0
   if (scs_ptr->lap_enabled) correct_frames_to_key(cpi);
+#else
+  rc->frames_to_key = (int)MIN((uint64_t)scs_ptr->intra_period_length + 1, scs_ptr->static_config.frames_to_be_encoded); 
 #endif
 
   // If there is a max kf interval set by the user we must obey it.
@@ -2768,10 +2771,10 @@ static void setup_target_rate(PictureControlSet *pcs_ptr) {
 }
 
 //void av1_get_second_pass_params(AV1_COMP *cpi,
-void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
-                                EncodeFrameParams *const frame_params,
-                                const EncodeFrameInput *const frame_input,
-                                unsigned int frame_flags) {
+//                                EncodeFrameParams *const frame_params,
+//                                const EncodeFrameInput *const frame_input,
+//                                unsigned int frame_flags)
+void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
   //AV1_COMP temp_cpi, *cpi = &temp_cpi;
   //RATE_CONTROL *const rc = &cpi->rc;
   //TWO_PASS *const twopass = &cpi->twopass;
@@ -2785,23 +2788,14 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr,
   CurrentFrame *const current_frame = &pcs_ptr->parent_pcs_ptr->av1_cm->current_frame;
   current_frame->frame_number = pcs_ptr->picture_number;
 
-  int is_src_frame_alt_ref, refresh_golden_frame, refresh_alt_ref_frame, is_intrl_arf_boost, rf_level;
-  is_src_frame_alt_ref  = 0;
-  refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
-  refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
-  is_intrl_arf_boost    = (pcs_ptr->parent_pcs_ptr->temporal_layer_index > 0 &&
-                           pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-                           ? 1
-                           : 0;
-  {
-      // kelvinhack
-      //oxcf->pass = 2;
-      //oxcf->rc_cfg.mode == AOM_VBR;
-      //oxcf->rc_cfg.cq_level = scs_ptr->static_config.qp;
-      //encode_context_ptr->gf_cfg.lag_in_frames = 25; //lad?
-      //encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
-      //encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
-  }
+  EncodeFrameParams temp_frame_params, *frame_params = &temp_frame_params;
+  const int update_type = (frame_is_intra_only(pcs_ptr->parent_pcs_ptr)) //gf_group->update_type[gf_group->index];
+                          ? KF_UPDATE
+                          : (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+                            ? ARF_UPDATE
+                            : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
+                                                                                 : LF_UPDATE;
+  gf_group->update_type[gf_group->index] = update_type;
 
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
@@ -3000,6 +2994,13 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->two_pass_cfg.vbrmin_section = 0;
       encode_context_ptr->two_pass_cfg.vbrmax_section = 2000;
       encode_context_ptr->two_pass_cfg.vbrbias        = 50;
+      //oxcf->pass = 2;
+      encode_context_ptr->rc_cfg.mode = AOM_VBR;
+      encode_context_ptr->rc_cfg.cq_level = scs_ptr->static_config.qp;
+      encode_context_ptr->gf_cfg.lag_in_frames = scs_ptr->static_config.look_ahead_distance + 1;
+      encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
+      encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
+      encode_context_ptr->kf_cfg.auto_key      = 0;
   }
 
   stats = twopass->stats_buf_ctx->total_stats;

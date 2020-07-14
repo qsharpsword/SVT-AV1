@@ -32,6 +32,9 @@
 #include "EbLambdaRateTables.h"
 #endif
 #endif
+#if TWOPASS_RC
+#include "pass2_strategy.h"
+#endif
 
 #include "EbSegmentation.h"
 #include "EbLog.h"
@@ -6094,6 +6097,57 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
         }
     }
 }
+
+#if TWOPASS_RC
+void set_rc_context(PictureControlSet *pcs_ptr,
+                    EncodeContext *encode_context_ptr,
+                    HighLevelRateControlContext *high_level_rate_control_ptr) {
+    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    //EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *const rc = &encode_context_ptr->rc;
+    TWO_PASS *const twopass = &scs_ptr->twopass;
+
+}
+
+static AOM_INLINE int combine_prior_with_tpl_boost_org(double min_factor,
+                                                   double max_factor,
+                                                   int prior_boost,
+                                                   int tpl_boost,
+                                                   int frames_to_key) {
+  double factor = sqrt((double)frames_to_key);
+  double range = max_factor - min_factor;
+  factor = AOMMIN(factor, max_factor);
+  factor = AOMMAX(factor, min_factor);
+  factor -= min_factor;
+  int boost =
+      (int)((factor * prior_boost + (range - factor) * tpl_boost) / range);
+  return boost;
+}
+
+#define MIN_BOOST_COMBINE_FACTOR 4.0
+#define MAX_BOOST_COMBINE_FACTOR 12.0
+void process_tpl_stats_frame_gfu_boost(PictureControlSet *pcs_ptr) {
+    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *const rc = &encode_context_ptr->rc;
+
+    if (scs_ptr->lap_enabled) {
+        double min_boost_factor = sqrt(rc->baseline_gf_interval);
+        const int gfu_boost = get_gfu_boost_from_r0_lap(
+                min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0,
+                rc->num_stats_required_for_gfu_boost);
+        // printf("old boost %d new boost %d\n", rc->gfu_boost, gfu_boost);
+        rc->gfu_boost = combine_prior_with_tpl_boost_org(
+                min_boost_factor, MAX_BOOST_COMBINE_FACTOR, rc->gfu_boost,
+                gfu_boost, rc->num_stats_used_for_gfu_boost);
+    } else {
+        const int gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
+        rc->gfu_boost = combine_prior_with_tpl_boost_org(
+                MIN_BOOST_COMBINE_FACTOR, MAX_BOOST_COMBINE_FACTOR,
+                rc->gfu_boost, gfu_boost, rc->frames_to_key);
+    }
+}
+#endif
 void *rate_control_kernel(void *input_ptr) {
     // Context
     EbThreadContext *   thread_context_ptr = (EbThreadContext *)input_ptr;
@@ -6159,7 +6213,15 @@ void *rate_control_kernel(void *input_ptr) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
                 // High level RC
                 if (scs_ptr->static_config.rate_control_mode == 1)
-
+#if TWOPASS_RC
+                    if (scs_ptr->use_input_stat_file &&
+                        !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                        scs_ptr->static_config.look_ahead_distance != 0
+                        ) {
+                        av1_get_second_pass_params(pcs_ptr);
+                        // set_rc_context(pcs_ptr, context_ptr, context_ptr->high_level_rate_control_ptr); //???
+                    } else
+#endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,
                                                     scs_ptr,
                                                     scs_ptr->encode_context_ptr,
@@ -6294,6 +6356,19 @@ void *rate_control_kernel(void *input_ptr) {
             } else {
                 // ***Rate Control***
                 if (scs_ptr->static_config.rate_control_mode == 1) {
+#if TWOPASS_RC
+                    if (scs_ptr->use_input_stat_file &&
+                        !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                        scs_ptr->static_config.look_ahead_distance != 0
+                        ) {
+                        if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
+                            process_tpl_stats_frame_gfu_boost(pcs_ptr);
+                            // VBR Qindex calculating
+                            //q = rc_pick_q_and_bounds(cpi, width, height, gf_index, bottom_index, top_index);
+                        }
+                    } else
+                    {
+#endif
                     frame_level_rc_input_picture_vbr(pcs_ptr,
                                                      scs_ptr,
                                                      context_ptr,
@@ -6306,6 +6381,9 @@ void *rate_control_kernel(void *input_ptr) {
                                             rate_control_param_ptr,
                                             prev_gop_rate_control_param_ptr,
                                             next_gop_rate_control_param_ptr);
+#if TWOPASS_RC
+                    }
+#endif
                 } else if (scs_ptr->static_config.rate_control_mode == 2) {
                     frame_level_rc_input_picture_cvbr(pcs_ptr,
                                                       scs_ptr,
