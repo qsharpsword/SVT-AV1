@@ -74,6 +74,10 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
             pcs_ptr->global_motion_estimation[list_index][ref_pic_index].wmtype = IDENTITY;
         }
     }
+#if FASTER_GMV
+    uint8_t identity_detected = 0;
+    uint8_t translation_detected = 0;
+#endif
     // Derive total_me_sad
     uint32_t total_me_sad = 0;
     for (uint16_t sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index) {
@@ -176,8 +180,23 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
                                   ref_picture_ptr,
                                   &pcs_ptr->global_motion_estimation[list_index][ref_pic_index],
                                   pcs_ptr->frm_hdr.allow_high_precision_mv);
-        }
 
+#if FASTER_GMV
+            if (pcs_ptr->global_motion_estimation[list_index][ref_pic_index].wmtype == IDENTITY) {
+                identity_detected = 1;
+                break;
+            }
+            if (pcs_ptr->global_motion_estimation[list_index][ref_pic_index].wmtype == TRANSLATION) {
+                translation_detected = 1;
+                break;
+            }
+#endif
+        }
+#if FASTER_GMV
+        if (identity_detected) {
+            break;
+        }
+#else
 #if GM_LIST1
         if (context_ptr->gm_identiy_exit) {
             if (list_index == 0) {
@@ -189,6 +208,7 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
                 }
             }
         }
+#endif
 #endif
     }
 
