@@ -621,7 +621,11 @@ extern "C" {
 #define FASTER_GMV         0 
 #define USE_ERROR_ADVANTAGE 0
 #define SHUT_GMV 0
-#define REMOVE_USELESS_GMV 1
+
+#define SHUT_NSQ 1
+#define SB_64x64 1
+#define SHUT_HP  1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

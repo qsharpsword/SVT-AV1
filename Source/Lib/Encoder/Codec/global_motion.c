@@ -28,7 +28,6 @@
 #define ERRORADV_BORDER 0
 // Border over which to compute the global motion
 
-#if !REMOVE_USELESS_GMV
 // TODO(sarahparker) These need to be retuned for speed 0 and 1 to
 // maximize gains from segmented error metric
 static const double erroradv_tr[]      = {0.65, 0.60, 0.65};
@@ -39,7 +38,7 @@ int av1_is_enough_erroradvantage(double best_erroradvantage, int params_cost, in
     return best_erroradvantage < erroradv_tr[erroradv_type] &&
            best_erroradvantage * params_cost < erroradv_prod_tr[erroradv_type];
 }
-#endif
+
 static void convert_to_params(const double *params, int32_t *model) {
     int i;
     int alpha_present = 0;
