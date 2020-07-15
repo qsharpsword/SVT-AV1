@@ -193,7 +193,7 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
 #endif
         }
 #if FASTER_GMV
-        if (identity_detected) {
+        if (identity_detected || translation_detected) {
             break;
         }
 #else
