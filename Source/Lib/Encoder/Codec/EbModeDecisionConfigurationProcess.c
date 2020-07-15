@@ -1360,7 +1360,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             ? 1
             : 0;
-
+#if SHUT_HP
+    frm_hdr->allow_high_precision_mv = 0;
+#endif
     // Warped
     EbBool enable_wm;
 #if PRESETS_SHIFT
