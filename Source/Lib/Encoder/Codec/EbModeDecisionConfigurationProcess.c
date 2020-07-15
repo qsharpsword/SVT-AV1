@@ -1346,13 +1346,42 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #endif
 
+
+#if HP_USE_INPUT_COMPLEXITY
+
+    // Normalized distortion-based thresholds
+#define HP_ME_SAD_TH_0  0
+#define HP_ME_SAD_TH_1  5
+#define HP_ME_SAD_TH_2 10
+
+    EbPictureBufferDesc *input_picture_ptr = pcs_ptr->parent_pcs_ptr->enhanced_unscaled_picture_ptr;
+    // Derive total_me_sad
+    uint32_t total_me_sad = 0;
+    for (uint16_t sb_index = 0; sb_index < pcs_ptr->parent_pcs_ptr->sb_total_count; ++sb_index) {
+        total_me_sad += pcs_ptr->parent_pcs_ptr->rc_me_distortion[sb_index];
+    }
+    uint32_t average_me_sad = total_me_sad / (input_picture_ptr->width * input_picture_ptr->height);
+    // Derive global_motion_estimation level
+
+    uint8_t hp_level;
+    if (hp_level <= HP_ME_SAD_TH_0)
+        hp_level = 0;
+    else if (hp_level < HP_ME_SAD_TH_1)
+        hp_level = 1;
+    else if (hp_level < HP_ME_SAD_TH_2)
+        hp_level = 2;
+    else
+        hp_level = 3;
+#endif
     // High Precision
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     frm_hdr->allow_high_precision_mv =
 #if !MAR2_M8_ADOPTIONS
         pcs_ptr->enc_mode <= ENC_M7 &&
 #endif
+#if !REMOVE_QP_CHECK
                 frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
+#endif
 #if NEW_RESOLUTION_RANGES
                 (scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)
 #else
