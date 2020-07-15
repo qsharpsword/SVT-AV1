@@ -624,7 +624,8 @@ extern "C" {
 
 #define SHUT_NSQ 1
 #define SB_64x64 1
-#define SHUT_HP  1
+#define SHUT_HP  0
+#define USE_LIBAOM_QP_INDEX 1
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
@@ -649,7 +650,12 @@ extern "C" {
 #endif
 #endif
 #define ALT_REF_QP_THRESH 20
+#if USE_LIBAOM_QP_INDEX
+// Q threshold for high precision mv.
+#define HIGH_PRECISION_MV_QTHRESH 128
+#else
 #define HIGH_PRECISION_MV_QTHRESH 150
+#endif
 #define NON8_FIX_REST 1
 
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
