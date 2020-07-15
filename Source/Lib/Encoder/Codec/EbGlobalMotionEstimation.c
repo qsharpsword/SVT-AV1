@@ -351,7 +351,7 @@ void compute_global_motion(EbPictureBufferDesc *input_pic, EbPictureBufferDesc *
             }
 
             if (global_motion.wmtype == IDENTITY) continue;
-
+#if !REMOVE_USELESS_GMV
             const int64_t ref_frame_error = eb_av1_frame_error(EB_FALSE,
                                                                EB_8BIT,
                                                                ref_buffer,
@@ -375,6 +375,7 @@ void compute_global_motion(EbPictureBufferDesc *input_pic, EbPictureBufferDesc *
 #endif
                 global_motion = default_warp_params;
             }
+#endif
             if (global_motion.wmtype != IDENTITY) { break; }
         }
     }
