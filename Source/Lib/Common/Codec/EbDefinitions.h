@@ -313,19 +313,19 @@ extern "C" {
 // START  svt-01 /////////////////////////////////////////////////////////
 #define SVT_01 0
 
-#if SVT_01
-
-
-#define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
+#define REU_MEM_OPT                 0 // Memory reduction for rate estimation tables ///////////
 #define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk
+
 #define MD_FRAME_CONTEXT_MEM_OPT    1 // Memory reduction for frame context used in MD
 #define ME_MEM_OPT                  1 // Memory reduction for ME results
 #define CAND_MEM_OPT                1 // Memory reduction for candidate buffers
 #define PAL_MEM_OPT                 1 // Memory allocation on the fly for palette
 #define REST_MEM_OPT2               1 // Memory reduction for restoration
+
 #define MAY03_4K_10BIT_ADOPTS       1 // disable chroma blind at MD for 10bit NSC; 4K setting change
 #define EC_MEM_OPT                  1 // Memory Opt for ec_ptr in pcs
 #define PCS_MEM_OPT                 1 // Memory reduction for child PCS
+
 #define TPL_LA                      1 // Add TPL into look ahead
 #if TPL_LA
 #define MAX_TPL_LA_SW            60 // Max TPL look ahead sliding window size
@@ -342,8 +342,10 @@ extern "C" {
 #define REMOVE_CHROMA_INTRA_S0      1 // INTRA S0 Chroma OFF
 #define NICS_CLEANUP                1 // cleanup nics generation (lossy)
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
-#define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 #define DISALLOW_ALL_ACTIONS        1
+#if SVT_01
+
+
 #define MULTI_BAND_ACTIONS          1
 #if MULTI_BAND_ACTIONS
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing

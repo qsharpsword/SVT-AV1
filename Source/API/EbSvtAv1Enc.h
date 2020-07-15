@@ -15,7 +15,6 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 
-#define TPL_LA 0
 //***HME***
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
@@ -504,7 +503,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default depends on rate control mode.*/
     uint32_t look_ahead_distance;
 
-#if 0 //TPL_LA
+#if 1 //TPL_LA
     /* Enable TPL in look ahead, only works when look_ahead_distance>0
      * 0 = disable TPL in look ahead
      * 1 = enable TPL in look ahead
