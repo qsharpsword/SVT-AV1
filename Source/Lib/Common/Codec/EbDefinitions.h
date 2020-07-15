@@ -619,6 +619,7 @@ extern "C" {
 #define ENABLE_GM_LIST1    1 // Enable GM_LIST1
 #define FASTER_GMV         0 
 #define USE_ERROR_ADVANTAGE 1
+#define SHUT_GMV 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

@@ -4151,6 +4151,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->global_mv_injection = 1;
             else
                 context_ptr->global_mv_injection = 0;
+
+#if SHUT_GMV
+        context_ptr->global_mv_injection = 0;
+#endif
 #else
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)

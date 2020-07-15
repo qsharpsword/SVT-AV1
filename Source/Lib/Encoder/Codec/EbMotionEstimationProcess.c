@@ -1021,6 +1021,10 @@ EbErrorType signal_derivation_me_kernel_oq(
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+
+#if SHUT_GMV
+        context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#endif
 #else
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
