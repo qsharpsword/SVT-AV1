@@ -1094,6 +1094,13 @@ static INLINE int64_t clamp64(int64_t value, int64_t low, int64_t high) {
     return value < low ? low : (value > high ? high : value);
 }
 
+#if TWOPASS_RC
+// from aom aom_dsp_common.h
+static INLINE double fclamp(double value, double low, double high) {
+  return value < low ? low : (value > high ? high : value);
+}
+#endif
+
 static INLINE uint8_t clip_pixel(int32_t val) {
     return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val);
 }

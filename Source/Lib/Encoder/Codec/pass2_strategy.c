@@ -49,11 +49,6 @@
 #define GROUP_ADAPTIVE_MAXQ 1
 static void init_gf_stats(GF_GROUP_STATS *gf_stats);
 
-// from aom aom_dsp_common.h
-static INLINE double fclamp(double value, double low, double high) {
-  return value < low ? low : (value > high ? high : value);
-}
-
 // Calculate an active area of the image that discounts formatting
 // bars and partially discounts other 0 energy areas.
 #define MIN_ACTIVE_AREA 0.5

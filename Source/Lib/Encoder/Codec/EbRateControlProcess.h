@@ -52,6 +52,8 @@
 
 #define MAX_NUM_GF_INTERVALS 15
 
+#define MAX_ARF_LAYERS 6
+
 enum {
     KF_UPDATE            = 0,
     LF_UPDATE            = 1,
@@ -65,6 +67,16 @@ enum {
     INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
     FRAME_UPDATE_TYPES   = 10
 } frame_update_type;
+
+enum {
+    INTER_NORMAL       = 0,
+    INTER_LOW          = 1,
+    INTER_HIGH         = 2,
+    GF_ARF_LOW         = 3,
+    GF_ARF_STD         = 4,
+    KF_STD             = 5,
+    RATE_FACTOR_LEVELS = 6
+} rate_factor_level;
 
 typedef struct {
     // Rate targetting variables
@@ -80,7 +92,7 @@ typedef struct {
     int gfu_boost;
     int kf_boost;
 
-    // double rate_correction_factors[RATE_FACTOR_LEVELS];
+    double rate_correction_factors[RATE_FACTOR_LEVELS];
 
     int frames_since_golden;
     int frames_till_gf_update_due;
@@ -162,7 +174,7 @@ typedef struct {
     int arf_q;
 #if TWOPASS_RC
     int active_worst_quality;
-    //int active_best_quality[MAX_ARF_LAYERS + 1];
+    int active_best_quality[MAX_ARF_LAYERS + 1];
     int base_layer_qp;
 
     // number of determined gf group length left
