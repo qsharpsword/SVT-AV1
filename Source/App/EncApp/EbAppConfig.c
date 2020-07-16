@@ -1722,7 +1722,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
     // --- start: ALTREF_FILTERING_SUPPORT
     config_ptr->enable_altrefs  = EB_TRUE;
     config_ptr->altref_strength = 5;
-#if 0//NOISE_BASED_TF_FRAMES
+#if 1//NOISE_BASED_TF_FRAMES
     config_ptr->altref_nframes = 13;
 #else
     config_ptr->altref_nframes  = 7;

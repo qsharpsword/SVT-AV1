@@ -14549,7 +14549,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #endif
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #if COEFF_BASED_BYPASS_NSQ
-#if !MERGED_COEFF_BAND || ADAPTIVE_NSQ_CR
+#if !MERGED_COEFF_BAND || ADAPTIVE_NSQ_CR || !NSQ_CYCLES_REDUCTION
             uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
 #else
             uint8_t skip_nsq = get_allowed_block(context_ptr);

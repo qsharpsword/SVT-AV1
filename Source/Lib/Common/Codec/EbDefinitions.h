@@ -343,14 +343,17 @@ extern "C" {
 #define NICS_CLEANUP                1 // cleanup nics generation (lossy)
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define DISALLOW_ALL_ACTIONS        1
-#if SVT_01
-
-
 #define MULTI_BAND_ACTIONS          1
 #if MULTI_BAND_ACTIONS
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
 #else
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
+#endif
+#if COEFF_BASED_BYPASS_NSQ
+#define REMOVE_SQ_WEIGHT_TOGGLING 1
+#define M1_TH4                    1
+#define MERGED_COEFF_BAND         1
+#define SSE_BASED_SPLITTING       1
 #endif
 #define CAP_MV_DIFF                 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
 #define COEFF_BASED_BYPASS_NSQ_FIX  1 // apply algorithm to non-I_SLICE
@@ -362,14 +365,6 @@ extern "C" {
 #define HME_4K_ADOPTIONS            1 // Adoptions for SC HME and 4K HME
 #define MAY15_M0_ADOPTIONS          1 // M0 adoptions
 #define MAY16_M0_ADOPTIONS          1
-#if COEFF_BASED_BYPASS_NSQ
-#define REMOVE_SQ_WEIGHT_TOGGLING 1
-#define M1_TH4                    1
-#define MERGED_COEFF_BAND         1
-#define SSE_BASED_SPLITTING       1
-#define SPEED_WEIGHT              0
-#endif
-
 #define MAY16_7PM_ADOPTIONS         1 // M0 and M1 adoptions
 #define MAY17_ADOPTIONS             1 // Adoptions for M0/M1
 #define MAY19_ADOPTIONS             1 // Adoptions in MR, M5-M8 from svt-01_presets branch
@@ -380,7 +375,6 @@ extern "C" {
 #define MD_CTX_CLEAN_UP             1 // Memory reduction for MdEncPassCuData
 #define BLK_MEM_CLEAN_UP            1 // Memory reduction for BlkStruct
 #define SB64_MEM_OPT                1 // Memory reduction for SB size 64
-#define M0_DEPTH_REFINEMENT_ADOPTS  0 // Expand the M0/MR depth refinement
 
 #define MOVE_NSQ_MON_UNIPRED_ME_TO_MD 1 // Move non-sq/non-unipred ME to MD
 #if MOVE_NSQ_MON_UNIPRED_ME_TO_MD
@@ -396,16 +390,6 @@ extern "C" {
 #define REMOVE_MRP_MODE            1 // Remove mrp_mode
 #define USE_SUB_BLOCK_MVC          1 // Use up to 4 additional MVC (sub-block MV(s)) @ MD NSQ motion search
 #endif
-
-#define OUTPUT_MEM_OPT              1 // Memory reduction for output bitstream
-
-#define ENBALE_RDOQ_SSSE_TXT        1 // Enable RDOQ and SSSE in TXT search
-#define UNIFY_TXT                   1 // Unify TXT search path and default path + fix bug in TXT search
-#define SB_BLK_MEM_OPT 1              // Memory reduction for total counts of final_blk_arr
-#define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
-
-#define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
-
 #define MOVE_SUB_PEL_ME_TO_MD         1 // Move subpel ME to MD/TF
 #if MOVE_SUB_PEL_ME_TO_MD
 #define REMOVE_ME_SUBPEL_CODE      1 // Shut subpel ME
@@ -416,6 +400,22 @@ extern "C" {
 
 
 #endif
+#if SVT_01
+
+
+
+
+
+
+#define OUTPUT_MEM_OPT              1 // Memory reduction for output bitstream
+
+#define ENBALE_RDOQ_SSSE_TXT        1 // Enable RDOQ and SSSE in TXT search
+#define UNIFY_TXT                   1 // Unify TXT search path and default path + fix bug in TXT search
+#define SB_BLK_MEM_OPT 1              // Memory reduction for total counts of final_blk_arr
+#define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
+
+#define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
+
 #define FIX_WARNINGS                    1     // fix build warnings
 #define FIX_WARNINGS_WIN                1     // fix build warnings
 
@@ -705,7 +705,7 @@ enum {
  * this number can be increased by increasing the constant
  * FUTURE_WINDOW_WIDTH defined in EbPictureDecisionProcess.c
  */
-#if 0//NOISE_BASED_TF_FRAMES
+#if 1//NOISE_BASED_TF_FRAMES
 #define ALTREF_MAX_NFRAMES 13
 #else
 #define ALTREF_MAX_NFRAMES 10
