@@ -626,8 +626,9 @@ extern "C" {
 #define SB_64x64 1
 #define SHUT_HP  0
 #define USE_LIBAOM_QP_INDEX 0
-#define HP_USE_INPUT_COMPLEXITY 1
-#define REMOVE_QP_CHECK 1
+#define HP_USE_INPUT_COMPLEXITY 0
+#define REMOVE_QP_CHECK 0
+#define FULL_HP_PD_0 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

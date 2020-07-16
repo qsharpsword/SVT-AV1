@@ -6696,7 +6696,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (pd_pass == PD_PASS_0)
 #if ADD_SKIP_INTRA_SIGNAL
 #if JUNE26_ADOPTIONS
+#if FULL_HP_PD_0
+        context_ptr->md_subpel_search_level = 1;
+#else
         context_ptr->md_subpel_search_level = enc_mode <= ENC_M5 ? 4 : 0;
+#endif
 #else
         context_ptr->md_subpel_search_level = enc_mode <= ENC_M6 ? 4 : 0;
 #endif
