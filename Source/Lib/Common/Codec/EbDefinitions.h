@@ -628,7 +628,8 @@ extern "C" {
 #define USE_LIBAOM_QP_INDEX 0
 #define HP_USE_INPUT_COMPLEXITY 0
 #define REMOVE_QP_CHECK 0
-#define FULL_HP_PD_0 1
+#define FULL_HP_PD_0 0
+#define UPGRADE_SUBPEL_LEVEL_4 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
