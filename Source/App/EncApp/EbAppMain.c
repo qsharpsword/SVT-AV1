@@ -70,32 +70,112 @@ void assign_app_thread_group(uint8_t target_socket) {
 }
 
 double get_psnr(double sse, double max);
+// GLOBAL VARIABLES
+EbErrorType          return_error   = EB_ErrorNone; // Error Handling
+AppExitConditionType exit_condition = APP_ExitConditionNone; // Processing loop exit condition
 
+EbErrorType          return_errors[MAX_CHANNEL_NUMBER]; // Error Handling
+AppExitConditionType exit_cond[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
+AppExitConditionType exit_cond_output[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
+AppExitConditionType exit_cond_recon[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
+AppExitConditionType exit_cond_input[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
+
+EbBool channel_active[MAX_CHANNEL_NUMBER];
+
+EbConfig *configs[MAX_CHANNEL_NUMBER]; // Encoder Configuration
+uint32_t      num_channels = 0;
+uint32_t      inst_cnt     = 0;
+EbAppContext *app_callbacks[MAX_CHANNEL_NUMBER]; // Instances App callback data
 /***************************************
  * Encoder App Main
  ***************************************/
+
+void *output_thread (){
+
+while (exit_condition == APP_ExitConditionNone) {
+exit_condition = APP_ExitConditionFinished;
+for (inst_cnt = 0; inst_cnt < num_channels; ++inst_cnt) {
+    if (channel_active[inst_cnt] == EB_TRUE) {
+        if (exit_cond_output[inst_cnt] == APP_ExitConditionNone)
+            exit_cond_output[inst_cnt] = process_output_stream_buffer(
+                configs[inst_cnt],
+                app_callbacks[inst_cnt],
+                (exit_cond_input[inst_cnt] == APP_ExitConditionNone) ||
+                        (exit_cond_recon[inst_cnt] == APP_ExitConditionNone)
+                    ? 0
+                    : 1);
+        if (exit_cond_output[inst_cnt] == APP_ExitConditionFinished ) {
+            channel_active[inst_cnt] = EB_FALSE;
+
+        }
+    }
+}
+// check if all channels are inactive
+for (inst_cnt = 0; inst_cnt < num_channels; ++inst_cnt) {
+    if (channel_active[inst_cnt] == EB_TRUE)
+        exit_condition = APP_ExitConditionNone;
+}
+}
+};
+typedef void * EbHandle;
+EbHandle eb_create_thread(void *thread_function(void *), void *thread_context) {
+    EbHandle thread_handle = NULL;
+
+#ifdef _WIN32
+
+    thread_handle = (EbHandle)CreateThread(
+        NULL, // default security attributes
+        0, // default stack size
+        (LPTHREAD_START_ROUTINE)thread_function, // function to be tied to the new thread
+        thread_context, // context to be tied to the new thread
+        0, // thread active when created
+        NULL); // new thread ID
+
+#else
+
+    pthread_attr_t     attr;
+    struct sched_param param = {.sched_priority = 99};
+    pthread_attr_init(&attr);
+    pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+    pthread_attr_setschedparam(&attr, &param);
+
+    pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+
+    thread_handle = (pthread_t *)malloc(sizeof(pthread_t));
+    if (thread_handle != NULL) {
+        int32_t ret = pthread_create((pthread_t *)thread_handle, // Thread handle
+                                     &attr, // attributes
+                                     thread_function, // function to be run by new thread
+                                     thread_context);
+
+        if (ret != 0) {
+            if (ret == EPERM) {
+                pthread_cancel(*((pthread_t *)thread_handle));
+                free(thread_handle);
+
+                thread_handle = (pthread_t *)malloc(sizeof(pthread_t));
+                if (thread_handle != NULL) {
+                    pthread_create((pthread_t *)thread_handle, // Thread handle
+                                   (const pthread_attr_t *)EB_NULL, // attributes
+                                   thread_function, // function to be run by new thread
+                                   thread_context);
+                }
+            }
+        }
+    }
+    pthread_attr_destroy(&attr);
+#endif // _WIN32
+
+    return thread_handle;
+};
+
 int32_t main(int32_t argc, char *argv[]) {
 #ifdef _WIN32
     _setmode(_fileno(stdin), _O_BINARY);
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
-    // GLOBAL VARIABLES
-    EbErrorType          return_error   = EB_ErrorNone; // Error Handling
-    AppExitConditionType exit_condition = APP_ExitConditionNone; // Processing loop exit condition
 
-    EbErrorType          return_errors[MAX_CHANNEL_NUMBER]; // Error Handling
-    AppExitConditionType exit_cond[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
-    AppExitConditionType exit_cond_output[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
-    AppExitConditionType exit_cond_recon[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
-    AppExitConditionType exit_cond_input[MAX_CHANNEL_NUMBER]; // Processing loop exit condition
 
-    EbBool channel_active[MAX_CHANNEL_NUMBER];
-
-    EbConfig *configs[MAX_CHANNEL_NUMBER]; // Encoder Configuration
-
-    uint32_t      num_channels = 0;
-    uint32_t      inst_cnt     = 0;
-    EbAppContext *app_callbacks[MAX_CHANNEL_NUMBER]; // Instances App callback data
     signal(SIGINT, event_handler);
     fprintf(stderr, "-------------------------------------------\n");
     fprintf(stderr, "SVT-AV1 Encoder\n");
@@ -159,6 +239,7 @@ int32_t main(int32_t argc, char *argv[]) {
             }
 
             {
+
                 // Start the Encoder
                 for (inst_cnt = 0; inst_cnt < num_channels; ++inst_cnt) {
                     if (return_errors[inst_cnt] == EB_ErrorNone) {
@@ -193,7 +274,8 @@ int32_t main(int32_t argc, char *argv[]) {
                 }
                 fprintf(stderr, "Encoding          ");
                 fflush(stdout);
-
+                // start new thread
+                eb_create_thread(output_thread, NULL);
                 while (exit_condition == APP_ExitConditionNone) {
                     exit_condition = APP_ExitConditionFinished;
                     for (inst_cnt = 0; inst_cnt < num_channels; ++inst_cnt) {
