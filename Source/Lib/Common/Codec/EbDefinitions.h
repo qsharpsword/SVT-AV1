@@ -400,59 +400,43 @@ extern "C" {
 
 
 #endif
-#if SVT_01
-
-
-
-
-
-
 #define OUTPUT_MEM_OPT              1 // Memory reduction for output bitstream
-
 #define ENBALE_RDOQ_SSSE_TXT        1 // Enable RDOQ and SSSE in TXT search
 #define UNIFY_TXT                   1 // Unify TXT search path and default path + fix bug in TXT search
 #define SB_BLK_MEM_OPT 1              // Memory reduction for total counts of final_blk_arr
 #define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
-
 #define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
 
 #define FIX_WARNINGS                    1     // fix build warnings
 #define FIX_WARNINGS_WIN                1     // fix build warnings
-
 #define NSQ_CYCLES_REDUCTION 1
 #define DEPTH_CYCLES_REDUCTION 1
 #define CLEANUP_CYCLE_ALLOCATION 1
 #define MR_DEPTH_REFINEMENT 1 // Change MR depth refinement levels
-
 #define TRACK_PER_DEPTH_DELTA  1 // Keep track of the distance of a given depth to the PD0 predicted depth
 #define COEFF_BASED_TXT_BYPASS 1 // Use TXT statistics to bypass certain tx types
 #define COEFF_BASED_TXS_BYPASS 1 // Use TXS statistics to bypass certain tx search sizes
-
-#define REMOVE_UNUSED_CODE              1 // Remove unused code
+#define REMOVE_UNUSED_CODE              0 // Remove unused code
 #define PRESET_SHIFITNG                 1 // Shift presets (new encoderMode  <- old encoderMode)
                                           // M: (0 <- 0);(1 <- 1);(2 <- 3);(3 <- 5);(4 <- 6);(5 <- 7);(6 <- 8);(7 <- 8);(8 <- 8);
 #define REDUCE_MR_COMP_CANDS    1 // Bug fix: Adopt the M0 level of inter_inter_distortion_based_reference_pruning to reduce compound candidates in MR
 #define QPS_240P_UPDATE          1 // Modify the QPS of 240P to be similar to other resolution
-
 #define IFS_MD_STAGE_1            1 // Move ifs from md_stage_3() to md_stage_1()
 #define SHUT_MERGE_1D_INTER_BLOCK 1 // Remove merge 1D feature
-
 #define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
-#define REMOVE_UNUSED_CODE_PH2          1 // Remove unused code
+#define REMOVE_UNUSED_CODE_PH2          0 // Remove unused code
 #define JUNE8_ADOPTIONS         1 // Adoptions in MR-M2
-
-#define SHUT_FEATURE_INTERACTIONS 0 // Orange: Turn off any feature that interacts with NSQ, depth, TXT, TXS, or MRP
-#define SHUT_LAYER_BASED_FEATURES 0 // Blue: Turn off any layer checks for feature levels (use safer level always)
-#define SHUT_RESOLUTION_CHECKS    0 // Green: Turn off any resolution checks (use lower resolution level)
-
 #define ADD_MRS_MODE        1 // A slow MR mode, intended to have no TH values (should have all speed features OFF)
+
 #define JUNE9_ADOPTIONS     1 // M1 adoptions
+
 #define RESTRICT_INTER_TXS_DEPTH 1 // Restrict the max tx depth for INTER TXS
 #define M0_SQ_WEIGHT_ADOPTION    1 // Change the M0 sq_weight level
 #define PR_1316            1 //AVX2 kernel svt_av1_apply_temporal_filter_planewise_hbd_avx2()
 #define PR_1311            1 //AVX2 kernel variance_highbd_avx2()
 #define NEW_MRP_SETTINGS   1 // New MRP settings for all modes
 #define NEW_TXS_SETTINGS   1 // New TXS settings
+
 #define ADAPTIVE_NSQ_CR 1
 #if ADAPTIVE_NSQ_CR
 #define DECOUPLE_FROM_ALLOCATION 1
@@ -460,9 +444,13 @@ extern "C" {
 #define ADAPTIVE_DEPTH_CR 1
 #define ADAPTIVE_TXT_CR 1 // Add code for generating TXS statistics
 #define STATS_TX_TYPES_FIX 1 // Fix the statistic txt crash
-
-
 #define ABILITY_TO_USE_CLOSEST_ONLY       1 // Add the ability to use closest_refs without using best_refs
+
+#if SVT_01
+
+
+
+
 #define OPTIMIZE_NEAREST_NEW_NEAR         1 // Use the closest ref only @ NEAREST_NEW_NEAR for M0 & higher
 #define M0_HME_ME_PRUNE                   1 // Use HME/ME ref prune level 0 for M0
 #define FIX_INCOMPLETE_SB                 1 // Perform Txs search for blocks @ right and bottom picture boundaries
