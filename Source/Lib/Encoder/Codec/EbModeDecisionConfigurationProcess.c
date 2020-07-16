@@ -1383,7 +1383,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                 frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
 #endif
 #if HP_USE_INPUT_COMPLEXITY
-        hp_level >= 2 &&
+        hp_level >= 3 &&
 #endif
 #if NEW_RESOLUTION_RANGES
                 (scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)
