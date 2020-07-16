@@ -2999,7 +2999,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(
     // Set Tx Search     Settings
     // 0                 OFF
     // 1                 ON
-    pcs_ptr->tx_size_search_mode = 0;
+    pcs_ptr->tx_size_search_mode = 1;
 
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
@@ -3060,7 +3060,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(
     // 9: (1,1) ; No-override features
     // Level 0 , 1  : set ref_list0_count_try and ref_list1_count_try and Override MRP-related features
     // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
-    pcs_ptr->mrp_level = 3;
+    pcs_ptr->mrp_level = 0;
 
     pcs_ptr->tpl_opt_flag = 1;
     return return_error;

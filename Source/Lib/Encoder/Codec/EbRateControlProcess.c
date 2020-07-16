@@ -6920,10 +6920,14 @@ void *rate_control_kernel(void *input_ptr) {
                             new_qindex = cqp_qindex_calc(pcs_ptr, &rc, qindex);
                     }
                     else {
+#if FIRST_PASS_SETUP
+                        new_qindex = 33;
+#else
                         new_qindex = cqp_qindex_calc(
                             pcs_ptr,
                             &rc,
                             qindex);
+#endif
                     }
                     frm_hdr->quantization_params.base_q_idx = (uint8_t)CLIP3(
                         (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed],

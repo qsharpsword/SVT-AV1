@@ -2472,7 +2472,7 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
 
   if (scs_ptr->lap_enabled) correct_frames_to_key(cpi);
 #else
-  rc->frames_to_key = (int)MIN((uint64_t)scs_ptr->intra_period_length + 1, scs_ptr->static_config.frames_to_be_encoded); 
+  rc->frames_to_key = (int)MIN((uint64_t)scs_ptr->intra_period_length + 1, scs_ptr->static_config.frames_to_be_encoded);
 #endif
 
   // If there is a max kf interval set by the user we must obey it.

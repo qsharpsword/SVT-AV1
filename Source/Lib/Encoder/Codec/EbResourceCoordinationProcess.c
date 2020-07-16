@@ -759,7 +759,7 @@ static void read_stat_from_file(SequenceControlSet *scs_ptr) {
         SVT_LOG("Failed to read first-pass stats buffer");
 }
 
-static void setup_second_pass(SequenceControlSet *scs_ptr) {
+static void setup_two_pass(SequenceControlSet *scs_ptr) {
 
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
 
@@ -770,22 +770,23 @@ static void setup_second_pass(SequenceControlSet *scs_ptr) {
 
     scs_ptr->twopass.stats_buf_ctx = &encode_context_ptr->stats_buf_context;
     scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
+    if (scs_ptr->use_input_stat_file) {
+        const size_t packet_sz = sizeof(FIRSTPASS_STATS);
+        const int packets = (int)(encode_context_ptr->rc_twopass_stats_in.sz / packet_sz);
 
-    const size_t packet_sz = sizeof(FIRSTPASS_STATS);
-    const int packets = (int)(encode_context_ptr->rc_twopass_stats_in.sz / packet_sz);
-
-    if (!scs_ptr->lap_enabled)
-    {
-        /*Re-initialize to stats buffer, populated by application in the case of
-            * two pass*/
-        scs_ptr->twopass.stats_buf_ctx->stats_in_start =
-            encode_context_ptr->rc_twopass_stats_in.buf;
-        scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
-        scs_ptr->twopass.stats_buf_ctx->stats_in_end =
-            &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
+        if (!scs_ptr->lap_enabled)
+        {
+            /*Re-initialize to stats buffer, populated by application in the case of
+                * two pass*/
+            scs_ptr->twopass.stats_buf_ctx->stats_in_start =
+                encode_context_ptr->rc_twopass_stats_in.buf;
+            scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
+            scs_ptr->twopass.stats_buf_ctx->stats_in_end =
+                &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
 #if TWOPASS_RC
-        av1_init_second_pass(scs_ptr);
+            av1_init_second_pass(scs_ptr);
 #endif
+        }
     }
 
 }
@@ -1351,12 +1352,13 @@ void *resource_coordination_kernel(void *input_ptr) {
                 pcs_ptr->picture_number = context_ptr->picture_number_array[instance_index];
             reset_pcs_av1(pcs_ptr);
 #if TWOPASS_STAT_BUF
-            if (scs_ptr->use_input_stat_file) {
-                if (pcs_ptr->picture_number == 0) {
+            if (pcs_ptr->picture_number == 0) {
+                if (scs_ptr->use_input_stat_file)
                     read_stat_from_file(scs_ptr);
-                    setup_second_pass(scs_ptr);
-                }
+                if (scs_ptr->use_input_stat_file || scs_ptr->use_output_stat_file)
+                    setup_two_pass(scs_ptr);
             }
+
 #else
             if (scs_ptr->use_input_stat_file && !end_of_sequence_flag)
                 read_stat_from_file(pcs_ptr, scs_ptr);

@@ -19,6 +19,7 @@
 #include "EbSequenceControlSet.h"
 #include "EbPictureControlSet.h"
 #include "firstpass.h"
+#include "EbLog.h"
 #if TWOPASS_RC
 #if 0
 #include "config/aom_scale_rtcd.h"
@@ -66,21 +67,21 @@ static INLINE int32_t frame_is_intra_only(PictureParentControlSet *pcs_ptr) {
     return pcs_ptr->frm_hdr.frame_type == KEY_FRAME ||
            pcs_ptr->frm_hdr.frame_type == INTRA_ONLY_FRAME;
 }
-#if 0
-static AOM_INLINE void output_stats(FIRSTPASS_STATS *stats,
-                                    struct aom_codec_pkt_list *pktlist) {
-  struct aom_codec_cx_pkt pkt;
-  pkt.kind = AOM_CODEC_STATS_PKT;
-  pkt.data.twopass_stats.buf = stats;
-  pkt.data.twopass_stats.sz = sizeof(FIRSTPASS_STATS);
-  if (pktlist != NULL) aom_codec_pkt_list_add(pktlist, &pkt);
-
+#if 1
+static AOM_INLINE void output_stats(SequenceControlSet *scs_ptr, FIRSTPASS_STATS *stats, uint64_t frame_number) {
+    eb_block_on_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
+    int32_t fseek_return_value = fseek(
+        scs_ptr->static_config.output_stat_file, (long)frame_number * sizeof(FIRSTPASS_STATS), SEEK_SET);
+    if (fseek_return_value != 0) SVT_LOG("Error in fseek  returnVal %i\n", fseek_return_value);
+    fwrite(stats, sizeof(FIRSTPASS_STATS), (size_t)1, scs_ptr->static_config.output_stat_file);
 // TEMP debug code
 #if OUTPUT_FPF
   {
     FILE *fpfile;
-    fpfile = fopen("firstpass.stt", "a");
-
+    if (frame_number == 0)
+        fpfile = fopen("firstpass.stt", "w");
+    else
+        fpfile = fopen("firstpass.stt", "a");
     fprintf(fpfile,
             "%12.0lf %12.4lf %12.0lf %12.0lf %12.0lf %12.4lf %12.4lf"
             "%12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf"
@@ -95,6 +96,7 @@ static AOM_INLINE void output_stats(FIRSTPASS_STATS *stats,
     fclose(fpfile);
   }
 #endif
+    eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
 #endif
 #if TWOPASS_STAT_BUF
@@ -150,12 +152,15 @@ void av1_accumulate_stats(FIRSTPASS_STATS *section,
   section->count += frame->count;
   section->duration += frame->duration;
 }
-#if 0
-void av1_end_first_pass(AV1_COMP *cpi) {
-  if (cpi->twopass.stats_buf_ctx->total_stats)
-    output_stats(cpi->twopass.stats_buf_ctx->total_stats, cpi->output_pkt_list);
-}
+void av1_end_first_pass(PictureParentControlSet *pcs_ptr) {
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    TWO_PASS *twopass = &scs_ptr->twopass;
 
+    if (twopass->stats_buf_ctx->total_stats)
+        // add the total to the end of the file
+        output_stats(scs_ptr, twopass->stats_buf_ctx->total_stats, pcs_ptr->picture_number + 1);
+}
+#if 0
 static aom_variance_fn_t get_block_variance_fn(BLOCK_SIZE bsize) {
   switch (bsize) {
     case BLOCK_8X8: return aom_mse8x8;
@@ -450,10 +455,10 @@ static int get_prediction_error_bitdepth(const int is_high_bitdepth,
 #endif  // CONFIG_AV1_HIGHBITDEPTH
   return get_prediction_error(block_size, src, ref);
 }
-
+#endif
 // Accumulates motion vector stats.
 // Modifies member variables of "stats".
-static void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv,
+/*static*/ void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv,
                                 const int mb_row, const int mb_col,
                                 const int mb_rows, const int mb_cols,
                                 MV *last_mv, FRAME_STATS *stats) {
@@ -494,7 +499,7 @@ static void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv,
     }
   }
 }
-
+#if 0
 #define LOW_MOTION_ERROR_THRESH 25
 // Computes and returns the inter prediction error from the last frame.
 // Computes inter prediction errors from the golden and alt ref frams and
@@ -792,18 +797,18 @@ static void update_firstpass_stats(PictureParentControlSet *pcs_ptr, //AV1_COMP 
   // We will store the stats inside the persistent twopass struct (and NOT the
   // local variable 'fps'), and then cpi->output_pkt_list will point to it.
   *this_frame_stats = fps;
-//  output_stats(this_frame_stats, cpi->output_pkt_list);
-//  if (cpi->twopass.stats_buf_ctx->total_stats != NULL) {
-//    av1_accumulate_stats(cpi->twopass.stats_buf_ctx->total_stats, &fps);
-//  }
+  output_stats(scs_ptr, this_frame_stats, pcs_ptr->picture_number);
+  if (twopass->stats_buf_ctx->total_stats != NULL) {
+    av1_accumulate_stats(twopass->stats_buf_ctx->total_stats, &fps);
+  }
   /*In the case of two pass, first pass uses it as a circular buffer,
    * when LAP is enabled it is used as a linear buffer*/
-//  twopass->stats_buf_ctx->stats_in_end++;
-//  if ((cpi->oxcf.pass == 1) && (twopass->stats_buf_ctx->stats_in_end >=
-//                                twopass->stats_buf_ctx->stats_in_buf_end)) {
-//    twopass->stats_buf_ctx->stats_in_end =
-//        twopass->stats_buf_ctx->stats_in_start;
-//  }
+  twopass->stats_buf_ctx->stats_in_end++;
+  if ((scs_ptr->use_output_stat_file) && (twopass->stats_buf_ctx->stats_in_end >=
+                                twopass->stats_buf_ctx->stats_in_buf_end)) {
+    twopass->stats_buf_ctx->stats_in_end =
+        twopass->stats_buf_ctx->stats_in_start;
+  }
 }
 
 #if 0
@@ -865,24 +870,24 @@ static FRAME_STATS accumulate_frame_stats(FRAME_STATS *mb_stats, int mb_rows,
   }
   return stats;
 }
-#if 0
-static void setup_firstpass_data(AV1_COMMON *const cm,
-                                 FirstPassData *firstpass_data) {
-  const CommonModeInfoParams *const mi_params = &cm->mi_params;
-  CHECK_MEM_ERROR(cm, firstpass_data->raw_motion_err_list,
-                  aom_calloc(mi_params->mb_rows * mi_params->mb_cols,
-                             sizeof(*firstpass_data->raw_motion_err_list)));
-  CHECK_MEM_ERROR(cm, firstpass_data->mb_stats,
-                  aom_calloc(mi_params->mb_rows * mi_params->mb_cols,
-                             sizeof(*firstpass_data->mb_stats)));
-  for (int j = 0; j < mi_params->mb_rows; j++) {
-    for (int i = 0; i < mi_params->mb_cols; i++) {
-      firstpass_data->mb_stats[j * mi_params->mb_cols + i]
-          .image_data_start_row = INVALID_ROW;
-    }
-  }
-}
+/**************************************************
+ * Reset first pass stat
+ **************************************************/
+void setup_firstpass_data(PictureParentControlSet *pcs_ptr) {
 
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    FirstPassData *firstpass_data = &pcs_ptr->firstpass_data;
+    const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
+    const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
+    const uint32_t num_mbs = mb_cols * mb_rows;
+    memset(firstpass_data->raw_motion_err_list, 0, sizeof(*firstpass_data->raw_motion_err_list) * num_mbs);
+    memset(firstpass_data->mb_stats, 0, sizeof(*firstpass_data->mb_stats) * num_mbs);
+    for (int i = 0; i < num_mbs; i++)
+        firstpass_data->mb_stats[i].image_data_start_row = INVALID_ROW;
+
+    return;
+}
+#if 0
 static void free_firstpass_data(FirstPassData *firstpass_data) {
   aom_free(firstpass_data->raw_motion_err_list);
   aom_free(firstpass_data->mb_stats);
@@ -1239,4 +1244,53 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
   ++current_frame->frame_number;
 #endif
 }
+
+#if FIRST_PASS_SETUP
+void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_duration) {
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
+    const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
+
+    int *raw_motion_err_list = pcs_ptr->firstpass_data.raw_motion_err_list;
+    FRAME_STATS *mb_stats = pcs_ptr->firstpass_data.mb_stats;
+
+    FRAME_STATS stats =
+        accumulate_frame_stats(mb_stats, mb_rows, mb_cols);
+    int total_raw_motion_err_count =
+        frame_is_intra_only(pcs_ptr) ? 0 : mb_rows * mb_cols;
+    const double raw_err_stdev =
+        raw_motion_error_stdev(raw_motion_err_list, total_raw_motion_err_count);
+#if 0
+    free_firstpass_data(&cpi->firstpass_data);
+    // anaghdin check this
+    // Clamp the image start to rows/2. This number of rows is discarded top
+    // and bottom as dead data so rows / 2 means the frame is blank.
+    if ((stats.image_data_start_row > mi_params->mb_rows / 2) ||
+        (stats.image_data_start_row == INVALID_ROW)) {
+        stats.image_data_start_row = mi_params->mb_rows / 2;
+    }
+    // Exclude any image dead zone
+    if (stats.image_data_start_row > 0) {
+        stats.intra_skip_count =
+            AOMMAX(0, stats.intra_skip_count -
+            (stats.image_data_start_row * mi_params->mb_cols * 2));
+    }
+#endif
+#if TWOPASS_STAT_BUF
+    TWO_PASS *twopass = &scs_ptr->twopass;
+#else
+    TWO_PASS *twopass = &pcs_ptr->twopass;
+#endif
+    const int num_mbs = mb_rows * mb_cols;
+    /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
+        ? cpi->initial_mbs
+        : mi_params->MBs;*/
+    stats.intra_factor = stats.intra_factor / (double)num_mbs;
+    stats.brightness_factor = stats.brightness_factor / (double)num_mbs;
+    //FIRSTPASS_STATS *this_frame_stats = twopass->stats_buf_ctx->stats_in_end;
+    update_firstpass_stats(pcs_ptr, &stats, raw_err_stdev,
+        pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
+
+}
+#endif
 #endif  // TWOPASS_RC

@@ -329,11 +329,19 @@ struct TileDataEnc;
 //void av1_rc_get_first_pass_params(struct AV1_COMP *cpi);
 //void av1_first_pass_row(struct AV1_COMP *cpi, struct ThreadData *td,
 //                        struct TileDataEnc *tile_data, int mb_row);
-//void av1_end_first_pass(struct AV1_COMP *cpi);
 
 void av1_twopass_zero_stats(FIRSTPASS_STATS *section);
 void av1_accumulate_stats(FIRSTPASS_STATS *section,
                           const FIRSTPASS_STATS *frame);
+#if FIRST_PASS_SETUP
+void av1_end_first_pass(struct PictureParentControlSet *pcs_ptr);
+void first_pass_frame_end(struct PictureParentControlSet *pcs_ptr, const int64_t ts_duration);
+void setup_firstpass_data(struct PictureParentControlSet *pcs_ptr);
+void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv,
+    const int mb_row, const int mb_col,
+    const int mb_rows, const int mb_cols,
+    MV *last_mv, FRAME_STATS *stats);
+#endif
 /*!\endcond */
 
 /*!\brief AV1 first pass encoding.

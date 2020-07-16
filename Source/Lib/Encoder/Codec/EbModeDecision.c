@@ -4851,9 +4851,15 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #else
     MeSbResults *me_results  = pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
 #endif
+#if FIRST_PASS_SETUP
+    EbBool       allow_bipred =
+        (scs_ptr->use_output_stat_file || context_ptr->blk_geom->bwidth == 4 || context_ptr->blk_geom->bheight == 4)
+        ? EB_FALSE : EB_TRUE;
+#else
     EbBool       allow_bipred =
         (context_ptr->blk_geom->bwidth == 4 || context_ptr->blk_geom->bheight == 4) ? EB_FALSE
                                                                                     : EB_TRUE;
+#endif
     BlockSize    bsize = context_ptr->blk_geom->bsize; // bloc size
     MD_COMP_TYPE cur_type; //GG
 

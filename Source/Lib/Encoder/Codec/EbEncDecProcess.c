@@ -42,7 +42,9 @@
 #if R2R_FIX_PADDING
 #include "EbPictureDecisionProcess.h"
 #endif
-
+#if FIRST_PASS_SETUP
+#include "firstpass.h"
+#endif
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
                         PictureControlSet *pcs_ptr);
 
@@ -339,7 +341,6 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
 
     return;
 }
-
 #if !QP2QINDEX
 /******************************************************
  * EncDec Configure SB
@@ -8131,7 +8132,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->interpolation_filter_search_blk_size = 0;//anaghdin to check
 
     // Derive Spatial SSE Flag
-    context_ptr->spatial_sse_full_loop = EB_FALSE;//anaghdin to check
+    context_ptr->spatial_sse_full_loop = EB_TRUE;//anaghdin to check
 
     context_ptr->blk_skip_decision = EB_FALSE;
 
@@ -8152,20 +8153,20 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // md_stage_1_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
         context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
-   
+
     // md_stage_2_3_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than
     // md_stage_2_3_cand_prune_th
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
-   
+
     // md_stage_2_3_class_prune_th (for class removal)
     // Remove class if deviation to the best is higher than
     // md_stage_2_3_class_prune_th
 
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
-  
+
     context_ptr->coeff_area_based_bypass_nsq_th = 0;
-    
+
     // NSQ cycles reduction level: TBD
     uint8_t nsq_cycles_red_mode = 0;
     set_nsq_cycle_redcution_controls(context_ptr, nsq_cycles_red_mode);
@@ -8195,25 +8196,25 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // Set pred ME full search area
     context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
     context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
-   
+
     // Set coeff_based_nsq_cand_reduction
     context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
-   
+
     // Set pic_obmc_level @ MD
     context_ptr->md_pic_obmc_level = 0;
     set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_level);
 
     // Set enable_inter_intra @ MD
     context_ptr->md_enable_inter_intra = 0;
-   
+
     // Set enable_paeth @ MD
     context_ptr->md_enable_paeth = 0;
-   
+
     // Set enable_smooth @ MD
     context_ptr->md_enable_smooth = 0;
-    
+
     // Set md_tx_size_search_mode @ MD
-    context_ptr->md_tx_size_search_mode = 0;
+    context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
 
     uint8_t txs_cycles_reduction_level = 0;
     set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
@@ -8225,10 +8226,10 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // 0                      | OFF
     // 1                      | ON
     context_ptr->md_filter_intra_level = 0;
-   
+
     // Set md_allow_intrabc @ MD
     context_ptr->md_allow_intrabc = 0;
-   
+
     // intra_similar_mode
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
@@ -8237,7 +8238,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // Set inter_intra_distortion_based_reference_pruning
     context_ptr->inter_intra_distortion_based_reference_pruning = 0;
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
-    
+
     context_ptr->block_based_depth_reduction_level = 0;
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 
@@ -8251,7 +8252,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level, 4, 4, 1); // anaghdin
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
-    context_ptr->md_skip_mvp_generation = EB_FALSE; //anaghdin 
+    context_ptr->md_skip_mvp_generation = EB_FALSE; //anaghdin
 
     // Set dc_cand_only_flag
     context_ptr->dc_cand_only_flag = EB_TRUE;
@@ -8261,12 +8262,12 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // Set disable_angle_z2_prediction_flag
     context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
-   
+
     // Set full_cost_derivation_fast_rate_blind_flag
-    context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;//anaghdin 
+    context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;//anaghdin
 
     context_ptr->skip_intra = 0;
-   
+
     return return_error;
 }
 #endif
@@ -10798,6 +10799,10 @@ void *enc_dec_kernel(void *input_ptr) {
         memset( context_ptr->md_context->txt_cnt, 0, sizeof(uint32_t) * TXT_DEPTH_DELTA_NUM * TX_TYPES);
         generate_txt_prob(pcs_ptr, context_ptr->md_context);
 #endif
+#if FIRST_PASS_SETUP
+        if (scs_ptr->use_output_stat_file)
+            setup_firstpass_data(pcs_ptr->parent_pcs_ptr);
+#endif
         // Segment-loop
         while (assign_enc_dec_segments(segments_ptr,
                                        &segment_index,
@@ -11374,6 +11379,14 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
 #else
             pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->full_lambda;
+#endif
+#if FIRST_PASS_SETUP
+            if (scs_ptr->use_output_stat_file) {
+                first_pass_frame_end(pcs_ptr->parent_pcs_ptr, 0);//anaghdin check second input
+
+                if(pcs_ptr->parent_pcs_ptr->end_of_sequence_flag)
+                    av1_end_first_pass(pcs_ptr->parent_pcs_ptr);
+            }
 #endif
 #if DECOUPLE_ME_RES
             eb_release_object(pcs_ptr->parent_pcs_ptr->me_data_wrapper_ptr);
