@@ -1364,11 +1364,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Derive global_motion_estimation level
 
     uint8_t hp_level;
-    if (hp_level <= HP_ME_SAD_TH_0)
+    if (average_me_sad <= HP_ME_SAD_TH_0)
         hp_level = 0;
-    else if (hp_level < HP_ME_SAD_TH_1)
+    else if (average_me_sad < HP_ME_SAD_TH_1)
         hp_level = 1;
-    else if (hp_level < HP_ME_SAD_TH_2)
+    else if (average_me_sad < HP_ME_SAD_TH_2)
         hp_level = 2;
     else
         hp_level = 3;
@@ -1383,7 +1383,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                 frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
 #endif
 #if HP_USE_INPUT_COMPLEXITY
-        hp_level >= 2 &&
+        hp_level >= 1 &&
 #endif
 #if NEW_RESOLUTION_RANGES
                 (scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)
