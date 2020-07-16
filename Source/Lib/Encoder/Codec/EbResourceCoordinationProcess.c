@@ -18,6 +18,9 @@
 #include "EbEntropyCoding.h"
 #include "EbObject.h"
 #include "EbLog.h"
+#if TWOPASS_RC
+#include "pass2_strategy.h"
+#endif
 
 typedef struct ResourceCoordinationContext {
     EbFifo *                       input_buffer_fifo_ptr;

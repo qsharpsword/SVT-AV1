@@ -66,9 +66,11 @@ void av1_init_single_pass_lap(AV1_COMP *cpi);
 //                                unsigned int frame_flags);
 void av1_get_second_pass_params(struct PictureControlSet *pcs_ptr);
 
-void av1_twopass_postencode_update(struct AV1_COMP *cpi);
+//void av1_twopass_postencode_update(struct AV1_COMP *cpi);
+void av1_twopass_postencode_update(struct PictureControlSet *pcs_ptr);
 
-void av1_gop_bit_allocation(const AV1_COMP *cpi, RATE_CONTROL *const rc,
+//void av1_gop_bit_allocation(const AV1_COMP *cpi, RATE_CONTROL *const rc,
+void av1_gop_bit_allocation(struct PictureControlSet *pcs_ptr, RATE_CONTROL *const rc,
                             GF_GROUP *gf_group, int is_key_frame, int use_arf,
                             int64_t gf_group_bits);
 

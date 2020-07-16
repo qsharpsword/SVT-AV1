@@ -792,7 +792,7 @@ static int calculate_boost_factor(int frame_count, int bits,
 // Reduce the number of bits assigned to keyframe or arf if necessary, to
 // prevent bitrate spikes that may break level constraints.
 // frame_type: 0: keyframe; 1: arf.
-static int adjust_boost_bits_for_target_level(const AV1_COMP *const cpi,
+static int adjust_boost_bits_for_target_level(PictureControlSet *pcs_ptr,
                                               RATE_CONTROL *const rc,
                                               int bits_assigned,
                                               int64_t group_bits,
@@ -843,6 +843,7 @@ static int adjust_boost_bits_for_target_level(const AV1_COMP *const cpi,
 
   return bits_assigned;
 }
+#endif
 
 // Allocate bits to each frame in a GF / ARF group
 double layer_fraction[MAX_ARF_LAYERS + 1] = { 1.0,  0.70, 0.55, 0.60,
@@ -918,7 +919,6 @@ static void allocate_gf_group_bits(GF_GROUP *gf_group, RATE_CONTROL *const rc,
   // simplify logics in reference frame management.
   gf_group->bit_allocation[gf_group_size] = 0;
 }
-#endif
 
 // Returns true if KF group and GF group both are almost completely static.
 static INLINE int is_almost_static(double gf_zero_motion, int kf_zero_motion,
@@ -1875,19 +1875,16 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
   twopass->rolling_arf_group_target_bits = 1;
   twopass->rolling_arf_group_actual_bits = 1;
 
-#if 0 //kelvinTODO
-  av1_gop_bit_allocation(cpi, rc, gf_group,
+  av1_gop_bit_allocation(pcs_ptr, rc, gf_group,
                          frame_params->frame_type == KEY_FRAME, use_alt_ref,
                          gf_group_bits);
-#endif
 }
 
-#if 0
 // #define FIXED_ARF_BITS
 #ifdef FIXED_ARF_BITS
 #define ARF_BITS_FRACTION 0.75
 #endif
-void av1_gop_bit_allocation(const AV1_COMP *cpi, RATE_CONTROL *const rc,
+void av1_gop_bit_allocation(PictureControlSet *pcs_ptr, RATE_CONTROL *const rc,
                             GF_GROUP *gf_group, int is_key_frame, int use_arf,
                             int64_t gf_group_bits) {
   // Calculate the extra bits to be used for boosted frame(s)
@@ -1898,14 +1895,16 @@ void av1_gop_bit_allocation(const AV1_COMP *cpi, RATE_CONTROL *const rc,
                                          rc->gfu_boost, gf_group_bits);
 #endif
 
-  gf_arf_bits = adjust_boost_bits_for_target_level(cpi, rc, gf_arf_bits,
+#if 0
+  // skip it for always no operating_point_idc
+  gf_arf_bits = adjust_boost_bits_for_target_level(pcs_ptr, rc, gf_arf_bits,
                                                    gf_group_bits, 1);
+#endif
 
   // Allocate bits to each of the frames in the GF group.
   allocate_gf_group_bits(gf_group, rc, gf_group_bits, gf_arf_bits, is_key_frame,
                          use_arf);
 }
-#endif
 
 // Minimum % intra coding observed in first pass (1.0 = 100%)
 #define MIN_INTRA_LEVEL 0.25
@@ -2594,7 +2593,7 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   //        kf_bits, twopass->kf_zeromotion_pct);
 #if 0
   // skip it for always no operating_point_idc
-  kf_bits = adjust_boost_bits_for_target_level(cpi, rc, kf_bits,
+  kf_bits = adjust_boost_bits_for_target_level(pcs_ptr, rc, kf_bits,
                                                twopass->kf_group_bits, 0);
 #endif
 
@@ -3083,15 +3082,34 @@ void av1_init_single_pass_lap(AV1_COMP *cpi) {
   twopass->rolling_arf_group_target_bits = 1;
   twopass->rolling_arf_group_actual_bits = 1;
 }
+#endif
+
+//static INLINE int frame_is_kf_gf_arf(const AV1_COMP *cpi)
+static INLINE int frame_is_kf_gf_arf(PictureControlSet *pcs_ptr) {
+  //const GF_GROUP *const gf_group = &cpi->gf_group;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+  const /*frame_update_type*/int update_type = gf_group->update_type[gf_group->index];
+
+  return frame_is_intra_only(pcs_ptr->parent_pcs_ptr) || update_type == ARF_UPDATE ||
+         update_type == GF_UPDATE;
+}
 
 #define MINQ_ADJ_LIMIT 48
 #define MINQ_ADJ_LIMIT_CQ 20
 #define HIGH_UNDERSHOOT_RATIO 2
-void av1_twopass_postencode_update(AV1_COMP *cpi) {
-  TWO_PASS *const twopass = &cpi->twopass;
-  RATE_CONTROL *const rc = &cpi->rc;
+void av1_twopass_postencode_update(PictureControlSet *pcs_ptr) {
+  //TWO_PASS *const twopass = &cpi->twopass;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  //const RateControlCfg *const rc_cfg = &cpi->oxcf.rc_cfg;
+  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  TWO_PASS *const twopass = &scs_ptr->twopass;
+  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
   const int bits_used = rc->base_frame_target;
-  const RateControlCfg *const rc_cfg = &cpi->oxcf.rc_cfg;
+  const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
 
   // VBR correction is done through rc->vbr_bits_off_target. Based on the
   // sign of this value, a limited % adjustment is made to the target rate
@@ -3116,10 +3134,10 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
 
   // Update the active best quality pyramid.
   if (!rc->is_src_frame_alt_ref) {
-    const int pyramid_level = cpi->gf_group.layer_depth[cpi->gf_group.index];
+    const int pyramid_level = gf_group->layer_depth[gf_group->index];
     int i;
     for (i = pyramid_level; i <= MAX_ARF_LAYERS; ++i) {
-      rc->active_best_quality[i] = cpi->common.quant_params.base_qindex;
+      rc->active_best_quality[i] = quantizer_to_qindex[pcs_ptr->picture_qp];//cpi->common.quant_params.base_qindex;
       // if (pyramid_level >= 2) {
       //   rc->active_best_quality[pyramid_level] =
       //     AOMMAX(rc->active_best_quality[pyramid_level],
@@ -3152,14 +3170,14 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
   }
 #endif
 
-  if (cpi->common.current_frame.frame_type != KEY_FRAME) {
+  if (pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
     twopass->kf_group_bits -= bits_used;
     twopass->last_kfgroup_zeromotion_pct = twopass->kf_zeromotion_pct;
   }
   twopass->kf_group_bits = AOMMAX(twopass->kf_group_bits, 0);
 
   // If the rate control is drifting consider adjustment to min or maxq.
-  if ((rc_cfg->mode != AOM_Q) && !cpi->rc.is_src_frame_alt_ref) {
+  if ((rc_cfg->mode != AOM_Q) && !rc->is_src_frame_alt_ref) {
     const int maxq_adj_limit = rc->worst_quality - rc->active_worst_quality;
     const int minq_adj_limit =
         (rc_cfg->mode == AOM_CQ ? MINQ_ADJ_LIMIT_CQ : MINQ_ADJ_LIMIT);
@@ -3194,7 +3212,7 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
     // bits back in quickly. One situation where this may happen is if a
     // frame is unexpectedly almost perfectly predicted by the ARF or GF
     // but not very well predcited by the previous frame.
-    if (!frame_is_kf_gf_arf(cpi) && !cpi->rc.is_src_frame_alt_ref) {
+    if (!frame_is_kf_gf_arf(pcs_ptr) && !rc->is_src_frame_alt_ref) {
       int fast_extra_thresh = rc->base_frame_target / HIGH_UNDERSHOOT_RATIO;
       if (rc->projected_frame_size < fast_extra_thresh) {
         rc->vbr_bits_off_target_fast +=
@@ -3218,6 +3236,5 @@ void av1_twopass_postencode_update(AV1_COMP *cpi) {
     }
   }
 }
-#endif
 
 #endif //TWOPASS_RC

@@ -4065,7 +4065,9 @@ enum {
 // that are not marked as coded with 0,0 motion in the first pass.
 #define FAST_MOVING_KF_GROUP_THRESH 5
 #define MEDIUM_MOVING_KF_GROUP_THRESH 30
+#if !TWOPASS_RC
 #define STATIC_KF_GROUP_THRESH 70
+#endif
 #define MAX_QPS_COMP_I 150
 #define MAX_QPS_COMP_I_LR 42
 #define MAX_QPS_COMP_NONI 300
@@ -5083,7 +5085,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
     // Extension to max or min Q if undershoot or overshoot is outside
     // the permitted range.
     if (rc_mode != AOM_Q) {
-        if (frame_is_intra_only(pcs_ptr) ||
+        if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ||
                 (!is_src_frame_alt_ref &&
                  (refresh_golden_frame || is_intrl_arf_boost ||
                   refresh_alt_ref_frame))) {
@@ -6200,14 +6202,25 @@ void av1_rc_init(PictureControlSet *pcs_ptr) {
   rc->baseline_gf_interval = 16; //kelvinhack
 }
 
-void set_rc_context(PictureControlSet *pcs_ptr,
-                    EncodeContext *encode_context_ptr,
+static void set_rc_gf_group(PictureControlSet *pcs_ptr,
                     HighLevelRateControlContext *high_level_rate_control_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
-    //EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *const rc = &encode_context_ptr->rc;
     TWO_PASS *const twopass = &scs_ptr->twopass;
+    GF_GROUP *gf_group = &encode_context_ptr->gf_group;
 
+    //kelvin double check it in construct_multi_layer_gf_structure()
+    gf_group->max_layer_depth_allowed = scs_ptr->static_config.hierarchical_levels;
+    gf_group->update_type[gf_group->index] =
+                  (frame_is_intra_only(pcs_ptr->parent_pcs_ptr))
+                      ? KF_UPDATE
+                      : (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+                            ? ARF_UPDATE
+                            : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
+                                                                                 : LF_UPDATE;
+    gf_group->layer_depth[gf_group->index] = pcs_ptr->parent_pcs_ptr->temporal_layer_index;
+    // TODO
 }
 
 static AOM_INLINE int combine_prior_with_tpl_boost_org(double min_factor,
@@ -6570,12 +6583,12 @@ static int get_q(PictureControlSet *pcs_ptr,
     int q;
 
   if (rc_mode == AOM_Q ||
-      (frame_is_intra_only(pcs_ptr) && !rc->this_key_frame_forced &&
+      (frame_is_intra_only(pcs_ptr->parent_pcs_ptr) && !rc->this_key_frame_forced &&
        twopass->kf_zeromotion_pct >= STATIC_KF_GROUP_THRESH &&
        rc->frames_to_key > 1)) {
     q = active_best_quality;
     // Special case code to try and match quality with forced key frames.
-  } else if (frame_is_intra_only(pcs_ptr) && rc->this_key_frame_forced) {
+  } else if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr) && rc->this_key_frame_forced) {
     // If static since last kf use better of last boosted and last kf q.
     if (twopass->last_kfgroup_zeromotion_pct >= STATIC_MOTION_THRESH) {
       q = AOMMIN(rc->last_kf_qindex, rc->last_boosted_qindex);
@@ -6636,9 +6649,9 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr, int qindex) {
                             ? ARF_UPDATE
                             : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
                                                                                  : LF_UPDATE;
-    const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
     const int pyramid_level = pcs_ptr->parent_pcs_ptr->temporal_layer_index; //kelvinhack?
 #if 0
+    const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
     if (oxcf->q_cfg.use_fixed_qp_offsets) {
         return get_q_using_fixed_offsets(oxcf, rc, gf_group, gf_group->index,
                                          cq_level, bit_depth);
@@ -6681,6 +6694,49 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr, int qindex) {
     clamp(q, active_best_quality, active_worst_quality);
 
     return q;
+}
+
+static void update_rc_counts(PictureControlSet *pcs_ptr) {
+  SequenceControlSet *scs_ptr       = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *rc                  = &encode_context_ptr->rc;
+  GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
+  //update_keyframe_counters(cpi);
+  if (1/*cpi->common.show_frame*/) {
+    if (/*!cpi->common.show_existing_frame || */rc->is_src_frame_alt_ref ||
+        pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
+      // If this is a show_existing_frame with a source other than altref,
+      // or if it is not a displayed forward keyframe, the keyframe update
+      // counters were incremented when it was originally encoded.
+      rc->frames_since_key++;
+      rc->frames_to_key--;
+    }
+  }
+
+  //update_frames_till_gf_update(cpi);
+#if 0
+  // TODO(weitinglin): Updating this counter for is_frame_droppable
+  // is a work-around to handle the condition when a frame is drop.
+  // We should fix the cpi->common.show_frame flag
+  // instead of checking the other condition to update the counter properly.
+  if (/*cpi->common.show_frame ||*/
+      is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)) {
+    // Decrement count down till next gf
+    if (cpi->rc.frames_till_gf_update_due > 0)
+      cpi->rc.frames_till_gf_update_due--;
+  }
+#endif
+
+  //update_gf_group_index(cpi);
+  // Increment the gf group index ready for the next frame. If this is
+  // a show_existing_frame with a source other than altref, or if it is not
+  // a displayed forward keyframe, the index was incremented when it was
+  // originally encoded.
+  if (/*!cpi->common.show_existing_frame || */rc->is_src_frame_alt_ref ||
+      pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
+    ++gf_group->index;
+  }
+
 }
 #endif
 void *rate_control_kernel(void *input_ptr) {
@@ -6757,7 +6813,7 @@ void *rate_control_kernel(void *input_ptr) {
                             av1_rc_init(pcs_ptr);
                         }
                         av1_get_second_pass_params(pcs_ptr);
-                        // set_rc_context(pcs_ptr, context_ptr, context_ptr->high_level_rate_control_ptr); //???
+                        set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                     } else
 #endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,
@@ -7130,7 +7186,8 @@ void *rate_control_kernel(void *input_ptr) {
                     if (scs_ptr->use_input_stat_file &&
                         !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
-                        //av1_twopass_postencode_update(pcs_ptr);
+                        av1_twopass_postencode_update(pcs_ptr);
+                        update_rc_counts(pcs_ptr);
                     } else
 #endif
                     frame_level_rc_feedback_picture_vbr(
