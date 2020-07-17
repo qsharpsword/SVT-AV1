@@ -633,7 +633,7 @@ extern "C" {
 #define FULL_HP_PD_0              0
 #define UPGRADE_SUBPEL_LEVEL_4    0
 #define SEARCH_MULTIPLE_EIGHT_PEL 0
-#define USE_VARIANCE_SUBPEL       1
+#define USE_VARIANCE_SUBPEL       0
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
