@@ -4725,6 +4725,9 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 #endif
 }
 
+#if USE_VARIANCE_SUBPEL
+AomVarianceFnPtr mefn_ptr[BlockSizeS_ALL];
+#endif
 #if ADD_MD_NSQ_SEARCH
 // HPs are the 8 performed positions when search area is 3x3, search_step is 4 (1/2 Pel search), search_pattern is 0 (H,V,D), search_central_position is 0
 // XX.......HP.......HP.......HP.......XX
@@ -4740,7 +4743,11 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                        EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
 #if INT_RECON_OFFSET_FIX
+#if USE_VARIANCE_SUBPEL
+                       int32_t blk_origin_index, uint8_t dist_fn, uint8_t list_idx, int8_t ref_idx,
+#else
                        int32_t blk_origin_index, EbBool use_ssd, uint8_t list_idx, int8_t ref_idx,
+#endif
 #else
                        uint32_t blk_origin_index, EbBool use_ssd, uint8_t list_idx, int8_t ref_idx,
 #endif
@@ -4793,7 +4800,23 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
                     (context_ptr->blk_origin_y + (mvy >> 3) + ref_pic->origin_y + refinement_pos_y) *
                     ref_pic->stride_y;
 
+#if USE_VARIANCE_SUBPEL
+                if (dist_fn == 2) {
+                    const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
+                    unsigned int sse;
+                    (void)fn_ptr->vf(
+                        input_picture_ptr->buffer_y + input_origin_index,
+                        input_picture_ptr->stride_y,
+                        ref_pic->buffer_y + ref_origin_index,
+                        ref_pic->stride_y, 
+                        &sse);
+                    distortion = (uint32_t)sse;
+
+                }
+                else if (dist_fn == 1) {
+#else
                 if (use_ssd) {
+#endif
                     EbSpatialFullDistType spatial_full_dist_type_fun =
                         hbd_mode_decision ? full_distortion_kernel16_bits
                         : spatial_full_distortion_kernel;
@@ -4882,7 +4905,22 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
                 hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
             // Distortion
+#if USE_VARIANCE_SUBPEL
+            if (dist_fn == 2) {
+                const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
+                unsigned int sse;
+                (void)fn_ptr->vf(
+                    input_picture_ptr->buffer_y + input_origin_index,
+                    input_picture_ptr->stride_y,
+                    prediction_ptr->buffer_y + blk_origin_index,
+                    prediction_ptr->stride_y, &sse);
+                distortion = (uint32_t)sse;
+
+            }
+            else if (dist_fn == 1) {
+#else
             if (use_ssd) {
+#endif
                 EbSpatialFullDistType spatial_full_dist_type_fun =
                     hbd_mode_decision ? full_distortion_kernel16_bits
                                       : spatial_full_distortion_kernel;
@@ -5620,7 +5658,11 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 input_picture_ptr,
                 input_origin_index,
                 blk_origin_index,
+#if USE_VARIANCE_SUBPEL
+                2,
+#else
                 context_ptr->md_subpel_search_ctrls.use_ssd,
+#endif
                 list_idx,
                 ref_idx,
                 context_ptr->md_motion_search_best_mv[best_mv_idx].mvx,
@@ -5706,7 +5748,11 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
             input_picture_ptr,
             input_origin_index,
             blk_origin_index,
+#if USE_VARIANCE_SUBPEL
+            2,
+#else
             context_ptr->md_subpel_search_ctrls.use_ssd,
+#endif
             list_idx,
             ref_idx,
 #if IMPROVE_QUARTER_PEL
@@ -5775,7 +5821,11 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 input_picture_ptr,
                 input_origin_index,
                 blk_origin_index,
+#if USE_VARIANCE_SUBPEL
+                2,
+#else
                 context_ptr->md_subpel_search_ctrls.use_ssd,
+#endif
                 list_idx,
                 ref_idx,
 #if IMPROVE_EIGHT_PEL

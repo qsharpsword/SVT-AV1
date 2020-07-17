@@ -622,15 +622,18 @@ extern "C" {
 #define USE_ERROR_ADVANTAGE 0
 #define SHUT_GMV 0
 
-#define SHUT_NSQ 1
-#define SB_64x64 1
-#define SHUT_HP  0
-#define USE_LIBAOM_QP_INDEX 0
-#define HP_USE_INPUT_COMPLEXITY 0
-#define REMOVE_QP_CHECK 0
-#define FULL_HP_PD_0 0
-#define UPGRADE_SUBPEL_LEVEL_4 0
-#define SEARCH_MULTIPLE_EIGHT_PEL 1
+#define SHUT_NSQ                  1
+#define SB_64x64                  1
+
+#define SHUT_HP                   0
+
+#define USE_LIBAOM_QP_INDEX       0
+#define HP_USE_INPUT_COMPLEXITY   0
+#define REMOVE_QP_CHECK           0
+#define FULL_HP_PD_0              0
+#define UPGRADE_SUBPEL_LEVEL_4    0
+#define SEARCH_MULTIPLE_EIGHT_PEL 0
+#define USE_VARIANCE_SUBPEL       1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
