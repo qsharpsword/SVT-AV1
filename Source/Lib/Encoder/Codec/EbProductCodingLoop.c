@@ -5822,7 +5822,7 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 input_origin_index,
                 blk_origin_index,
 #if USE_VARIANCE_SUBPEL
-                2,
+                0,
 #else
                 context_ptr->md_subpel_search_ctrls.use_ssd,
 #endif
@@ -7230,7 +7230,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                           input_origin_index,
                                           blk_origin_index,
 #if USE_VARIANCE_SUBPEL // pred_me
-                                          2,
+                                          0,
 #else
                                           use_ssd,
 #endif
