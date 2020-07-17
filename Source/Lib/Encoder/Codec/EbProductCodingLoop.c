@@ -5659,7 +5659,7 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 input_origin_index,
                 blk_origin_index,
 #if USE_VARIANCE_SUBPEL
-                2,
+                0,
 #else
                 context_ptr->md_subpel_search_ctrls.use_ssd,
 #endif
@@ -5749,7 +5749,7 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
             input_origin_index,
             blk_origin_index,
 #if USE_VARIANCE_SUBPEL
-            2,
+            0,
 #else
             context_ptr->md_subpel_search_ctrls.use_ssd,
 #endif
@@ -5847,7 +5847,11 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 &best_search_mvy,
                 &best_search_distortion,
                 context_ptr->md_subpel_search_ctrls.eight_pel_interpolation,
+#if USE_VARIANCE_SUBPEL
+                1,
+#else
                 0,
+#endif
                 context_ptr->md_subpel_search_ctrls.eight_pel_search_scan);
 #if IMPROVE_EIGHT_PEL
             }
@@ -7225,7 +7229,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                           input_picture_ptr,
                                           input_origin_index,
                                           blk_origin_index,
+#if USE_VARIANCE_SUBPEL // pred_me
+                                          2,
+#else
                                           use_ssd,
+#endif
                                           list_idx,
                                           ref_idx,
                                           best_search_mvx,
@@ -7244,7 +7252,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #if PERFORM_SUB_PEL_MD
                                           0,
 #endif
+#if USE_VARIANCE_SUBPEL // pred_me
+                                          1,
+#else
                                           0,
+#endif
                                           search_pattern);
                     }
 
