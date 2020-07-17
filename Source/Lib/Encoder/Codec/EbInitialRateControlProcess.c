@@ -2035,7 +2035,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
             if (scs_ptr->static_config.look_ahead_distance == 0) {
 
 
-                for (temporal_layer_index = 0; temporal_layer_index < EB_MAX_TEMPORAL_LAYERS;
+                for (uint8_t temporal_layer_index = 0; temporal_layer_index < EB_MAX_TEMPORAL_LAYERS;
                     temporal_layer_index++)
                     pcs_ptr->frames_in_interval[temporal_layer_index] = 0;
 
@@ -2066,7 +2066,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                     context_ptr->initialrate_control_results_output_fifo_ptr,
                     &out_results_wrapper_ptr);
 
-                out_results_ptr =
+                InitialRateControlResults * out_results_ptr =
                     (InitialRateControlResults *)out_results_wrapper_ptr->object_ptr;
 
                 out_results_ptr->pcs_wrapper_ptr = pcs_ptr->p_pcs_wrapper_ptr;
