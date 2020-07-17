@@ -71,6 +71,18 @@ void assign_app_thread_group(uint8_t target_socket) {
 
 double get_psnr(double sse, double max);
 
+#if 1 //COMBINED_2PASSES_CLI
+static const char* get_pass_name(EncodePass pass)
+{
+    if (pass == ENCODE_FIRST_PASS)
+        return "Pass 1/2 ";
+    if (pass == ENCODE_LAST_PASS)
+        return "Pass 2/2 ";
+    return "";
+}
+static EbErrorType encode(int32_t argc, char *argv[], EncodePass pass)
+{
+#else
 /***************************************
  * Encoder App Main
  ***************************************/
@@ -80,6 +92,7 @@ int32_t main(int32_t argc, char *argv[]) {
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
     // GLOBAL VARIABLES
+#endif
     EbErrorType          return_error   = EB_ErrorNone; // Error Handling
     AppExitConditionType exit_condition = APP_ExitConditionNone; // Processing loop exit condition
 
@@ -96,10 +109,13 @@ int32_t main(int32_t argc, char *argv[]) {
     uint32_t      num_channels = 0;
     uint32_t      inst_cnt     = 0;
     EbAppContext *app_callbacks[MAX_CHANNEL_NUMBER]; // Instances App callback data
+#if 1 //COMBINED_2PASSES_CLI
+#else
     signal(SIGINT, event_handler);
     fprintf(stderr, "-------------------------------------------\n");
     fprintf(stderr, "SVT-AV1 Encoder\n");
     if (!get_help(argc, argv)) {
+#endif
         // Get num_channels
         num_channels = get_number_of_channels(argc, argv);
         if (num_channels == 0) return EB_ErrorBadParameter;
@@ -111,6 +127,12 @@ int32_t main(int32_t argc, char *argv[]) {
                 return EB_ErrorInsufficientResources;
             }
             eb_config_ctor(configs[inst_cnt]);
+#if 1 //COMBINED_2PASSES_CLI
+        if (pass == ENCODE_FIRST_PASS)
+            configs[inst_cnt]->pass = 1;
+        else if (pass == ENCODE_LAST_PASS)
+            configs[inst_cnt]->pass = 2;
+#endif
             return_errors[inst_cnt] = EB_ErrorNone;
         }
 
@@ -150,6 +172,11 @@ int32_t main(int32_t argc, char *argv[]) {
                     start_time(
                         (uint64_t *)&configs[inst_cnt]->performance_context.lib_start_time[0],
                         (uint64_t *)&configs[inst_cnt]->performance_context.lib_start_time[1]);
+#if 1 //COMBINED_2PASSES_CLI
+                if (pass == ENCODE_FIRST_PASS) {
+                    configs[inst_cnt]->enc_mode = MAX_ENC_PRESET;
+                }
+#endif
 
                     return_errors[inst_cnt] =
                         init_encoder(configs[inst_cnt], app_callbacks[inst_cnt], inst_cnt);
@@ -191,7 +218,11 @@ int32_t main(int32_t argc, char *argv[]) {
                     else
                         break;
                 }
+#if 1 //COMBINED_2PASSES_CLI
+            fprintf(stderr, "%sEncoding          ", get_pass_name(pass));
+#else
                 fprintf(stderr, "Encoding          ");
+#endif
                 fflush(stdout);
 
                 while (exit_condition == APP_ExitConditionNone) {
@@ -415,9 +446,33 @@ int32_t main(int32_t argc, char *argv[]) {
             if (configs[inst_cnt]) free(configs[inst_cnt]);
             if (app_callbacks[inst_cnt]) free(app_callbacks[inst_cnt]);
         }
+#if 1 //COMBINED_2PASSES_CLI
+    return EB_ErrorNone;
+}
 
+int32_t main(int32_t argc, char *argv[]) {
+#ifdef _WIN32
+    _setmode(_fileno(stdin), _O_BINARY);
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
+    EbErrorType          return_error   = EB_ErrorNone; // Error Handling
+    uint32_t passes;
+    EncodePass pass[MAX_ENCODE_PASS];
+    signal(SIGINT, event_handler);
+    fprintf(stderr, "-------------------------------------------\n");
+    fprintf(stderr, "SVT-AV1 Encoder\n");
+    if (get_help(argc, argv))
+        return 0;
+    passes = get_passes(argc, argv, pass);
+    for (uint32_t i = 0; i < passes; i++) {
+        return_error = encode(argc, argv, pass[i]);
+        if (return_error != EB_ErrorNone)
+            break;
+    }
+#else
         fprintf(stderr, "Encoder finished\n");
     }
+#endif
 
     return (return_error == 0) ? 0 : 1;
 }
