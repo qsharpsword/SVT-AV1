@@ -622,6 +622,9 @@ extern "C" {
 #define FIX_MV_BOUND       1 //Clip inherited ME MVs to stay within pic boundaries
 #define NEW_DELAY          1 //Change delay some sorts of I in PicDecision
 
+
+
+#define COMBINED_2PASSES_CLI   1 //CLI for combined two passes
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

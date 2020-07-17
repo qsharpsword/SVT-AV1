@@ -17,6 +17,9 @@
 #include <io.h>
 #else
 #include <unistd.h>
+#if 1 //COMBINED_2PASSES_CLI
+#include <sys/file.h>
+#endif
 #endif
 
 /**********************************
@@ -33,6 +36,11 @@
 #define OUTPUT_RECON_TOKEN "-o"
 #define ERROR_FILE_TOKEN "-errlog"
 #define QP_FILE_TOKEN "-qp-file"
+#if 1 //COMBINED_2PASSES_CLI
+#define PASS_TOKEN "--pass"
+#define TWO_PASS_STATS_TOKEN "--stats"
+#define PASSES_TOKEN "--passes"
+#endif
 #define INPUT_STAT_FILE_TOKEN "-input-stat-file"
 #define OUTPUT_STAT_FILE_TOKEN "-output-stat-file"
 #define STAT_FILE_TOKEN "-stat-file"
@@ -238,6 +246,45 @@
 #if 1//ON_OFF_FEATURE_MRP
 #define MRP_LEVEL_TOKEN "--mrp-level"
 #endif
+#if 1 //COMBINED_2PASSES_CLI
+#ifdef _WIN32
+static HANDLE get_file_handle(FILE* fp)
+{
+    return (HANDLE)_get_osfhandle(_fileno(fp));
+}
+#endif
+static EbBool fopen_and_lock(FILE** file, const char* name, EbBool write)
+{
+    if (!file || !name)
+        return EB_FALSE;
+    const char* mode = write ? "wb" : "rb";
+    FOPEN(*file, name, mode);
+    if (!*file)
+        return EB_FALSE;
+#ifdef _WIN32
+    HANDLE handle = get_file_handle(*file);
+    if (handle == INVALID_HANDLE_VALUE) return EB_FALSE;
+    if (LockFile(handle, 0, 0, MAXDWORD, MAXDWORD))
+        return EB_TRUE;
+#else
+    int fd = fileno(*file);
+    if (flock(fd, LOCK_EX | LOCK_NB) == 0)
+        return EB_TRUE;
+#endif
+    fprintf(stderr, "ERROR: locking %s failed, is it used by other encoder?\n", name);
+    return EB_FALSE;
+}
+static void unlock_and_fclose(FILE* file)
+{
+    if (!file)
+        return;
+#ifdef _WIN32
+    HANDLE handle = get_file_handle(file);
+    UnlockFile(handle, 0, 0, MAXDWORD, MAXDWORD);
+#endif
+    fclose(file);
+}
+#endif
 /**********************************
  * Set Cfg Functions
  **********************************/
@@ -292,6 +339,35 @@ static void set_cfg_qp_file(const char *value, EbConfig *cfg) {
     if (cfg->qp_file) { fclose(cfg->qp_file); }
     FOPEN(cfg->qp_file, value, "r");
 };
+#if 1 //COMBINED_2PASSES_CLI
+static void set_pass(const char* value, EbConfig *cfg) {
+    cfg->pass = strtol(value, NULL, 0);
+}
+
+static void set_two_pass_stats(const char* value, EbConfig *cfg) {
+#ifndef _WIN32
+    cfg->stats = strdup(value);
+#else
+    cfg->stats = _strdup(value);
+#endif
+}
+
+static void set_passes(const char* value, EbConfig *cfg) {
+    (void)value;
+    (void)cfg;
+    /* empty function, we will handle passes at higher level*/
+    return;
+}
+
+static void set_input_stat_file(const char *value, EbConfig *cfg) {
+    if (cfg->input_stat_file) { unlock_and_fclose(cfg->input_stat_file); }
+    fopen_and_lock(&cfg->input_stat_file, value, EB_FALSE);
+};
+static void set_output_stat_file(const char *value, EbConfig *cfg) {
+    if (cfg->output_stat_file) { unlock_and_fclose(cfg->output_stat_file); }
+    fopen_and_lock(&cfg->output_stat_file, value, EB_TRUE);
+};
+#else
 static void set_input_stat_file(const char *value, EbConfig *cfg) {
     if (cfg->input_stat_file) { fclose(cfg->input_stat_file); }
     FOPEN(cfg->input_stat_file, value, "rb");
@@ -300,6 +376,7 @@ static void set_output_stat_file(const char *value, EbConfig *cfg) {
     if (cfg->output_stat_file) { fclose(cfg->output_stat_file); }
     FOPEN(cfg->output_stat_file, value, "wb");
 };
+#endif
 #if !TWOPASS_CLEANUP
 static void set_snd_pass_enc_mode(const char *value, EbConfig *cfg) {
     cfg->snd_pass_enc_mode = (uint8_t)strtoul(value, NULL, 0);
@@ -892,6 +969,11 @@ ConfigEntry config_entry_rc[] = {
     {SINGLE_INPUT, NULL, NULL, NULL}};
 ConfigEntry config_entry_2p[] = {
     // 2 pass
+#if 1 //COMBINED_2PASSES_CLI
+    {SINGLE_INPUT, PASS_TOKEN, "Multipass bitrate control (1: first pass, generates stats file , 2: second pass, uses stats file)", set_pass},
+    {SINGLE_INPUT, TWO_PASS_STATS_TOKEN, "Filename for 2 pass stats(\"svtav1_2pass.log\" : [Default])", set_two_pass_stats},
+    {SINGLE_INPUT, PASSES_TOKEN, "Number of passes (1: one pass encode, 2: two passes encode)", set_passes},
+#endif
     {SINGLE_INPUT, OUTPUT_STAT_FILE_TOKEN, "First pass stat file output", set_output_stat_file},
     {SINGLE_INPUT,
      INPUT_STAT_FILE_TOKEN,
@@ -1282,6 +1364,10 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, OUTPUT_RECON_TOKEN, "ReconFile", set_cfg_recon_file},
     {SINGLE_INPUT, QP_FILE_TOKEN, "QpFile", set_cfg_qp_file},
     {SINGLE_INPUT, STAT_FILE_TOKEN, "StatFile", set_cfg_stat_file},
+#if 1 //COMBINED_2PASSES_CLI
+    {SINGLE_INPUT, PASS_TOKEN, "pass", set_pass},
+    {SINGLE_INPUT, TWO_PASS_STATS_TOKEN, "two_pass_stats", set_two_pass_stats},
+#endif
     {SINGLE_INPUT, INPUT_STAT_FILE_TOKEN, "input_stat_file", set_input_stat_file},
     {SINGLE_INPUT, OUTPUT_STAT_FILE_TOKEN, "output_stat_file", set_output_stat_file},
     {SINGLE_INPUT, INPUT_PREDSTRUCT_FILE_TOKEN, "pred_struct_file", set_pred_struct_file},
@@ -1751,6 +1837,9 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->md_stage_2_3_cand_prune_th  = 15;
     config_ptr->md_stage_2_3_class_prune_th = 25;
 
+#if 1 //COMBINED_2PASSES_CLI
+    config_ptr->pass = DEFAULT;
+#endif
     return;
 }
 
@@ -1794,13 +1883,24 @@ void eb_config_dtor(EbConfig *config_ptr) {
         config_ptr->stat_file = (FILE *)NULL;
     }
     if (config_ptr->input_stat_file) {
+#if 1 //COMBINED_2PASSES_CLI
+        unlock_and_fclose(config_ptr->input_stat_file);
+#else
         fclose(config_ptr->input_stat_file);
+#endif
         config_ptr->input_stat_file = (FILE *)NULL;
     }
     if (config_ptr->output_stat_file) {
+#if 1 //COMBINED_2PASSES_CLI
+        unlock_and_fclose(config_ptr->output_stat_file);
+#else
         fclose(config_ptr->output_stat_file);
+#endif
         config_ptr->output_stat_file = (FILE *)NULL;
     }
+#if 1 //COMBINED_2PASSES_CLI
+    free((void*)config_ptr->stats);
+#endif
     return;
 }
 
@@ -2073,6 +2173,49 @@ static EbErrorType verify_settings(EbConfig *config, uint32_t channel_number) {
         return_error = EB_ErrorBadParameter;
     }
 
+#if 1 //COMBINED_2PASSES_CLI
+    if (config->input_stat_file && config->output_stat_file) {
+        fprintf(config->error_log_file,
+                "Error instance %u: do not set input_stat_file and output_stat_file at same time\n",
+                channel_number + 1);
+        return EB_ErrorBadParameter;
+    }
+    int pass = config->pass;
+    if (pass != 2 && pass != 1 && pass != DEFAULT) {
+        fprintf(config->error_log_file,
+                "Error instance %u: %d pass encode is not supported\n",
+                channel_number + 1, config->pass);
+        return EB_ErrorBadParameter;
+    }
+    if (pass != DEFAULT  && (config->input_stat_file || config->output_stat_file)) {
+        fprintf(config->error_log_file,
+                "Error instance %u: --pass can't work with -input-stat-file or -output-stat-file \n",
+                channel_number + 1);
+        return EB_ErrorBadParameter;
+    }
+    if ((pass != DEFAULT || config->input_stat_file || config->output_stat_file) && channel_number > 0) {
+        fprintf(config->error_log_file,
+                "Error instance %u: 2 pass encode for multi instance is not supported\n",
+                channel_number + 1);
+        return EB_ErrorBadParameter;
+    }
+    const char* stats = config->stats ? config->stats : "svtav1_2pass.log";
+    if (pass == 1) {
+        if (!fopen_and_lock(&config->output_stat_file, stats, EB_TRUE)) {
+            fprintf(config->error_log_file,
+                "Error instance %u: can't open stats file %s for write \n",
+                channel_number + 1, stats);
+            return EB_ErrorBadParameter;
+        }
+    } else if (pass == 2) {
+        if (!fopen_and_lock(&config->input_stat_file, stats, EB_FALSE)) {
+            fprintf(config->error_log_file,
+                "Error instance %u: can't read stats file %s for read\n",
+                channel_number + 1, stats);
+            return EB_ErrorBadParameter;
+        }
+    }
+#endif
     return return_error;
 }
 
@@ -2142,6 +2285,14 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
         fprintf(stderr,
                 "\n%-25s\n",
                 "Usage: SvtAv1EncApp.exe <options> -b dst_filename -i src_filename");
+#if 1 //COMBINED_2PASSES_CLI
+        fprintf(stderr, "\n%-25s\n", "Examples:");
+        fprintf(stderr, "\n%-25s", "Two passes encode:");
+        fprintf(stderr, "\n\t%s", "SvtAv1EncApp --pass 1 -i <input> -b <output>");
+        fprintf(stderr, "\n\t%s", "SvtAv1EncApp --pass 2 -i <input> -b <output>");
+        fprintf(stderr, "\n\tOr combined one:");
+        fprintf(stderr, "\n\t%s\n", "SvtAv1EncApp --passes 2 -i <input> -b <output>");
+#endif
         fprintf(stderr, "\n%-25s\n", "Options:");
         while (config_entry_options[++options_token_index].token != NULL) {
             uint32_t check = check_long(config_entry_options[options_token_index],
@@ -2331,7 +2482,67 @@ uint32_t get_number_of_channels(int32_t argc, char *const argv[]) {
     }
     return 1;
 }
+#if 1 //COMBINED_2PASSES_CLI
+static EbBool check_two_pass_conflicts(int32_t argc, char *const argv[])
+{
+    char     config_string[COMMAND_LINE_MAX_SIZE];
+    const char* conflicts[] = {
+        PASS_TOKEN,
+        INPUT_STAT_FILE_TOKEN,
+        OUTPUT_STAT_FILE_TOKEN,
+        NULL,
+    };
+    int i = 0;
+    const char* token;
+    while ((token = conflicts[i])) {
+        if (find_token(argc, argv, token, config_string) == 0) {
+            fprintf(stderr,
+                "--passes 2 conflicts with %s\n", token);
+            return EB_TRUE;
+        }
+        i++;
+    }
+    return EB_FALSE;
+}
 
+uint32_t get_passes(int32_t argc, char *const argv[], EncodePass pass[MAX_ENCODE_PASS]) {
+    char     config_string[COMMAND_LINE_MAX_SIZE];
+    uint32_t passes;
+    if (find_token(argc, argv, PASSES_TOKEN, config_string) != 0) {
+        pass[0] = ENCODE_SINGLE_PASS;
+        return 1;
+    }
+    passes = strtol(config_string, NULL, 0);
+    if (passes == 0 || passes > 2) {
+        fprintf(stderr,
+            "Error: The number of passes has to be within the range [1,%u]\n",
+            (uint32_t)MAX_ENCODE_PASS);
+        return 0;
+    }
+    if (passes == 1) {
+        pass[0] = ENCODE_SINGLE_PASS;
+        return 1;
+    }
+    if (check_two_pass_conflicts(argc, argv))
+        return 0;
+
+    int preset = MAX_ENC_PRESET;
+    if (find_token(argc, argv, PRESET_TOKEN, config_string) == 0
+        || find_token(argc, argv, ENCMODE_TOKEN, config_string) == 0) {
+        preset = strtol(config_string, NULL, 0);
+    }
+    if (preset > 4) {
+        fprintf(stderr,
+            "\nWarn: --passes 2 for preset > 4 is not supported yet, force single pass\n\n");
+        pass[0] = ENCODE_SINGLE_PASS;
+        return 1;
+    }
+
+    pass[0] = ENCODE_FIRST_PASS;
+    pass[1] = ENCODE_LAST_PASS;
+    return 2;
+}
+#endif
 void mark_token_as_read(const char *token, char *cmd_copy[], int32_t *cmd_token_cnt) {
     int32_t cmd_copy_index;
     for (cmd_copy_index = 0; cmd_copy_index < *(cmd_token_cnt); ++cmd_copy_index) {
@@ -2577,10 +2788,17 @@ EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **confi
     for (index = 0; index < MAX_CHANNEL_NUMBER; ++index)
         config_strings[index] = (char *)malloc(sizeof(char) * COMMAND_LINE_MAX_SIZE);
     // Copy tokens (except for CHANNEL_NUMBER_TOKEN ) into a temp token buffer hosting all tokens that are passed through the command line
+#if 1 //COMBINED_2PASSES_CLI
+    size_t len = COMMAND_LINE_MAX_SIZE;
+#else
     size_t len = EB_STRLEN(CHANNEL_NUMBER_TOKEN, COMMAND_LINE_MAX_SIZE);
+#endif
     for (token_index = 0; token_index < argc; ++token_index) {
         if ((argv[token_index][0] == '-') &&
             strncmp(argv[token_index], CHANNEL_NUMBER_TOKEN, len) &&
+#if 1 //COMBINED_2PASSES_CLI
+            strncmp(argv[token_index], PASSES_TOKEN, len) &&
+#endif
             !is_negative_number(argv[token_index]))
             cmd_copy[cmd_token_cnt++] = argv[token_index];
     }
