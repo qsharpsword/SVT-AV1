@@ -2027,7 +2027,11 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
         md_subpel_search_ctrls->eight_pel_search_scan    = 0;
 #if IMPROVE_EIGHT_PEL
 #if REMOVE_MR_MACRO
+#if SEARCH_MULTIPLE_EIGHT_PEL
+        md_subpel_search_ctrls->eight_pel_search_pos_cnt = 8;
+#else
         md_subpel_search_ctrls->eight_pel_search_pos_cnt = enc_mode <= ENC_MR ? 8 : 1;
+#endif
 #else
         md_subpel_search_ctrls->eight_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 1;
 #endif
