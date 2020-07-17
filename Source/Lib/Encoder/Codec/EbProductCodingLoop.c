@@ -7246,10 +7246,17 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                           ref_idx,
                                           best_search_mvx,
                                           best_search_mvy,
+#if PRED_ME_REF_INCREASE
+                                          -(15 >> 1),
+                                          +(15 >> 1),
+                                          -(15 >> 1),
+                                          +(15 >> 1),
+#else
                                           -(PRED_ME_EIGHT_PEL_REF_WINDOW >> 1),
                                           +(PRED_ME_EIGHT_PEL_REF_WINDOW >> 1),
                                           -(PRED_ME_EIGHT_PEL_REF_WINDOW >> 1),
                                           +(PRED_ME_EIGHT_PEL_REF_WINDOW >> 1),
+#endif
                                           1,
 #if IMPROVE_QUARTER_PEL
                                           0,

@@ -645,7 +645,7 @@ extern "C" {
 #endif
 
 
-#define PA_ME_REF_INCREASE 1
+#define PA_ME_REF_INCREASE 0
 #define PRED_ME_REF_INCREASE 1
 
 #endif
