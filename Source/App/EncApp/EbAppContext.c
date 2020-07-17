@@ -136,7 +136,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.inter_intra_compound     = config->inter_intra_compound;
     callback_data->eb_enc_parameters.enable_paeth             = config->enable_paeth;
     callback_data->eb_enc_parameters.enable_smooth            = config->enable_smooth;
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     callback_data->eb_enc_parameters.mrp_level                = config->mrp_level;
 #endif
     callback_data->eb_enc_parameters.enable_mfmv              = config->enable_mfmv;
@@ -187,7 +187,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
         config->hme_level0_total_search_area_height;
     callback_data->eb_enc_parameters.screen_content_mode = (EbBool)config->screen_content_mode;
     callback_data->eb_enc_parameters.enable_hbd_mode_decision =
-#if 0 //CHANGE_HBD_MODE
+#if 1 //CHANGE_HBD_MODE
         config->enable_hbd_mode_decision;
 #else
         (EbBool)config->enable_hbd_mode_decision;
@@ -209,7 +209,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.speed_control_flag        = config->speed_control_flag;
     callback_data->eb_enc_parameters.use_cpu_flags             = config->cpu_flags_limit;
     callback_data->eb_enc_parameters.logical_processors        = config->logical_processors;
-#if 0 //PR_1275
+#if 1//PR_1275
     callback_data->eb_enc_parameters.unpin                     = config->unpin;
 #else
     callback_data->eb_enc_parameters.unpin_lp1 = config->unpin_lp1;

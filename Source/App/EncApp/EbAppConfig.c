@@ -161,7 +161,7 @@
 #define SPEED_CONTROL_TOKEN "-speed-ctrl"
 #define ASM_TYPE_TOKEN "-asm"
 #define THREAD_MGMNT "-lp"
-#if 0 //PR_1275
+#if 1 //PR_1275
 #define UNPIN_TOKEN "-unpin"
 #else
 #define UNPIN_LP1_TOKEN "-unpin-lp1"
@@ -235,7 +235,7 @@
 #define INTRA_ANGLE_DELTA_NEW_TOKEN "--enable-intra-angle-delta"
 #define PAETH_NEW_TOKEN "--enable-paeth"
 #define SMOOTH_NEW_TOKEN "--enable-smooth"
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
 #define MRP_LEVEL_TOKEN "--mrp-level"
 #endif
 /**********************************
@@ -411,7 +411,7 @@ static void set_enable_paeth_flag(const char *value, EbConfig *cfg) {
 static void set_enable_smooth_flag(const char *value, EbConfig *cfg) {
     cfg->enable_smooth = strtol(value, NULL, 0);
 };
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
 static void set_mrp_level(const char *value, EbConfig *cfg) {
     cfg->mrp_level = strtol(value, NULL, 0);
 };
@@ -701,7 +701,7 @@ static void set_asm_type(const char *value, EbConfig *cfg) {
 static void set_logical_processors(const char *value, EbConfig *cfg) {
     cfg->logical_processors = (uint32_t)strtoul(value, NULL, 0);
 };
-#if 0 //PR_1275
+#if 1 //PR_1275
 static void set_unpin_execution(const char *value, EbConfig *cfg) {
     cfg->unpin = (uint32_t)strtoul(value, NULL, 0);
 };
@@ -837,7 +837,7 @@ ConfigEntry config_entry_global_options[] = {
      set_asm_type},
     {SINGLE_INPUT, THREAD_MGMNT, "number of logical processors to be used", set_logical_processors},
     {SINGLE_INPUT,
-#if 0 //PR_1275
+#if 1 //PR_1275
      UNPIN_TOKEN,
     "Allows the execution to be pined/unpined to/from a specific number of cores \n"
     "The combinational use of --unpin with --lp results in memory reduction while allowing the execution to work on any of the cores and not restrict it to specific cores \n"
@@ -962,7 +962,7 @@ ConfigEntry config_entry_specific[] = {
      "Wiener filter mode (0:OFF, 1: 3-Tap luma/ 3-Tap chroma, 2: 5-Tap luma/ 5-Tap chroma, 3: "
      "7-Tap luma/ 7-Tap chroma, -1: DEFAULT)",
      set_wn_filter_mode},
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     {SINGLE_INPUT,
      MRP_LEVEL_TOKEN,
      "Multi reference frame levels( 0: OFF, 1: FULL, 2: Level1 .. 9: Level8,  -1: DEFAULT)",
@@ -1337,7 +1337,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, RESTORATION_ENABLE_TOKEN, "RestorationFilter", set_enable_restoration_filter_flag},
     {SINGLE_INPUT, SG_FILTER_MODE_TOKEN, "SelfGuidedFilterMode", set_sg_filter_mode},
     {SINGLE_INPUT, WN_FILTER_MODE_TOKEN, "WienerFilterMode", set_wn_filter_mode},
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     {SINGLE_INPUT, MRP_LEVEL_TOKEN, "MrpLevel", set_mrp_level},
 #endif
     {SINGLE_INPUT, MFMV_ENABLE_TOKEN, "Mfmv", set_enable_mfmv_flag},
@@ -1445,7 +1445,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, OLPD_REFINEMENT_TOKEN, "OlpdRefinement", set_enable_olpd_refinement},
     // Thread Management
     {SINGLE_INPUT, THREAD_MGMNT, "LogicalProcessors", set_logical_processors},
-#if 0 //PR_1275
+#if 1 //PR_1275
     { SINGLE_INPUT, UNPIN_TOKEN, "UnpinExecution", set_unpin_execution },
 #else
     {SINGLE_INPUT, UNPIN_LP1_TOKEN, "UnpinSingleCoreExecution", set_unpin_single_core_execution},
@@ -1642,7 +1642,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->inter_intra_compound                      = DEFAULT;
     config_ptr->enable_paeth                              = DEFAULT;
     config_ptr->enable_smooth                             = DEFAULT;
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     config_ptr->mrp_level                                 = DEFAULT;
 #endif
     config_ptr->enable_mfmv                               = DEFAULT;
@@ -1699,7 +1699,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
 #else
     config_ptr->screen_content_mode                       = 0;
 #endif
-#if 0 //CHANGE_HBD_MODE
+#if 1 //CHANGE_HBD_MODE
     config_ptr->enable_hbd_mode_decision                  = DEFAULT;
 #else
     config_ptr->enable_hbd_mode_decision                  = 2;
@@ -1710,7 +1710,7 @@ void eb_config_ctor(EbConfig *config_ptr) {
 
     // ASM Type
     config_ptr->cpu_flags_limit = CPU_FLAGS_ALL;
-#if 0 //PR_1275
+#if 1 //PR_1275
     config_ptr->unpin     = 1;
 #else
     config_ptr->unpin_lp1     = 1;

@@ -282,7 +282,7 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int enable_paeth;
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     /* mrp level
     *
     * Default is -1. */
@@ -614,7 +614,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * LogicalProcessorNumber and TargetSocket are not set, threads are managed by
      * OS thread scheduler. */
     uint32_t logical_processors;
-#if 0 //PR_1275
+#if 1 //PR_1275
     /* Unpin the execution .This option does not
     * set the execution to be pinned to a specific number of cores when set to 1. this allows the execution
     * of multiple encodes on the CPU wihtout having to pin them to a specific mask

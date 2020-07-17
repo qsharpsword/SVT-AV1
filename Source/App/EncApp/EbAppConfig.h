@@ -476,7 +476,7 @@ typedef struct EbConfig {
     uint32_t channel_id;
     uint32_t active_channel_count;
     uint32_t logical_processors;
-#if 0 //PR_1275
+#if 1//PR_1275
     uint32_t unpin;
 #else
     uint32_t unpin_lp1;
@@ -521,7 +521,7 @@ typedef struct EbConfig {
     PredictionStructureConfigEntry pred_struct[1 << (MAX_HIERARCHICAL_LEVEL - 1)];
     EbBool enable_manual_pred_struct;
     int32_t manual_pred_struct_entry_num;
-#if 0//ON_OFF_FEATURE_MRP
+#if 1//ON_OFF_FEATURE_MRP
     int                 mrp_level;
 #endif
 } EbConfig;

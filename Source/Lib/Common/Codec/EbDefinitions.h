@@ -445,18 +445,12 @@ extern "C" {
 #define ADAPTIVE_TXT_CR 1 // Add code for generating TXS statistics
 #define STATS_TX_TYPES_FIX 1 // Fix the statistic txt crash
 #define ABILITY_TO_USE_CLOSEST_ONLY       1 // Add the ability to use closest_refs without using best_refs
-
-#if SVT_01
-
-
-
-
 #define OPTIMIZE_NEAREST_NEW_NEAR         1 // Use the closest ref only @ NEAREST_NEW_NEAR for M0 & higher
 #define M0_HME_ME_PRUNE                   1 // Use HME/ME ref prune level 0 for M0
 #define FIX_INCOMPLETE_SB                 1 // Perform Txs search for blocks @ right and bottom picture boundaries
 #define FIX_IFS_RATE                      1 // Update fast_luma_rate to take into account switchable_rate
-#define M0_NIC                            1 // Use nic level 0 for M0
 
+#define M0_NIC                            1 // Use nic level 0 for M0
 #define MEM_OPT_10bit       1 // Memory optimization for 10bit
 #define LAD_MEM_RED         1 // tpl works with lad 16. limit the look ahead to be 16
 #define TPL_IMP             1 // tpl improvement changes
@@ -465,25 +459,22 @@ extern "C" {
 #define TPL_LAMBDA_IMP      1 // Do lambda modulation for fast lambda
                               // Interdepth decision uses SB lambda
 #define SEPARATE_ADAPTIVE_TXT_INTER_INTRA 1 // Separate the inter/intra actions for adaptive TXT
-
 #define USE_REGULAR_MD_STAGE_0 1 // Use Regular (instead of Bilinear) @ md_stage_0()
 #define PR_1275                1 // Add the option of unpinning threads from being executed on a specific number of cores and buffer tuning
-
 #define FIX_TX_BLOCK_GEOMETRY 1 // Fix tx construction for tx_depth=1 of 4NxN and Nx4N
 #define DISALLOW_CYCLES_REDUCTION_REF 1 // Disallow Depth and NSQ cycles reduction in REF frames
 #define FIX_NSQ_CYCLE_RED_LEVEL 1 // Remove invalid setting for nsq cycles reduction
 #define JUNE15_ADOPTIONS 1 // M0, MR, and MRS adoptions
 #define TPL_SW_UPDATE           1 // enable tpl for end of clip
 #define TPL_SC_ON               1 // enable tpl for SC
-
 #define UPDATE_SC_DETECTION 1 // update sc detection
+
 #define IMPROVE_SUB_PEL       1 // Add the ability to perform 1/4-Pel and 1/8-Pel refinement around multiple points (~top N best positions=8), and perform 1/2-Pel ~8 best full positions
 #if IMPROVE_SUB_PEL
 #define IMPROVE_HALF_PEL    1
 #define IMPROVE_QUARTER_PEL 1
 #define IMPROVE_EIGHT_PEL   1
 #endif
-
 #define LIBAOM_BUG_FIXES            1 // libaom bug fixes
 #if LIBAOM_BUG_FIXES
 #define GLOBAL_ME_BUG_FIX_0       1 // Fix ransac()
@@ -494,9 +485,7 @@ extern "C" {
 #define CRC_CALC_FIX              1 // Fix integer sanitizer warning in hash.c
 #define OBMC_BUG_FIX              1 // Fix mv err cost for obmc subpel motion search (by default not used)
 #endif
-
 #define BWD_ALTREF_PA_ME_CAND_FIX 1 // (BWD, ALT) prep bug fix
-
 #define JUNE17_ADOPTIONS        1 // New presets (M1-M7)
 #define NEW_NSQ_RED_LEVEL       1 // Add new threshold level for NSQ cycle reduction
 #define ADD_SKIP_INTRA_SIGNAL   1 // Add ability to skip intra candidate injection
@@ -505,7 +494,6 @@ extern "C" {
 #if SOFT_CYCLES_REDUCTION
 #define DEPTH_PROB_PRECISION 10000
 #endif
-
 #define IMPROVED_M6_M7        1 // Improve M6 & M7
 #if IMPROVED_M6_M7
 #define IMPROVED_TF_LEVELS  1 // Improve tf levels; f(window_size, noise-based adjust)
@@ -513,8 +501,7 @@ extern "C" {
 #define M6_M7_NIC           1 // NIC=1 @ md_stage_3() in M6 & M7
 #define M6_LOOP_FILTER_MODE 1 // Use M5_LOOP_FILTER in M6
 #endif
-#define  ON_OFF_FEATURE_MRP     1 // ON/OFF Feature MRP
-
+#define  ON_OFF_FEATURE_MRP     0 // ON/OFF Feature MRP
 #define UNIFY_SC_NSC        1 // Unify the SC/NSC settings, except for Palette, IBC, and ME
 #define REMOVE_PRINT_STATEMENTS 1 // remove print statements
 #define SOFT_CYCLES_M6M7        1
@@ -538,18 +525,25 @@ extern "C" {
 #define FIX_HBD_MD5         1 // Fix 10bit error in non multiple of 8 resolution
 #define CHANGE_HBD_MODE     1 // Change 10bit MD for MR and M0
 #define JUNE25_ADOPTIONS    1 // Adoptions in M3-M8
-
 #define GM_DOWN_16          1 // Downsampled search mode, with a downsampling factor of 4 in each dimension
-#define GM_LIST1            1 // Exit gm search if first reference detection is identity
 
+#define GM_LIST1            1 // Exit gm search if first reference detection is identity
 #define JUNE26_ADOPTIONS    1
 #define ENABLE_ADAPTIVE_NSQ_ALL_FRAMES 1    // Enable the adaptive NSQ algorithm for all frames (no longer REF only)
+
+#define MEM_OPT_UV_MODE     1 // Memory optimization for independant uv mode
+
+#if SVT_01
+
+
+
+
+
 
 #define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
 
 #define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
 #define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
-#define MEM_OPT_UV_MODE     1 // Memory optimization for independant uv mode
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -693,7 +687,7 @@ enum {
  * this number can be increased by increasing the constant
  * FUTURE_WINDOW_WIDTH defined in EbPictureDecisionProcess.c
  */
-#if 1//NOISE_BASED_TF_FRAMES
+#if NOISE_BASED_TF_FRAMES
 #define ALTREF_MAX_NFRAMES 13
 #else
 #define ALTREF_MAX_NFRAMES 10

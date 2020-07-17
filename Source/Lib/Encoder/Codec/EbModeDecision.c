@@ -5539,8 +5539,12 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
         if (av1_is_directional_mode((PredictionMode)intra_mode)) {
             int32_t angle_delta                 = ois_blk_ptr[can_total_cnt].angle_delta;
             candidate_array[can_total_cnt].type = INTRA_MODE;
+#if MEM_OPT_PALETTE
+            candidate_array[can_total_cnt].palette_info = NULL;
+#else
             candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
             candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
             candidate_array[can_total_cnt].intra_luma_mode                  = intra_mode;
             candidate_array[can_total_cnt].distortion_ready                 = 1;
             candidate_array[can_total_cnt].me_distortion = ois_blk_ptr[can_total_cnt].distortion;
@@ -5581,8 +5585,12 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
             INCRMENT_CAND_TOTAL_COUNT(can_total_cnt);
         } else {
             candidate_array[can_total_cnt].type                             = INTRA_MODE;
+#if MEM_OPT_PALETTE
+            candidate_array[can_total_cnt].palette_info = NULL;
+#else
             candidate_array[can_total_cnt].palette_info.pmi.palette_size[0] = 0;
             candidate_array[can_total_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
             candidate_array[can_total_cnt].intra_luma_mode                  = intra_mode;
             candidate_array[can_total_cnt].distortion_ready                 = 1;
             candidate_array[can_total_cnt].me_distortion = ois_blk_ptr[can_total_cnt].distortion;
