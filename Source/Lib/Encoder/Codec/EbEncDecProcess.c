@@ -2104,7 +2104,7 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 #endif
 #if UPGRADE_SUBPEL_LEVEL_4
         md_subpel_search_ctrls->eight_pel_search_enabled = 1;
-        md_subpel_search_ctrls->eight_pel_search_scan = 1;
+        md_subpel_search_ctrls->eight_pel_search_scan = 0;
         md_subpel_search_ctrls->eight_pel_search_pos_cnt = 1;
 #else
         md_subpel_search_ctrls->eight_pel_search_enabled = 0;

@@ -631,7 +631,7 @@ extern "C" {
 #define HP_USE_INPUT_COMPLEXITY   0
 #define REMOVE_QP_CHECK           0
 #define FULL_HP_PD_0              0
-#define UPGRADE_SUBPEL_LEVEL_4    0
+
 #define SEARCH_MULTIPLE_EIGHT_PEL 0
 #define USE_VARIANCE_SUBPEL       0
 
@@ -647,7 +647,7 @@ extern "C" {
 
 #define PA_ME_REF_INCREASE 1
 #define PRED_ME_REF_INCREASE 1
-
+#define UPGRADE_SUBPEL_LEVEL_4 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
