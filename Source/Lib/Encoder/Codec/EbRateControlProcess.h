@@ -173,6 +173,7 @@ typedef struct {
     // Q index used for ALT frame
     int arf_q;
 #if TWOPASS_RC
+    int prev_avg_frame_bandwidth; //only for CBR?
     int active_worst_quality;
     int active_best_quality[MAX_ARF_LAYERS + 1];
     int base_layer_qp;

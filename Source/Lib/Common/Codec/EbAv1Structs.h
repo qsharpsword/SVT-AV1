@@ -388,7 +388,7 @@ typedef struct SkipModeInfo {
 
 #if TWOPASS_RC
 typedef struct {
-  //FRAME_TYPE frame_type;
+  /*FRAME_TYPE*/FrameType frame_type;
   //REFERENCE_MODE reference_mode;
 
   unsigned int order_hint;
