@@ -1985,6 +1985,42 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
 }
 #endif
 #if PERFORM_SUB_PEL_MD
+#if UPGRADE_SUBPEL
+#if REMOVE_MR_MACRO
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level) {
+#else
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level) {
+#endif
+    MdSubPelSearchCtrls *md_subpel_search_ctrls = &mdctxt->md_subpel_search_ctrls;
+
+    switch (md_subpel_search_level) {
+    case 0: md_subpel_search_ctrls->enabled = 0; break;
+    case 1:
+        md_subpel_search_ctrls->enabled = 1;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled  = 1;
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->eight_pel_search_enabled = 1;
+        md_subpel_search_ctrls->sub_search_pos_cnt = 1 ;
+        break;
+    case 2:
+        md_subpel_search_ctrls->enabled = 1;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled = 1;
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->eight_pel_search_enabled = 0;
+        md_subpel_search_ctrls->sub_search_pos_cnt = 1;
+        break;
+    default: assert(0); break;
+    }
+}
+#else
 #if REMOVE_MR_MACRO
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode) {
 #else
@@ -2119,6 +2155,7 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
     md_subpel_search_ctrls->eight_pel_interpolation = 0;
 
 }
+#endif
 #endif
 #if SB_CLASSIFIER
 /******************************************************
@@ -6689,6 +6726,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
 #endif
 #if PERFORM_SUB_PEL_MD
+#if UPGRADE_SUBPEL
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_subpel_search_level = 1;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_subpel_search_level = 1;
+    else
+        context_ptr->md_subpel_search_level = 1;
+
+    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level);
+#else
     if (pd_pass == PD_PASS_0)
 #if ADD_SKIP_INTRA_SIGNAL
 #if JUNE26_ADOPTIONS
@@ -6727,9 +6774,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->md_subpel_search_level = 3;
 #if REMOVE_MR_MACRO
-    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level,enc_mode);
+    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
 #else
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level);
+#endif
 #endif
 #endif
     // Set max_ref_count @ MD

@@ -209,7 +209,22 @@ static INLINE const InterpFilterParams *av1_get_filter(int subpel_search) {
     default: assert(0); return NULL;
     }
 }
+#if UPGRADE_SUBPEL
+void aom_comp_avg_pred_c(uint8_t *comp_pred, const uint8_t *pred, int width,
+    int height, const uint8_t *ref, int ref_stride) {
+    int i, j;
 
+    for (i = 0; i < height; ++i) {
+        for (j = 0; j < width; ++j) {
+            const int tmp = pred[j] + ref[j];
+            comp_pred[j] = ROUND_POWER_OF_TWO(tmp, 1);
+        }
+        comp_pred += width;
+        pred += width;
+        ref += ref_stride;
+    }
+}
+#endif
 // Get pred block from up-sampled reference.
 void aom_upsampled_pred_c(MacroBlockD *                 xd,
                           const struct AV1Common *const cm, //const AV1_COMMON *const cm,

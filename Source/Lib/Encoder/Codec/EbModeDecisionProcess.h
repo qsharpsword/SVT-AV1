@@ -351,6 +351,17 @@ typedef struct MdSqMotionSearchCtrls {
 #endif
 
 #if PERFORM_SUB_PEL_MD
+#if UPGRADE_SUBPEL
+typedef struct MdSubPelSearchCtrls {
+    uint8_t enabled;                             // 0: subpel search @ MD OFF; 1: subpel search @ MD ON
+    uint8_t do_4x4;                              // 0: do not perform search for 4x4 and inherit Parent MV; 1: perform search for SQ
+    uint8_t do_nsq;                              // 0: do not perform search for NSQ and inherit SQ MV if NSQ Full Pel search not performed; 1: perform search for NSQ
+    uint8_t half_pel_search_enabled;             // 0: OFF; 1: ON
+    uint8_t quarter_pel_search_enabled;          // 0: OFF; 1: ON
+    uint8_t eight_pel_search_enabled;            // 0: OFF; 1: ON
+    uint8_t sub_search_pos_cnt;                  // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of full-pel position(s) to search
+}MdSubPelSearchCtrls;
+#else
 typedef struct MdSubPelSearchCtrls {
     uint8_t enabled;                             // 0: subpel search @ MD OFF; 1: subpel search @ MD ON
     uint8_t use_ssd;                             // 0: search using SAD; 1: search using SSD
@@ -382,6 +393,7 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t eight_pel_search_pos_cnt;           // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt best MV)
 #endif
 }MdSubPelSearchCtrls;
+#endif
 #if SEARCH_TOP_N
 typedef struct MdMotionSearchResults {
     uint32_t dist; // distortion

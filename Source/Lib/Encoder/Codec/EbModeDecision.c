@@ -32,6 +32,10 @@
 #include "EbRateDistortionCost.h"
 #include "aom_dsp_rtcd.h"
 #include "EbLog.h"
+
+#if UPGRADE_SUBPEL
+#include "mcomp.h"
+#endif
 #define INCRMENT_CAND_TOTAL_COUNT(cnt)                                                     \
     MULTI_LINE_MACRO_BEGIN cnt++;                                                          \
     if (cnt >= MODE_DECISION_CANDIDATE_MAX_COUNT_Y)                                          \
@@ -6171,6 +6175,21 @@ void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *context_ptr,
     for (int i = 0; i < 2; i++)
         for (int j = 0; j < 2; j++) free(x->hash_value_buffer[i][j]);
 }
+#if UPGRADE_SUBPEL
+void svt_init_mv_cost_params(MV_COST_PARAMS *mv_cost_params,
+    ModeDecisionContext *context_ptr,
+    const MV *ref_mv, uint8_t base_q_idx) {
+
+    mv_cost_params->ref_mv = ref_mv;
+    mv_cost_params->full_ref_mv = get_fullmv_from_mv(ref_mv);
+    mv_cost_params->mv_cost_type = MV_COST_ENTROPY;
+    mv_cost_params->error_per_bit = AOMMAX(context_ptr->full_lambda_md[EB_8_BIT_MD] >> RD_EPB_SHIFT, 1);
+    mv_cost_params->sad_per_bit = sad_per_bit16lut_8[base_q_idx];
+    mv_cost_params->mvjcost = context_ptr->md_rate_estimation_ptr->nmv_vec_cost;
+    mv_cost_params->mvcost[0] = context_ptr->md_rate_estimation_ptr->nmvcoststack[0];
+    mv_cost_params->mvcost[1] = context_ptr->md_rate_estimation_ptr->nmvcoststack[1];
+}
+#endif
 
 void inject_intra_bc_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                                 const SequenceControlSet *scs_ptr, BlkStruct *blk_ptr,
