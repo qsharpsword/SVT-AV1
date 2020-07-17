@@ -1021,7 +1021,11 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                 }
                 int16_t to_inject_mv_x;
                 int16_t to_inject_mv_y;
+#if DISABLE_3x3_REF
+                if (0) {
+#else
                 if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+#endif
                     to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds]
                         [REF_LIST_0][list0_ref_index][0] +
                         bipred_3x3_x_pos[bipred_index];
@@ -1203,7 +1207,11 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                     }
                     int16_t to_inject_mv_x;
                     int16_t to_inject_mv_y;
+#if DISABLE_3x3_REF
+                    if (0) {
+#else
                     if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+#endif
                         to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds]
                             [REF_LIST_1][list1_ref_index][0] +
                             bipred_3x3_x_pos[bipred_index];
@@ -1452,7 +1460,11 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
 
                     int16_t to_inject_mv_x_l1;
                     int16_t to_inject_mv_y_l1;
+#if DISABLE_3x3_REF
+                    if (0) {
+#else
                     if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+#endif
                         to_inject_mv_x_l1 =
                             context_ptr
                             ->sb_me_mv[context_ptr->blk_geom->blkidx_mds]
@@ -1641,7 +1653,11 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
 
                     int16_t to_inject_mv_x_l0;
                     int16_t to_inject_mv_y_l0;
+#if DISABLE_3x3_REF
+                    if (0) {
+#else
                     if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+#endif
                         to_inject_mv_x_l0 =
                             context_ptr
                             ->sb_me_mv[context_ptr->blk_geom->blkidx_mds]

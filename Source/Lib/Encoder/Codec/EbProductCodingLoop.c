@@ -5785,7 +5785,11 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
     }
 #endif
     if (context_ptr->md_subpel_search_ctrls.eight_pel_search_enabled)
+#if DISABLE_PA_ME_REF
+        if (0)
+#else
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv)
+#endif
 #if IMPROVE_EIGHT_PEL
         {
             // Derive valid_fp_pos_cnt
@@ -5822,7 +5826,7 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 input_origin_index,
                 blk_origin_index,
 #if USE_VARIANCE_SUBPEL
-                0,
+                1,
 #else
                 context_ptr->md_subpel_search_ctrls.use_ssd,
 #endif
@@ -7222,7 +7226,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                         }
                     }
                     // Step 5: perform eigh pel search around the best quarter pel position
+#if DISABLE_PRED_ME_REF
+                    if(0) {
+#else
                     if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_high_precision_mv) {
+#endif
                         uint8_t search_pattern = 0;
                         md_sub_pel_search(pcs_ptr,
                                           context_ptr,
@@ -7230,7 +7238,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                           input_origin_index,
                                           blk_origin_index,
 #if USE_VARIANCE_SUBPEL // pred_me
-                                          0,
+                                          1,
 #else
                                           use_ssd,
 #endif
