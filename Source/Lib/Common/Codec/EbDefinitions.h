@@ -635,7 +635,7 @@ extern "C" {
 #define SEARCH_MULTIPLE_EIGHT_PEL 0
 #define USE_VARIANCE_SUBPEL       0
 
-#define BREAK_DOWN_HP 1
+#define BREAK_DOWN_HP 0
 #if BREAK_DOWN_HP
 
 #define DISABLE_PA_ME_REF   1
@@ -643,6 +643,11 @@ extern "C" {
 #define DISABLE_3x3_REF     0
 
 #endif
+
+
+#define PA_ME_REF_INCREASE 1
+#define PRED_ME_REF_INCREASE 1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
