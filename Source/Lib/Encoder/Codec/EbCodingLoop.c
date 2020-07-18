@@ -2836,7 +2836,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 }
 #endif
 
-                                pu_ptr = blk_ptr->prediction_unit_array;
+
                                 // Set MvUnit
                                 context_ptr->mv_unit.pred_direction =
                                     (uint8_t)pu_ptr->inter_pred_direction_index;
@@ -4127,7 +4127,11 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     weight;
 
                                 if (origin_x + blk_geom->bwidth >
+#if PASS1_FIX
+                                    sb_origin_x_org + context_ptr->sb_sz) {
+#else
                                     sb_origin_x1 + context_ptr->sb_sz) {
+#endif
                                     sb_origin_x1 = (origin_x / context_ptr->sb_sz + 1) *
                                         context_ptr->sb_sz;
                                     sb_origin_y1 = origin_y / context_ptr->sb_sz *
@@ -4138,81 +4142,17 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                         MAX(sb_origin_x1, origin_x);
                                     height = MIN(sb_origin_y1 + context_ptr->sb_sz,
                                                  origin_y + blk_geom->bheight) -
-                                             origin_y;
-                                    ref_obj_0->stat_struct.referenced_area[sb_index] +=
-                                        width * height * weight;
-
-                                    if (origin_x + blk_geom->bwidth >
-#if PASS1_FIX
-                                        sb_origin_x_org + context_ptr->sb_sz) {
-#else
-                                        sb_origin_x + context_ptr->sb_sz) {
-#endif
-                                        sb_origin_x = (origin_x / context_ptr->sb_sz + 1) *
-                                                      context_ptr->sb_sz;
-                                        sb_origin_y =
-                                            origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
-                                        sb_index =
-                                            sb_origin_x / context_ptr->sb_sz +
-                                            pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                        width = origin_x + blk_geom->bwidth -
-                                                MAX(sb_origin_x, origin_x);
-                                        height = MIN(sb_origin_y + context_ptr->sb_sz,
-                                                     origin_y + blk_geom->bheight) -
-                                                 origin_y;
-                                        ref_obj_0->stat_struct.referenced_area[sb_index] +=
-                                            width * height * weight;
-                                    }
-#if PASS1_FIX
-                                    if (origin_y + blk_geom->bheight >
-                                    sb_origin_y_org + context_ptr->sb_sz) {
-#else
-                                    if (origin_y + blk_geom->bheight >
-                                        sb_origin_y + context_ptr->sb_sz) {
-#endif
-                                        sb_origin_x =
-                                            (origin_x / context_ptr->sb_sz) * context_ptr->sb_sz;
-                                        sb_origin_y = (origin_y / context_ptr->sb_sz + 1) *
-                                                      context_ptr->sb_sz;
-                                        sb_index =
-                                            sb_origin_x / context_ptr->sb_sz +
-                                            pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                        width = MIN(sb_origin_x + context_ptr->sb_sz,
-                                                    origin_x + blk_geom->bwidth) -
-                                                origin_x;
-                                        height = origin_y + blk_geom->bheight -
-                                                 MAX(sb_origin_y, origin_y);
-                                        ref_obj_0->stat_struct.referenced_area[sb_index] +=
-                                            width * height * weight;
-                                    }
-#if PASS1_FIX
-                                    if (origin_x + blk_geom->bwidth >
-                                            sb_origin_x_org + context_ptr->sb_sz &&
-                                        origin_y + blk_geom->bheight >
-                                            sb_origin_y_org + context_ptr->sb_sz) {
-#else
-                                    if (origin_x + blk_geom->bwidth >
-                                            sb_origin_x + context_ptr->sb_sz &&
-                                        origin_y + blk_geom->bheight >
-                                            sb_origin_y + context_ptr->sb_sz) {
-#endif
-                                        sb_origin_x = (origin_x / context_ptr->sb_sz + 1) *
-                                                      context_ptr->sb_sz;
-                                        sb_origin_y = (origin_y / context_ptr->sb_sz + 1) *
-                                                      context_ptr->sb_sz;
-                                        sb_index =
-                                            sb_origin_x / context_ptr->sb_sz +
-                                            pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                        width = origin_x + blk_geom->bwidth -
-                                                MAX(sb_origin_x, origin_x);
-                                        height = origin_y + blk_geom->bheight -
-                                                 MAX(sb_origin_y, origin_y);
-                                        ref_obj_0->stat_struct.referenced_area[sb_index] +=
-                                            width * height * weight;
-                                    }
+                                        origin_y;
+                                    ref_obj_0->stat_struct.referenced_area[sb_index] += width *
+                                        height * weight;
                                 }
+#if PASS1_FIX
+                                if (origin_y + blk_geom->bheight >
+                                sb_origin_y_org + context_ptr->sb_sz) {
+#else
                                 if (origin_y + blk_geom->bheight >
                                     sb_origin_y1 + context_ptr->sb_sz) {
+#endif
                                     sb_origin_x1 = (origin_x / context_ptr->sb_sz) *
                                         context_ptr->sb_sz;
                                     sb_origin_y1 = (origin_y / context_ptr->sb_sz + 1) *
@@ -4227,10 +4167,17 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     ref_obj_0->stat_struct.referenced_area[sb_index] += width *
                                         height * weight;
                                 }
+#if PASS1_FIX
+                                if (origin_x + blk_geom->bwidth >
+                                        sb_origin_x_org + context_ptr->sb_sz &&
+                                    origin_y + blk_geom->bheight >
+                                        sb_origin_y_org + context_ptr->sb_sz) {
+#else
                                 if (origin_x + blk_geom->bwidth >
                                         sb_origin_x1 + context_ptr->sb_sz &&
                                     origin_y + blk_geom->bheight >
                                         sb_origin_y1 + context_ptr->sb_sz) {
+#endif
                                     sb_origin_x1 = (origin_x / context_ptr->sb_sz + 1) *
                                         context_ptr->sb_sz;
                                     sb_origin_y1 = (origin_y / context_ptr->sb_sz + 1) *
@@ -4296,17 +4243,17 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     sb_origin_x_org + context_ptr->sb_sz) {
 #else
                                 if (origin_x + blk_geom->bwidth >
-                                    sb_origin_x + context_ptr->sb_sz) {
+                                    sb_origin_x2 + context_ptr->sb_sz) {
 #endif
-                                    sb_origin_x =
-                                        (origin_x / context_ptr->sb_sz + 1) * context_ptr->sb_sz;
-                                    sb_origin_y =
-                                        origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
-                                    sb_index = sb_origin_x / context_ptr->sb_sz +
-                                               pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                    width =
-                                        origin_x + blk_geom->bwidth - MAX(sb_origin_x, origin_x);
-                                    height = MIN(sb_origin_y + context_ptr->sb_sz,
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = origin_y / context_ptr->sb_sz *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = origin_x + blk_geom->bwidth -
+                                        MAX(sb_origin_x2, origin_x);
+                                    height = MIN(sb_origin_y2 + context_ptr->sb_sz,
                                                  origin_y + blk_geom->bheight) -
                                         origin_y;
                                     ref_obj_1->stat_struct.referenced_area[sb_index] += width *
@@ -4317,15 +4264,15 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     sb_origin_y_org + context_ptr->sb_sz) {
 #else
                                 if (origin_y + blk_geom->bheight >
-                                    sb_origin_y + context_ptr->sb_sz) {
+                                    sb_origin_y2 + context_ptr->sb_sz) {
 #endif
-                                    sb_origin_x =
-                                        (origin_x / context_ptr->sb_sz) * context_ptr->sb_sz;
-                                    sb_origin_y =
-                                        (origin_y / context_ptr->sb_sz + 1) * context_ptr->sb_sz;
-                                    sb_index = sb_origin_x / context_ptr->sb_sz +
-                                               pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                    width = MIN(sb_origin_x + context_ptr->sb_sz,
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = MIN(sb_origin_x2 + context_ptr->sb_sz,
                                                 origin_x + blk_geom->bwidth) -
                                         origin_x;
                                     height = origin_y + blk_geom->bheight -
@@ -4340,22 +4287,22 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                         sb_origin_y_org + context_ptr->sb_sz) {
 #else
                                 if (origin_x + blk_geom->bwidth >
-                                        sb_origin_x + context_ptr->sb_sz &&
+                                        sb_origin_x2 + context_ptr->sb_sz &&
                                     origin_y + blk_geom->bheight >
-                                        sb_origin_y + context_ptr->sb_sz) {
+                                        sb_origin_y2 + context_ptr->sb_sz) {
 #endif
-                                    sb_origin_x =
-                                        (origin_x / context_ptr->sb_sz + 1) * context_ptr->sb_sz;
-                                    sb_origin_y =
-                                        (origin_y / context_ptr->sb_sz + 1) * context_ptr->sb_sz;
-                                    sb_index = sb_origin_x / context_ptr->sb_sz +
-                                               pic_width_in_sb * (sb_origin_y / context_ptr->sb_sz);
-                                    width =
-                                        origin_x + blk_geom->bwidth - MAX(sb_origin_x, origin_x);
-                                    height =
-                                        origin_y + blk_geom->bheight - MAX(sb_origin_y, origin_y);
-                                    ref_obj_1->stat_struct.referenced_area[sb_index] +=
-                                        width * height * weight;
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = origin_x + blk_geom->bwidth -
+                                        MAX(sb_origin_x2, origin_x);
+                                    height = origin_y + blk_geom->bheight -
+                                        MAX(sb_origin_y2, origin_y);
+                                    ref_obj_1->stat_struct.referenced_area[sb_index] += width *
+                                        height * weight;
                                 }
                             }
                             eb_release_mutex(ref_obj_1->referenced_area_mutex);

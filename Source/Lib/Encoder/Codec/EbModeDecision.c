@@ -1016,7 +1016,7 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) continue;
 #endif
 #endif
-        if (list0_ref_index > context_ptr->md_max_ref_count - 1) continue;
+
         if (inter_direction == 0) {
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
@@ -1192,7 +1192,7 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) continue;
 #endif
 #endif
-        if (list1_ref_index > context_ptr->md_max_ref_count - 1) continue;
+
         if (inter_direction == 1) {
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;

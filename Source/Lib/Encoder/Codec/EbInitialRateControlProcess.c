@@ -574,12 +574,12 @@ void update_bea_info_over_time(EncodeContext *          encode_context_ptr,
     // SB Loop
     for (uint16_t sb_idx = 0; sb_idx < pcs_ptr->sb_total_count; ++sb_idx) {
         uint16_t non_moving_index_over_sliding_window = pcs_ptr->non_moving_index_array[sb_idx];
+        uint16_t frames_to_check_index;
 #if QPS_UPDATE
         SbParams *sb_params = &pcs_ptr->sb_params_array[sb_idx];
         complete_sb_count++;
 #endif
 
-        uint16_t frames_to_check_index;
         // Walk the first N entries in the sliding window starting picture + 1
         uint32_t input_queue_index =
             encode_context_ptr->initial_rate_control_reorder_queue_head_index ==

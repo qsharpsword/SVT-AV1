@@ -8148,6 +8148,7 @@ static void set_child_to_be_considered(PictureControlSet *pcs_ptr, ModeDecisionC
 static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
                                        int8_t depth_step) {
 #endif
+
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
     unsigned         tot_d1_blocks = blk_geom->sq_size == 128
         ? 17

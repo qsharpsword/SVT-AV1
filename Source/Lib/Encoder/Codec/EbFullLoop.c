@@ -3070,6 +3070,7 @@ void cu_full_distortion_fast_txb_mode_r(
             txb_origin_x + txb_origin_y * candidate_buffer->residual_quant_coeff_ptr->stride_y;
 #endif
         const uint32_t txb_chroma_origin_index = txb_1d_offset;
+
         // Reset the Bit Costs
         uint64_t y_txb_coeff_bits  = 0;
         uint64_t cb_txb_coeff_bits = 0;
@@ -3352,7 +3353,7 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
 #endif
-    uint64_t above_non_split_rate = 0;
+
     uint64_t above_split_rate     = 0;
 
     /*
@@ -3545,7 +3546,7 @@ void compute_depth_costs_md_skip(ModeDecisionContext *context_ptr, SequenceContr
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
 #endif
-    uint64_t above_non_split_rate = 0;
+
     uint64_t above_split_rate     = 0;
     *curr_depth_cost              = 0;
     // sum the previous ones
