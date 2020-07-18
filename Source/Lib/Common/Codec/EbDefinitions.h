@@ -626,6 +626,10 @@ extern "C" {
 
 #define PR_1349 1 //Port fixes for SIMD kernels from AOM
 #define PR_1359 1 //Valgrind fix
+
+// sq64_presets
+#define USE_SQ_64 1 // Turn off NSQ and use SB_64x64 (all modes); use at least [-1,+1] depth refinement
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

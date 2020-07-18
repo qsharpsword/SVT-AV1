@@ -9883,8 +9883,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
                                 if (pcs_ptr->enc_mode <= ENC_M8) {
+#if USE_SQ_64
+                                    s_depth = -1;
+                                    e_depth = 1;
+#else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
                                 }
 #else
 #if PRESET_SHIFITNG
