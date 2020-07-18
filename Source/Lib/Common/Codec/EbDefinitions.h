@@ -620,11 +620,11 @@ extern "C" {
 #define CDEF_CLI           1 // Improve CLI Support for CDEF
 #define REF_PRUNE_CAT_TUNE 1 // Tune the allowable references per category to improve trade-offs
 /*********************************/
-#define SHUT_NSQ                  1
-#define SB_64x64                  1
-#define COEFF_OPT                 1
-#define IFS_MD_STAGE_3            1
-#define TX_EARLY_EXIT             1
+#define SHUT_NSQ                   1
+#define SB_64x64                   1
+#define COEFF_OPT                  1
+#define IFS_SWITCH_STAGE_1_STAGE_3 1
+#define TX_EARLY_EXIT              0
 /*********************************/
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
