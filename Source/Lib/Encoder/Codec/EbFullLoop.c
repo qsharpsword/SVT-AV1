@@ -1652,7 +1652,12 @@ static INLINE void set_dc_sign(int32_t *cul_level, int32_t dc_val) {
         *cul_level += 2 << COEFF_CONTEXT_BITS;
 }
 int32_t av1_quantize_inv_quantize(
-    PictureControlSet *pcs_ptr, ModeDecisionContext *md_context, int32_t *coeff,
+    PictureControlSet *pcs_ptr, ModeDecisionContext *md_context, 
+#if COEFF_OPT
+    int16_t *residual,
+    uint16_t residual_stride,
+#endif
+    int32_t *coeff,
 #if QP2QINDEX
     const uint32_t coeff_stride, int32_t *quant_coeff, int32_t *recon_coeff, uint32_t qindex,
 #else
@@ -1780,6 +1785,13 @@ int32_t av1_quantize_inv_quantize(
     else {
         perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
             md_context->rdoq_level);
+
+#if COEFF_OPT
+        if (perform_rdoq) {
+            uint64_t sse =
+                aom_sum_squares_2d_i16(residual, residual_stride, width, height);
+        }
+#endif
     }
 #else
     EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
@@ -1787,7 +1799,6 @@ int32_t av1_quantize_inv_quantize(
 
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
 #endif
-
 
     if (perform_rdoq) {
         if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {
@@ -1948,6 +1959,10 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
     candidate_buffer->candidate_ptr->quantized_dc[0][txb_itr] = av1_quantize_inv_quantize(
         pcs_ptr,
         context_ptr,
+#if COEFF_OPT
+        &(((int16_t *)candidate_buffer->residual_ptr->buffer_y)[txb_origin_index]),
+        candidate_buffer->residual_ptr->stride_y,
+#endif
         &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                ->buffer_y)[txb_1d_offset]),
         NOT_USED_VALUE,
@@ -2916,6 +2931,10 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
             candidate_buffer->candidate_ptr->quantized_dc[1][0] = av1_quantize_inv_quantize(
                 pcs_ptr,
                 context_ptr,
+#if COEFF_OPT
+                chroma_residual_ptr,
+                candidate_buffer->residual_ptr->stride_cb,
+#endif
                 &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                        ->buffer_cb)[txb_1d_offset]),
                 NOT_USED_VALUE,
@@ -3016,6 +3035,10 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
             candidate_buffer->candidate_ptr->quantized_dc[2][0] = av1_quantize_inv_quantize(
                 pcs_ptr,
                 context_ptr,
+#if COEFF_OPT
+                chroma_residual_ptr,
+                candidate_buffer->residual_ptr->stride_cr,
+#endif
                 &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                        ->buffer_cr)[txb_1d_offset]),
                 NOT_USED_VALUE,

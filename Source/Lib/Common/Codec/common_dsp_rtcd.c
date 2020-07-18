@@ -460,7 +460,10 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
 
     aom_subtract_block = aom_subtract_block_c;
     if (flags & HAS_AVX2) aom_subtract_block = aom_subtract_block_avx2;
-
+#if COEFF_OPT
+    aom_sum_squares_2d_i16 = aom_sum_squares_2d_i16_sse2;
+    if (flags & HAS_AVX2) aom_sum_squares_2d_i16 = aom_sum_squares_2d_i16_avx2;
+#endif
     aom_lowbd_blend_a64_d16_mask = aom_lowbd_blend_a64_d16_mask_c;
     if (flags & HAS_AVX2) aom_lowbd_blend_a64_d16_mask = aom_lowbd_blend_a64_d16_mask_avx2;
     aom_highbd_blend_a64_d16_mask = aom_highbd_blend_a64_d16_mask_c;

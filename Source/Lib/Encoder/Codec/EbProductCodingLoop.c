@@ -9461,6 +9461,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #endif
             pcs_ptr,
             context_ptr,
+#if COEFF_OPT
+            &(((int16_t *)candidate_buffer->residual_ptr->buffer_y)[txb_origin_index]),
+            candidate_buffer->residual_ptr->stride_y,
+#endif
             &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                    ->buffer_y)[context_ptr->txb_1d_offset]),
             NOT_USED_VALUE,
@@ -11292,7 +11296,11 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         candidate_ptr->txs_level = 0;
 #endif
 #if REFACTOR_SIGNALS
+#if IFS_SWITCH_STAGE_1_STAGE_3
+        context_ptr->md_staging_perform_inter_pred = EB_FALSE;
+#else
         context_ptr->md_staging_perform_inter_pred = EB_TRUE;
+#endif
 #else
         context_ptr->md_staging_skip_full_pred            = EB_FALSE;
 #endif
