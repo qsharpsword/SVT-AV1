@@ -10373,6 +10373,11 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
         if (pcs_ptr->parent_pcs_ptr->tx_size_early_exit) {
             if (!is_best_has_coeff) continue;
         }
+#if TX_EARLY_EXIT
+        if (best_tx_depth > start_tx_depth)
+            continue;
+#endif
+
         tx_reset_neighbor_arrays(pcs_ptr, context_ptr, is_inter, context_ptr->tx_depth);
         ModeDecisionCandidateBuffer *tx_candidate_buffer =
             (context_ptr->tx_depth == 0)
