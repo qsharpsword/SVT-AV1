@@ -624,6 +624,7 @@ extern "C" {
 #define SB_64x64                  1
 #define COEFF_OPT                 1
 #define IFS_MD_STAGE_3            1
+#define TX_EARLY_EXIT             1
 /*********************************/
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
