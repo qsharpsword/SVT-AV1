@@ -1215,6 +1215,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set disallow_nsq
 #if DISALLOW_NSQ_DEPTH
     pcs_ptr->disallow_nsq = EB_FALSE;
+#if SHUT_NSQ
+    pcs_ptr->disallow_nsq = EB_TRUE;
+#endif
 #else
 #if APR25_12AM_ADOPTIONS
 #if JUNE11_ADOPTIONS
