@@ -11,11 +11,11 @@
 
 #include <immintrin.h>
 #include <smmintrin.h>
-
+#include "EbDefinitions.h"
 #include "synonyms.h"
 #include "synonyms_avx2.h"
 #include "sum_squares_sse2.h"
-#include "aom_dsp_rtcd.h"
+#include "common_dsp_rtcd.h"
 
 static uint64_t aom_sum_squares_2d_i16_nxn_avx2(const int16_t *src, int stride,
                                                 int width, int height) {

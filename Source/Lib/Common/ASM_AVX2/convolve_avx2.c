@@ -1947,6 +1947,7 @@ static INLINE uint64_t xx_cvtsi128_si64(__m128i a) {
     }
 #endif
 }
+#if !COEFF_OPT
 static uint64_t aom_sum_squares_i16_64n_sse2(const int16_t *src, uint32_t n) {
     const __m128i v_zext_mask_q = xx_set1_64_from_32i(0xffffffff);
     __m128i       v_acc0_q      = _mm_setzero_si128();
@@ -2006,6 +2007,7 @@ uint64_t aom_sum_squares_i16_sse2(const int16_t *src, uint32_t n) {
         return aom_sum_squares_i16_c(src, n);
     }
 }
+#endif
 
 /**
  * See av1_wedge_sign_from_residuals_c
