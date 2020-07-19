@@ -1799,7 +1799,7 @@ int32_t av1_quantize_inv_quantize(
         // feature is ON
         // There are 7 levels with increasing speed, mapping to vertical indices.
         static unsigned int coeff_opt_dist_thresholds[7] = {
-            UINT_MAX, 3200, 1728, 864, 432, 216, 216};
+             (unsigned int) ~0, 3200, 1728, 864, 432, 216, 216};
 
         // Further refine based on the energy of the residual
         if (perform_rdoq) {
