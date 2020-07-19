@@ -1786,7 +1786,7 @@ int32_t av1_quantize_inv_quantize(
         perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
             md_context->rdoq_level);
 
-#if COEFF_OPT
+#if ENABLE_COEFF_OPT
         if (perform_rdoq) {
             uint64_t sse =
                 aom_sum_squares_2d_i16(residual, residual_stride, width, height);
