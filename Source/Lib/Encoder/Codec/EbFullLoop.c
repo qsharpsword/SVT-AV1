@@ -1787,9 +1787,45 @@ int32_t av1_quantize_inv_quantize(
             md_context->rdoq_level);
 
 #if ENABLE_COEFF_OPT
+        // Threshold values to be used for disabling coeff RD-optimization
+        // based on block MSE / qstep^2.
+        // TODO(any): Experiment the threshold logic based on variance metric.
+        // For each row, the indices are as follows.
+        // Index 0: Default mode evaluation, Winner mode processing is not applicable
+        // (Eg : IntraBc)
+        // Index 1: Mode evaluation.
+        // Index 2: Winner mode evaluation.
+        // Index 1 and 2 are applicable when enable_winner_mode_for_coeff_opt speed
+        // feature is ON
+        // There are 7 levels with increasing speed, mapping to vertical indices.
+        static unsigned int coeff_opt_dist_thresholds[7] = {
+            UINT_MAX, 3200, 1728, 864, 432, 216, 216};
+
+        // Further refine based on the energy of the residual
         if (perform_rdoq) {
-            uint64_t sse =
+            uint64_t block_sse =
                 aom_sum_squares_2d_i16(residual, residual_stride, width, height);
+            unsigned int block_mse_q8 =
+                (unsigned int)((256 * block_sse) / (width * height));
+
+            if (bit_increment) {
+                block_sse = ROUND_POWER_OF_TWO(block_sse, (pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth - 8) * 2);
+                block_mse_q8 = ROUND_POWER_OF_TWO(block_mse_q8, (pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth - 8) * 2);
+            }
+            block_sse *= 16;
+
+            const int dequant_shift = bit_increment ? pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth - 5 : 3;
+            const int qstep = candidate_plane.dequant_qtx[1] /*[AC]*/>> dequant_shift;
+            // Use mse / qstep^2 based threshold logic to take decision of R-D
+            // optimization of coeffs. For smaller residuals, coeff optimization
+            // would be helpful. For larger residuals, R-D optimization may not be
+            // effective.
+            // TODO(any): Experiment with variance and mean based thresholds
+            const int is_small_residual =
+                ((uint64_t)block_mse_q8 <=
+                (uint64_t)coeff_opt_dist_thresholds[0] * qstep * qstep);
+            // Turn OFF RDOQ if large resudual
+            perform_rdoq = is_small_residual;
         }
 #endif
     }
