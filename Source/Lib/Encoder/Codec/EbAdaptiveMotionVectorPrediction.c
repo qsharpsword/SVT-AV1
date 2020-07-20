@@ -1158,10 +1158,17 @@ void mvp_bypass_init(PictureControlSet *pcs_ptr, ModeDecisionContext *context_pt
     memset(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack,
            0,
            sizeof(CandidateMv) * MODE_CTX_REF_FRAMES * MAX_REF_MV_STACK_SIZE);
+#if ENABLE_PR_1133
     memset(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs,
            0,
            sizeof(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs[0][0]) *
                MODE_CTX_REF_FRAMES * MAX_MV_REF_CANDIDATES);
+#else
+    memset(
+        context_ptr->blk_ptr->ref_mvs,
+        0,
+        sizeof(context_ptr->blk_ptr->ref_mvs[0][0]) * MODE_CTX_REF_FRAMES * MAX_MV_REF_CANDIDATES);
+#endif
     memset(context_ptr->blk_ptr->inter_mode_ctx, 0, sizeof(int16_t) * MODE_CTX_REF_FRAMES);
     memset(xd->ref_mv_count, 0, sizeof(int8_t) * MODE_CTX_REF_FRAMES);
 }
@@ -1263,7 +1270,11 @@ void generate_av1_mvp_table(TileInfo *tile, ModeDecisionContext *context_ptr, Bl
                           ref_frame,
                           xd->ref_mv_count,
                           context_ptr->md_local_blk_unit[blk_geom->blkidx_mds].ed_ref_mv_stack,
+#if ENABLE_PR_1133
                           context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs,
+#else
+                          blk_ptr->ref_mvs,
+#endif
                           gm_mv,
                           pcs_ptr->parent_pcs_ptr->global_motion,
                           mi_row,
@@ -1279,10 +1290,15 @@ void get_av1_mv_pred_drl(ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
 
     if (!is_compound && mode != GLOBALMV) {
         //av1_find_best_ref_mvs(allow_hp, ref_mvs[mbmi->ref_frame[0]], &nearestmv[0], &nearmv[0], cm->cur_frame_force_integer_mv);
+#if ENABLE_PR_1133
         nearestmv[0] =
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs[ref_frame][0];
         nearmv[0] =
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs[ref_frame][1];
+#else
+        nearestmv[0] = blk_ptr->ref_mvs[ref_frame][0];
+        nearmv[0]    = blk_ptr->ref_mvs[ref_frame][1];
+#endif        
     }
 
     if (is_compound && mode != GLOBAL_GLOBALMV) {
@@ -1536,20 +1552,31 @@ void update_mi_map(struct ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
             else {
                 if (blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1)
                     mi_ptr[mi_x + mi_y * mi_stride].mbmi.block_mi.skip =
+#if ENABLE_PR_1133
+
                         (context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                                  .y_has_coeff[0] == 0 &&
                          context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                                  .v_has_coeff[0] == 0 &&
                          context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                                  .u_has_coeff[0] == 0)
+#else
+                        (blk_ptr->txb_array[0].y_has_coeff == 0 &&
+                         blk_ptr->txb_array[0].v_has_coeff == 0 &&
+                         blk_ptr->txb_array[0].u_has_coeff == 0)
+#endif
                             ? EB_TRUE
                             : EB_FALSE;
                 else
                     mi_ptr[mi_x + mi_y * mi_stride].mbmi.block_mi.skip =
+#if ENABLE_PR_1133
                         (context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                              .y_has_coeff[0] == 0)
                             ? EB_TRUE
                             : EB_FALSE;
+#else
+                        (blk_ptr->txb_array[0].y_has_coeff == 0) ? EB_TRUE : EB_FALSE;
+#endif                    
             }
 
             mi_ptr[mi_x + mi_y * mi_stride].mbmi.block_mi.interp_filters = blk_ptr->interp_filters;

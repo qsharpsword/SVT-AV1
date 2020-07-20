@@ -33,7 +33,6 @@ void eb_apply_selfguided_restoration_c(const uint8_t *dat8, int32_t width, int32
 #define REAL_PTR(hbd, d) ((hbd) ? (uint8_t *)CONVERT_TO_SHORTPTR(d) : (d))
 
 #define RESTORATION_PROC_UNIT_SIZE 64
-
 // Filter tile grid offset upwards compared to the superblock grid
 #define RESTORATION_UNIT_OFFSET 8
 

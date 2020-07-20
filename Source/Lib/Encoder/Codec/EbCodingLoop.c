@@ -270,7 +270,66 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
 
     return;
 }
+#if !ENABLE_PR_1133
+/************************************************************	
+* Update Intra Luma Neighbor Modes	
+************************************************************/
+void generate_pu_intra_luma_neighbor_nodes(BlkStruct *blk_ptr, uint32_t pu_origin_x,
+                                           uint32_t pu_origin_y, uint32_t sb_sz,
+                                           NeighborArrayUnit *intraLumaNeighborArray,
+                                           NeighborArrayUnit *intraChromaNeighborArray,
+                                           NeighborArrayUnit *mode_type_neighbor_array) {
+    (void)sb_sz;
 
+    uint32_t mode_type_left_neighbor_index = get_neighbor_array_unit_left_index(
+        mode_type_neighbor_array, pu_origin_y);
+    uint32_t mode_type_top_neighbor_index = get_neighbor_array_unit_top_index(
+        mode_type_neighbor_array, pu_origin_x);
+    uint32_t intra_luma_mode_left_neighbor_index = get_neighbor_array_unit_left_index(
+        intraLumaNeighborArray, pu_origin_y);
+    uint32_t intra_luma_mode_top_neighbor_index = get_neighbor_array_unit_top_index(
+        intraLumaNeighborArray, pu_origin_x);
+
+    uint32_t pu_origin_x_round = (pu_origin_x >> 3) << 3;
+    uint32_t pu_origin_y_round = (pu_origin_y >> 3) << 3;
+
+    uint32_t intra_chroma_mode_left_neighbor_index = get_neighbor_array_unit_left_index(
+        intraChromaNeighborArray, pu_origin_y_round >> 1);
+    uint32_t intra_chroma_mode_top_neighbor_index = get_neighbor_array_unit_top_index(
+        intraChromaNeighborArray, pu_origin_x_round >> 1);
+
+    (&blk_ptr->prediction_unit_array[0])->intra_luma_left_mode = (uint32_t)(
+        (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] != INTRA_MODE)
+            ? DC_PRED /*EB_INTRA_DC*/
+            : (uint32_t)intraLumaNeighborArray->left_array[intra_luma_mode_left_neighbor_index]);
+
+    (&blk_ptr->prediction_unit_array[0])->intra_luma_top_mode = (uint32_t)(
+        (mode_type_neighbor_array->top_array[mode_type_top_neighbor_index] != INTRA_MODE)
+            ? DC_PRED /*EB_INTRA_DC*/
+            : (uint32_t)intraLumaNeighborArray->top_array
+                  [intra_luma_mode_top_neighbor_index]); //   use DC. This seems like we could use a SB-width
+
+    uint32_t mode_type_left_neighbor_index_round = get_neighbor_array_unit_left_index(
+        mode_type_neighbor_array, pu_origin_y_round);
+    uint32_t mode_type_top_neighbor_index_round = get_neighbor_array_unit_top_index(
+        mode_type_neighbor_array, pu_origin_x_round);
+
+    (&blk_ptr->prediction_unit_array[0])->intra_chroma_left_mode = (uint32_t)(
+        (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index_round] != INTRA_MODE)
+            ? UV_DC_PRED
+            : (uint32_t)
+                  intraChromaNeighborArray->left_array[intra_chroma_mode_left_neighbor_index]);
+
+    (&blk_ptr->prediction_unit_array[0])->intra_chroma_top_mode = (uint32_t)(
+        (mode_type_neighbor_array->top_array[mode_type_top_neighbor_index_round] != INTRA_MODE)
+            ? UV_DC_PRED
+            : (uint32_t)intraChromaNeighborArray->top_array
+                  [intra_chroma_mode_top_neighbor_index]); //   use DC. This seems like we could use a SB-width
+
+    return;
+}
+
+#endif
 void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_ptr,
                            SuperBlock *sb_ptr, uint32_t cb_qp,
                            EbPictureBufferDesc *coeff_samples_sb,

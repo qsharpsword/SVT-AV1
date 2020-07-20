@@ -9544,6 +9544,7 @@ void integer_search_sb(
                 continue;  //so will not get ME results for those references.
             x_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x;
             y_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y;
+#if ENABLE_DIST_BASED_ME
             search_area_width = context_ptr->search_area_width;
             search_area_height = context_ptr->search_area_height;
 
@@ -9576,6 +9577,13 @@ void integer_search_sb(
             else {
                 search_area_width = (search_area_width + 7) & ~0x07;
             }
+#else
+
+            // Constrain x_ME to be a multiple of 8 (round up)
+            search_area_width  = (context_ptr->search_area_width + 7) & ~0x07;
+            search_area_height = context_ptr->search_area_height;
+#endif
+
 
             if ((x_search_center != 0 || y_search_center != 0) &&
                 (pcs_ptr->is_used_as_reference_flag == EB_TRUE)) {

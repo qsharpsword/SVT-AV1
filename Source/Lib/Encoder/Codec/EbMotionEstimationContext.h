@@ -443,8 +443,10 @@ typedef struct MeContext {
     // ME
     uint16_t search_area_width;
     uint16_t search_area_height;
+#if ENABLE_DIST_BASED_ME
     uint16_t max_me_search_width;
     uint16_t max_me_search_height;
+#endif
     uint8_t inherit_rec_mv_from_sq_block;
     uint8_t best_list_idx;
     uint8_t best_ref_idx;
@@ -468,9 +470,11 @@ typedef struct MeContext {
     uint16_t adj_search_area_height;
     EbBool   me_alt_ref;
     void *   alt_ref_reference_ptr;
+#if ENABLE_DIST_BASED_ME
     // tf
     int tf_frame_index;
     int tf_index_center;
+#endif
     uint8_t h_pel_search_wind;
     signed short tf_16x16_mv_x[16];
     signed short tf_16x16_mv_y[16];
