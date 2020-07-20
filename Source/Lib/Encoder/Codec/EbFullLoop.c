@@ -1799,10 +1799,10 @@ int32_t av1_quantize_inv_quantize(
         // feature is ON
         // There are 7 levels with increasing speed, mapping to vertical indices.
         static unsigned int coeff_opt_dist_thresholds[7] = {
-             (unsigned int) ~0, 3200, 1728, 864, 432, 216, 216};
+             (unsigned int) ~0, 3200, 1728, 864, 432, 216, 86};
 
         // Further refine based on the energy of the residual
-        if (perform_rdoq) {
+        if (pcs_ptr->parent_pcs_ptr->temporal_layer_index > 0 && perform_rdoq) {
             uint64_t block_sse =
                 aom_sum_squares_2d_i16(residual, residual_stride, width, height);
             unsigned int block_mse_q8 =
