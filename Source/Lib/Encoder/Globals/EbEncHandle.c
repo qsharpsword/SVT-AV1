@@ -2406,14 +2406,18 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_redundant_blk         = ((EbSvtAv1EncConfiguration*)config_struct)->enable_redundant_blk;
     // spatial sse in full loop
     scs_ptr->static_config.spatial_sse_fl               = ((EbSvtAv1EncConfiguration*)config_struct)->spatial_sse_fl;
+#if !REMOVE_ME_SUBPEL_CODE
     // subpel
     scs_ptr->static_config.enable_subpel                = ((EbSvtAv1EncConfiguration*)config_struct)->enable_subpel;
+#endif
     // over boundry block mode
     scs_ptr->static_config.over_bndry_blk               = ((EbSvtAv1EncConfiguration*)config_struct)->over_bndry_blk;
     // new nearest comb injection
     scs_ptr->static_config.new_nearest_comb_inject      = ((EbSvtAv1EncConfiguration*)config_struct)->new_nearest_comb_inject;
+#if !SHUT_ME_CAND_SORTING
     // prune unipred at me
     scs_ptr->static_config.prune_unipred_me             = ((EbSvtAv1EncConfiguration*)config_struct)->prune_unipred_me;
+#endif
     //prune ref frame for rec partitions
     scs_ptr->static_config.prune_ref_rec_part           = ((EbSvtAv1EncConfiguration*)config_struct)->prune_ref_rec_part;
     // NSQ table
@@ -3170,12 +3174,12 @@ static EbErrorType verify_settings(
       SVT_LOG("Error instance %u: Invalid new_nearest_comb_inject flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->new_nearest_comb_inject);
       return_error = EB_ErrorBadParameter;
     }
-
+#if !SHUT_ME_CAND_SORTING
     if (config->prune_unipred_me != 0 && config->prune_unipred_me != 1 && config->prune_unipred_me != -1) {
       SVT_LOG("Error instance %u: Invalid prune_unipred_me flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->prune_unipred_me);
       return_error = EB_ErrorBadParameter;
     }
-
+#endif
     if (config->prune_ref_rec_part != 0 && config->prune_ref_rec_part != 1 && config->prune_ref_rec_part != -1) {
       SVT_LOG("Error instance %u: Invalid prune_ref_rec_part flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->prune_ref_rec_part);
       return_error = EB_ErrorBadParameter;
@@ -3336,10 +3340,14 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->enable_mfmv = DEFAULT;
     config_ptr->enable_redundant_blk = DEFAULT;
     config_ptr->spatial_sse_fl = DEFAULT;
+#if !REMOVE_ME_SUBPEL_CODE
     config_ptr->enable_subpel = DEFAULT;
+#endif
     config_ptr->over_bndry_blk = DEFAULT;
     config_ptr->new_nearest_comb_inject = DEFAULT;
+#if !SHUT_ME_CAND_SORTING
     config_ptr->prune_unipred_me = DEFAULT;
+#endif
     config_ptr->prune_ref_rec_part = DEFAULT;
     config_ptr->nsq_table = DEFAULT;
     config_ptr->frame_end_cdf_update = DEFAULT;

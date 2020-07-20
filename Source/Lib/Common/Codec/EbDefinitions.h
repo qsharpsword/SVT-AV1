@@ -416,7 +416,7 @@ extern "C" {
 #define TRACK_PER_DEPTH_DELTA  1 // Keep track of the distance of a given depth to the PD0 predicted depth
 #define COEFF_BASED_TXT_BYPASS 1 // Use TXT statistics to bypass certain tx types
 #define COEFF_BASED_TXS_BYPASS 1 // Use TXS statistics to bypass certain tx search sizes
-#define REMOVE_UNUSED_CODE              0 // Remove unused code
+#define REMOVE_UNUSED_CODE              1 // Remove unused code
 #define PRESET_SHIFITNG                 1 // Shift presets (new encoderMode  <- old encoderMode)
                                           // M: (0 <- 0);(1 <- 1);(2 <- 3);(3 <- 5);(4 <- 6);(5 <- 7);(6 <- 8);(7 <- 8);(8 <- 8);
 #define REDUCE_MR_COMP_CANDS    1 // Bug fix: Adopt the M0 level of inter_inter_distortion_based_reference_pruning to reduce compound candidates in MR
@@ -424,7 +424,7 @@ extern "C" {
 #define IFS_MD_STAGE_1            1 // Move ifs from md_stage_3() to md_stage_1()
 #define SHUT_MERGE_1D_INTER_BLOCK 1 // Remove merge 1D feature
 #define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
-#define REMOVE_UNUSED_CODE_PH2          0 // Remove unused code
+#define REMOVE_UNUSED_CODE_PH2          1 // Remove unused code
 #define JUNE8_ADOPTIONS         1 // Adoptions in MR-M2
 #define ADD_MRS_MODE        1 // A slow MR mode, intended to have no TH values (should have all speed features OFF)
 

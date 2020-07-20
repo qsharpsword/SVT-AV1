@@ -293,7 +293,7 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is -1. */
     int enable_smooth;
 
-#if !REMOVE_COMBINE_CLASS12
+#if 0//!REMOVE_COMBINE_CLASS12
     /* combine class 12
     *
     * Default is -1. */
@@ -312,7 +312,7 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int spatial_sse_fl;
-#if !REMOVE_ME_SUBPEL_CODE
+#if 0//!REMOVE_ME_SUBPEL_CODE
     /* subpel
     *
     * Default is -1. */
@@ -326,7 +326,7 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int new_nearest_comb_inject;
-#if !SHUT_ME_CAND_SORTING
+#if 0//!SHUT_ME_CAND_SORTING
     /* prune unipred at me
     *
     * Default is -1. */
@@ -468,7 +468,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * 2 = Auto: 8bit & 10bit mode decision
      *
     * Default is -1. */
-#if 0 //CHANGE_HBD_MODE
+#if 1 //CHANGE_HBD_MODE
     int8_t enable_hbd_mode_decision;
 #else
     uint8_t enable_hbd_mode_decision;

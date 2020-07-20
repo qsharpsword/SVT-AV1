@@ -248,7 +248,7 @@ typedef struct EbConfig {
     int sg_filter_mode;
     int wn_filter_mode;
 
-#if !REMOVE_COMBINE_CLASS12
+#if 0//!REMOVE_COMBINE_CLASS12
     /****************************************
      * class12
     ****************************************/
@@ -286,7 +286,7 @@ typedef struct EbConfig {
       * spatial sse in full loop
      ****************************************/
     int spatial_sse_fl;
-#if !REMOVE_ME_SUBPEL_CODE
+#if 0//!REMOVE_ME_SUBPEL_CODE
     /****************************************
       * subpel
      ****************************************/
@@ -300,10 +300,12 @@ typedef struct EbConfig {
       * new nearest comb injection
      ****************************************/
     int new_nearest_comb_inject;
+#if 0//!SHUT_ME_CAND_SORTING
     /****************************************
       * prune unipred at me
      ****************************************/
     int prune_unipred_me;
+#endif
     /****************************************
       * prune ref frame for rec partitions
      ****************************************/

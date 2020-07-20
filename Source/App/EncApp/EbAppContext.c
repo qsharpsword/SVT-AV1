@@ -128,7 +128,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.enable_restoration_filtering = config->enable_restoration_filtering;
     callback_data->eb_enc_parameters.sg_filter_mode           = config->sg_filter_mode;
     callback_data->eb_enc_parameters.wn_filter_mode           = config->wn_filter_mode;
-#if !REMOVE_COMBINE_CLASS12
+#if 0//!REMOVE_COMBINE_CLASS12
     callback_data->eb_enc_parameters.combine_class_12         = config->combine_class_12;
 #endif
     callback_data->eb_enc_parameters.edge_skp_angle_intra     = config->edge_skp_angle_intra;
@@ -142,10 +142,14 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.enable_mfmv              = config->enable_mfmv;
     callback_data->eb_enc_parameters.enable_redundant_blk     = config->enable_redundant_blk;
     callback_data->eb_enc_parameters.spatial_sse_fl           = config->spatial_sse_fl;
+#if 0
     callback_data->eb_enc_parameters.enable_subpel            = config->enable_subpel;
+#endif
     callback_data->eb_enc_parameters.over_bndry_blk           = config->over_bndry_blk;
     callback_data->eb_enc_parameters.new_nearest_comb_inject  = config->new_nearest_comb_inject;
+#if 0
     callback_data->eb_enc_parameters.prune_unipred_me         = config->prune_unipred_me;
+#endif
     callback_data->eb_enc_parameters.prune_ref_rec_part       = config->prune_ref_rec_part;
     callback_data->eb_enc_parameters.nsq_table                = config->nsq_table;
     callback_data->eb_enc_parameters.frame_end_cdf_update     = config->frame_end_cdf_update;
