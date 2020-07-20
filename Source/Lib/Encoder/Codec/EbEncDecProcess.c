@@ -8245,7 +8245,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_nsq_mv_search_level = 0;
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
 
-    context_ptr->md_subpel_search_level = 4; //anaghdin to check
+    context_ptr->md_subpel_search_level = 0; //anaghdin to check
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
 
     // Set max_ref_count @ MD

@@ -85,7 +85,7 @@ static AOM_INLINE void output_stats(SequenceControlSet *scs_ptr, FIRSTPASS_STATS
     fprintf(fpfile,
             "%12.0lf %12.4lf %12.0lf %12.0lf %12.0lf %12.4lf %12.4lf"
             "%12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf %12.4lf"
-            "%12.4lf %12.4lf %12.0lf %12.0lf %12.0lf %12.4lf %12.4lf\n",
+            "%12.4lf %12.4lf %12.0lf %12.4lf %12.4lf %12.4lf %12.4lf\n",
             stats->frame, stats->weight, stats->intra_error, stats->coded_error,
             stats->sr_coded_error, stats->pcnt_inter, stats->pcnt_motion,
             stats->pcnt_second_ref, stats->pcnt_neutral, stats->intra_skip_pct,
@@ -880,12 +880,11 @@ void setup_firstpass_data(PictureParentControlSet *pcs_ptr) {
     const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
     const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
     const uint32_t num_mbs = mb_cols * mb_rows;
-    memset(firstpass_data->raw_motion_err_list, 0, sizeof(*firstpass_data->raw_motion_err_list) * num_mbs);
+    //anaghdin: set the init in another place. It might not be initialized for LAD=0
+ //   memset(firstpass_data->raw_motion_err_list, 0, sizeof(*firstpass_data->raw_motion_err_list) * num_mbs);
     memset(firstpass_data->mb_stats, 0, sizeof(*firstpass_data->mb_stats) * num_mbs);
     for (int i = 0; i < num_mbs; i++)
         firstpass_data->mb_stats[i].image_data_start_row = INVALID_ROW;
-
-    return;
 }
 #if 0
 static void free_firstpass_data(FirstPassData *firstpass_data) {

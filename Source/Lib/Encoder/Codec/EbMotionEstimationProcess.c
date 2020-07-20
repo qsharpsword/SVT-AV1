@@ -1968,7 +1968,91 @@ EbErrorType compute_decimated_zz_sad(MotionEstimationContext_t *context_ptr, Pic
 
     return return_error;
 }
+#if FIRST_PASS_SETUP
+/***************************************************************************************************
+* ZZ Decimated SAD Computation
+***************************************************************************************************/
+EbErrorType compute_zz_ssd(MotionEstimationContext_t *context_ptr, PictureParentControlSet *pcs_ptr,
+    EbPictureBufferDesc *sixteenth_decimated_picture_ptr,
+    uint32_t x_sb_start_index, uint32_t x_sb_end_index,
+    uint32_t y_sb_start_index, uint32_t y_sb_end_index) {
+    EbErrorType return_error = EB_ErrorNone;
 
+    PictureParentControlSet *previous_picture_control_set_wrapper_ptr =
+        ((PictureParentControlSet *)pcs_ptr->previous_picture_control_set_wrapper_ptr->object_ptr);
+    EbPictureBufferDesc *prev_input_picture_full =
+        previous_picture_control_set_wrapper_ptr->enhanced_picture_ptr;
+    EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_unscaled_picture_ptr;
+    SequenceControlSet *     scs_ptr = pcs_ptr->scs_ptr;
+    const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width + FORCED_BLK_SIZE - 1) / FORCED_BLK_SIZE;
+
+    uint32_t sb_width;
+    uint32_t sb_height;
+    uint32_t blk_width;
+    uint32_t blk_height;
+    uint32_t sb_origin_x;
+    uint32_t sb_origin_y;
+    uint32_t blk_origin_x;
+    uint32_t blk_origin_y;
+
+    uint32_t input_origin_index;
+
+    uint32_t x_sb_index;
+    uint32_t y_sb_index;
+    // anaghdin address HBD
+    EbSpatialFullDistType spatial_full_dist_type_fun = /*context_ptr->hbd_mode_decision
+        ? full_distortion_kernel16_bits
+        :*/ spatial_full_distortion_kernel;
+
+    for (y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index; ++y_sb_index) {
+        for (x_sb_index = x_sb_start_index; x_sb_index < x_sb_end_index; ++x_sb_index) {
+            sb_origin_x = x_sb_index * scs_ptr->sb_sz;
+            sb_origin_y = y_sb_index * scs_ptr->sb_sz;
+
+            sb_width =
+                (pcs_ptr->aligned_width - sb_origin_x) < BLOCK_SIZE_64
+                ? pcs_ptr->aligned_width - sb_origin_x
+                : BLOCK_SIZE_64;
+            sb_height =
+                (pcs_ptr->aligned_height - sb_origin_y) < BLOCK_SIZE_64
+                ? pcs_ptr->aligned_height - sb_origin_y
+                : BLOCK_SIZE_64;
+
+            for (uint32_t y_blk_index = 0; y_blk_index < sb_height / FORCED_BLK_SIZE; ++y_blk_index) {
+                for (uint32_t x_blk_index = 0; x_blk_index < sb_width / FORCED_BLK_SIZE; ++x_blk_index) {
+                    blk_origin_x = sb_origin_x + x_blk_index * FORCED_BLK_SIZE;
+                    blk_origin_y = sb_origin_y + y_blk_index* FORCED_BLK_SIZE;
+
+                    blk_width =
+                        (pcs_ptr->aligned_width - blk_origin_x) < FORCED_BLK_SIZE
+                        ? pcs_ptr->aligned_width - blk_origin_x
+                        : FORCED_BLK_SIZE;
+                    blk_height =
+                        (pcs_ptr->aligned_height - blk_origin_y) < FORCED_BLK_SIZE
+                        ? pcs_ptr->aligned_height - blk_origin_y
+                        : FORCED_BLK_SIZE;
+
+                    input_origin_index = (input_picture_ptr->origin_y + blk_origin_y) *
+                        input_picture_ptr->stride_y +
+                        (input_picture_ptr->origin_x + blk_origin_x);
+
+                    pcs_ptr->firstpass_data.raw_motion_err_list[(blk_origin_y >> 4) * mb_cols + (blk_origin_x >> 4)]
+                        = (uint32_t)( spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
+                            input_origin_index,
+                            input_picture_ptr->stride_y,
+                            prev_input_picture_full->buffer_y,
+                            input_origin_index,
+                            input_picture_ptr->stride_y,
+                            blk_width,
+                            blk_height));
+                }
+            }
+        }
+    }
+
+    return return_error;
+}
+#endif
 /************************************************
  * Motion Analysis Kernel
  * The Motion Analysis performs  Motion Estimation
@@ -2285,7 +2369,24 @@ void *motion_estimation_kernel(void *input_ptr) {
                     }
                 }
             }
-
+#if FIRST_PASS_SETUP
+            // ZZ SSDs Computation
+            // 1 lookahead frame is needed to get valid (0,0) SAD
+            if (scs_ptr->use_output_stat_file && scs_ptr->static_config.look_ahead_distance != 0) {
+                // ZZ SSDs Computation using full picture
+                if (pcs_ptr->picture_number > 0) {
+                    compute_zz_ssd(
+                        context_ptr,
+                        pcs_ptr,
+                        (EbPictureBufferDesc *)pa_ref_obj_
+                        ->sixteenth_decimated_picture_ptr, // Hsan: always use decimated for ZZ SAD derivation until studying the trade offs and regenerating the activity threshold
+                        x_sb_start_index,
+                        x_sb_end_index,
+                        y_sb_start_index,
+                        y_sb_end_index);
+                }
+            }
+#endif
             // Calculate the ME Distortion and OIS Historgrams
 
             eb_block_on_mutex(pcs_ptr->rc_distortion_histogram_mutex);

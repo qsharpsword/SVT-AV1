@@ -6772,7 +6772,7 @@ static void av1_rc_update_rate_correction_factors(PictureControlSet *pcs_ptr, in
   if (cpi->oxcf.q_cfg.aq_mode == CYCLIC_REFRESH_AQ && cpi->common.seg.enabled) {
     projected_size_based_on_q =
         av1_cyclic_refresh_estimate_bits_at_q(cpi, rate_correction_factor);
-  } else 
+  } else
 #endif
   {
     projected_size_based_on_q = av1_estimate_bits_at_q(

@@ -10831,6 +10831,7 @@ void first_pass_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStr
     uint64_t chroma_fast_distortion = 0;
     EbBool use_ssd = 0;
     // Fast Cost
+    //anaghdin: is it needed?
     *(candidate_buffer->fast_cost_ptr) = av1_product_fast_cost_func_table[candidate_ptr->type](
         blk_ptr,
         candidate_buffer->candidate_ptr,
@@ -11134,7 +11135,7 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
   //  const int fp_block_size_height = block_size_wide[bsize];
     // Assume 0,0 motion with no mv overhead.
     FULLPEL_MV mv = kZeroFullMv;
-    FULLPEL_MV tmp_mv = kZeroFullMv;
+  //  FULLPEL_MV tmp_mv = kZeroFullMv;
     //xd->plane[0].pre[0].buf = last_frame->y_buffer + recon_yoffset;
     //// Set up limit values for motion vectors to prevent them extending
     //// outside the UMV borders.
@@ -11142,10 +11143,18 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     //    (fp_block_size_height >> MI_SIZE_LOG2),
     //    cpi->oxcf.border_in_pixels);
 
-    int motion_error = 0;
-       // get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
-       //     &x->plane[0].src, &xd->plane[0].pre[0]);
 
+    uint32_t full_lambda = context_ptr->full_lambda_md[EB_8_BIT_MD];
+    int errorperbit = full_lambda >> RD_EPB_SHIFT;
+    errorperbit += (errorperbit == 0);
+    EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
+        ? full_distortion_kernel16_bits
+        : spatial_full_distortion_kernel;
+
+    int motion_error = 0;
+           // get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
+       //     &x->plane[0].src, &xd->plane[0].pre[0]);
+#if 1
     // Compute the motion error of the 0,0 motion using the last source
     // frame as the reference. Skip the further motion search on
     // reconstructed frame if this error is small.
@@ -11156,9 +11165,9 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     //const int raw_motion_error = get_prediction_error_bitdepth(
     //    is_high_bitdepth, bitdepth, bsize, &x->plane[0].src,
     //    &unscaled_last_source_buf_2d);
-    const int raw_motion_error = 100;
-    raw_motion_err_list[raw_motion_err_counts] = raw_motion_error;
 
+      const int raw_motion_error = raw_motion_err_list[raw_motion_err_counts]; //anaghdin: check this for non multiple of 16
+#endif
     // TODO(pengchong): Replace the hard-coded threshold
     if (raw_motion_error > LOW_MOTION_ERROR_THRESH) {
         //// Test last reference frame using the previous best mv as the
@@ -11176,6 +11185,7 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
         //        mv = tmp_mv;
         //    }
         //}
+
         uint32_t cand_index = 1;
         ModeDecisionCandidateBuffer **candidate_buffer_ptr_array_base =
             context_ptr->candidate_buffer_ptr_array;
@@ -11191,6 +11201,7 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
         candidate_buffer->candidate_ptr->fast_luma_rate = 0;
         candidate_buffer->candidate_ptr->fast_chroma_rate = 0;
         candidate_buffer->candidate_ptr->interp_filters = 0;
+
         first_pass_loop_core(pcs_ptr,
             context_ptr->sb_ptr,
             blk_ptr,
@@ -11204,9 +11215,12 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
             blk_chroma_origin_index,
             ref_fast_cost);
 
-        EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
-            ? full_distortion_kernel16_bits
-            : spatial_full_distortion_kernel;
+        // anaghdin to check the above logic
+        mv.col = candidate_buffer->candidate_ptr->motion_vector_xl0>>3;
+        mv.row = candidate_buffer->candidate_ptr->motion_vector_yl0>>3;
+
+        last_mv->col = candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_0];
+        last_mv->row = candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_0];
 
         motion_error = (uint32_t)(
             spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
@@ -11217,6 +11231,11 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
                 candidate_buffer->prediction_ptr->stride_y,
                 context_ptr->blk_geom->bwidth,
                 context_ptr->blk_geom->bheight));
+
+        const MV temp_full_mv = get_mv_from_fullmv(&mv);
+        if(mv.col != 0 && mv.row != 0)
+        motion_error += mv_err_cost(&temp_full_mv, last_mv, context_ptr->md_rate_estimation_ptr->nmv_vec_cost, context_ptr->md_rate_estimation_ptr->nmvcoststack, errorperbit) +
+            NEW_MV_MODE_PENALTY;
 
         // Motion search in 2nd reference frame.
         int gf_motion_error = motion_error;
@@ -11266,6 +11285,16 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
                     candidate_buffer->prediction_ptr->stride_y,
                     context_ptr->blk_geom->bwidth,
                     context_ptr->blk_geom->bheight));
+            FULLPEL_MV gf_mv;
+            gf_mv.col = candidate_buffer->candidate_ptr->motion_vector_xl0 >> 3;
+            gf_mv.row = candidate_buffer->candidate_ptr->motion_vector_yl0 >> 3;
+            const MV temp_full_mv = get_mv_from_fullmv(&gf_mv);
+            // anaghdin: check the refmv for golden
+            MV temp_last_mv;
+            temp_last_mv.col = candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_1];
+            temp_last_mv.row = candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_1];
+            gf_motion_error += mv_err_cost(&temp_full_mv, &temp_last_mv, context_ptr->md_rate_estimation_ptr->nmv_vec_cost, context_ptr->md_rate_estimation_ptr->nmvcoststack, errorperbit) +
+                NEW_MV_MODE_PENALTY;
         }
 
         if (gf_motion_error < motion_error && gf_motion_error < this_intra_error) {
@@ -11343,7 +11372,6 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
             stats->neutral_count +=
                 (double)motion_error / DOUBLE_DIVIDE_CHECK((double)this_intra_error);
         }
-
         const MV best_mv = get_mv_from_fullmv(&mv);
         this_inter_error = motion_error;
       /*  xd->mi[0]->mode = NEWMV;
@@ -14486,14 +14514,14 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         mb_stats);
 
 
-
+    int this_inter_error = this_intra_error;
 
     if (pcs_ptr->slice_type != I_SLICE && fast_candidate_total_count > 1) {
         MV firstpass_top_mv = kZeroMv;
-        const int raw_motion_err_counts = 0;// anaghdin to set
+        int raw_motion_err_counts = 0;// anaghdin to set
         MV *best_ref_mv = &firstpass_top_mv; // anaghdin to set
-        MV *last_mv = &firstpass_top_mv;// anaghdin to set
-        const int this_inter_error = firstpass_inter_prediction(pcs_ptr,
+        MV last_mv = kZeroMv;// anaghdin to set
+        this_inter_error = firstpass_inter_prediction(pcs_ptr,
             context_ptr->sb_ptr,
             blk_ptr,
             context_ptr,
@@ -14510,7 +14538,7 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
             raw_motion_err_counts,
             raw_motion_err_list,
             best_ref_mv,
-            last_mv,
+            &last_mv,
             mb_stats);
         //cand_index++;
         ////const int this_inter_error = 0;
@@ -14540,20 +14568,25 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         //if (mb_col_in_tile == 0) {
         //    *first_top_mv = last_mv;
         //}
-       // mb_stats->coded_error += this_inter_error;
-        //++raw_motion_err_counts;
+        mb_stats->coded_error += this_inter_error;
+        ++raw_motion_err_counts;
     } else {
         mb_stats->sr_coded_error += this_intra_error;
         mb_stats->tr_coded_error += this_intra_error;
         mb_stats->coded_error += this_intra_error;
     }
+    // choose between Intra and inter LAST based on inter/intra error
+    if (this_inter_error < this_intra_error)
+        context_ptr->best_candidate_index_array[0] = 1;
+    else
+        context_ptr->best_candidate_index_array[0] = 0;
 
 // Full Mode Decision (choose the best mode)
     candidate_index = product_full_mode_decision(
         context_ptr,
         blk_ptr,
         candidate_buffer_ptr_array,
-        fast_candidate_total_count,//context_ptr->md_stage_3_total_count,
+        1,//fast_candidate_total_count,//context_ptr->md_stage_3_total_count,
 #if M8_CLEAN_UP
         context_ptr->best_candidate_index_array,
 #else
