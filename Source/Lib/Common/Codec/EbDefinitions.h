@@ -623,9 +623,9 @@ extern "C" {
 #define SHUT_NSQ                   1
 #define SB_64x64                   1
 #define COEFF_OPT                  1 // support only: no action
-#define ENABLE_COEFF_OPT           1
+#define ENABLE_COEFF_OPT           0
 #define IFS_SWITCH_STAGE_1_STAGE_3 0
-#define TX_EARLY_EXIT              0
+#define TX_EARLY_EXIT              1
 /*********************************/
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
