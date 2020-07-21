@@ -15,7 +15,7 @@
 #include "EbDefinitions.h"
 #include "./../ASM_SSE4_1/EbTemporalFiltering_constants.h"
 
-
+#if ENABLE_ENHANCED_TF
 #define SSE_STRIDE (BW + 2)
 
 DECLARE_ALIGNED(32, static const uint32_t, sse_bytemask[4][8]) = {
@@ -34,21 +34,21 @@ DECLARE_ALIGNED(32, static const uint8_t, shufflemask_32b[2][16]) = {
 
 static AOM_FORCE_INLINE void get_squared_error_16x16_avx2(
     const uint8_t *frame1, const unsigned int stride, const uint8_t *frame2,
-    const unsigned int stride2, const int block_width, const int block_height,
-    uint16_t *frame_sse, const unsigned int sse_stride) {
+    const unsigned int stride2, const int block_width, const int block_height, uint16_t *frame_sse,
+    const unsigned int sse_stride) {
     (void)block_width;
     const uint8_t *src1 = frame1;
     const uint8_t *src2 = frame2;
-    uint16_t *dst = frame_sse;
+    uint16_t *     dst  = frame_sse;
     for (int i = 0; i < block_height; i++) {
         __m128i vf1_128, vf2_128;
         __m256i vf1, vf2, vdiff1, vsqdiff1;
 
-        vf1_128 = _mm_loadu_si128((__m128i *)(src1));
-        vf2_128 = _mm_loadu_si128((__m128i *)(src2));
-        vf1 = _mm256_cvtepu8_epi16(vf1_128);
-        vf2 = _mm256_cvtepu8_epi16(vf2_128);
-        vdiff1 = _mm256_sub_epi16(vf1, vf2);
+        vf1_128  = _mm_loadu_si128((__m128i *)(src1));
+        vf2_128  = _mm_loadu_si128((__m128i *)(src2));
+        vf1      = _mm256_cvtepu8_epi16(vf1_128);
+        vf2      = _mm256_cvtepu8_epi16(vf2_128);
+        vdiff1   = _mm256_sub_epi16(vf1, vf2);
         vsqdiff1 = _mm256_mullo_epi16(vdiff1, vdiff1);
 
         _mm256_storeu_si256((__m256i *)(dst), vsqdiff1);
@@ -62,25 +62,25 @@ static AOM_FORCE_INLINE void get_squared_error_16x16_avx2(
 
 static AOM_FORCE_INLINE void get_squared_error_32x32_avx2(
     const uint8_t *frame1, const unsigned int stride, const uint8_t *frame2,
-    const unsigned int stride2, const int block_width, const int block_height,
-    uint16_t *frame_sse, const unsigned int sse_stride) {
+    const unsigned int stride2, const int block_width, const int block_height, uint16_t *frame_sse,
+    const unsigned int sse_stride) {
     (void)block_width;
     const uint8_t *src1 = frame1;
     const uint8_t *src2 = frame2;
-    uint16_t *dst = frame_sse;
+    uint16_t *     dst  = frame_sse;
     for (int i = 0; i < block_height; i++) {
         __m256i vsrc1, vsrc2, vmin, vmax, vdiff, vdiff1, vdiff2, vres1, vres2;
 
         vsrc1 = _mm256_loadu_si256((__m256i *)src1);
         vsrc2 = _mm256_loadu_si256((__m256i *)src2);
-        vmax = _mm256_max_epu8(vsrc1, vsrc2);
-        vmin = _mm256_min_epu8(vsrc1, vsrc2);
+        vmax  = _mm256_max_epu8(vsrc1, vsrc2);
+        vmin  = _mm256_min_epu8(vsrc1, vsrc2);
         vdiff = _mm256_subs_epu8(vmax, vmin);
 
         __m128i vtmp1 = _mm256_castsi256_si128(vdiff);
         __m128i vtmp2 = _mm256_extracti128_si256(vdiff, 1);
-        vdiff1 = _mm256_cvtepu8_epi16(vtmp1);
-        vdiff2 = _mm256_cvtepu8_epi16(vtmp2);
+        vdiff1        = _mm256_cvtepu8_epi16(vtmp1);
+        vdiff2        = _mm256_cvtepu8_epi16(vtmp2);
 
         vres1 = _mm256_mullo_epi16(vdiff1, vdiff1);
         vres2 = _mm256_mullo_epi16(vdiff2, vdiff2);
@@ -95,8 +95,7 @@ static AOM_FORCE_INLINE void get_squared_error_32x32_avx2(
     }
 }
 
-static AOM_FORCE_INLINE __m256i xx_load_and_pad(uint16_t *src, int col,
-    int block_width) {
+static AOM_FORCE_INLINE __m256i xx_load_and_pad(uint16_t *src, int col, int block_width) {
     __m128i v128tmp = _mm_loadu_si128((__m128i *)(src));
     if (col == 0) {
         // For the first column, replicate the first element twice to the left
@@ -129,29 +128,29 @@ static AOM_FORCE_INLINE int32_t xx_mask_and_hadd(__m256i vsum, int i) {
     return _mm_extract_epi32(v128a, 0);
 }
 
-static void apply_temporal_filter_planewise(
-    const uint8_t *frame1, const unsigned int stride, const uint8_t *frame2,
-    const unsigned int stride2, const int block_width, const int block_height,
-    const double sigma, const int decay_control, unsigned int *accumulator,
-    uint16_t *count, uint16_t *luma_sq_error, uint16_t *chroma_sq_error,
-    int plane, int ss_x_shift, int ss_y_shift) {
+static void apply_temporal_filter_planewise(const uint8_t *frame1, const unsigned int stride,
+                                            const uint8_t *frame2, const unsigned int stride2,
+                                            const int block_width, const int block_height,
+                                            const double sigma, const int decay_control,
+                                            unsigned int *accumulator, uint16_t *count,
+                                            uint16_t *luma_sq_error, uint16_t *chroma_sq_error,
+                                            int plane, int ss_x_shift, int ss_y_shift) {
     assert(TF_PLANEWISE_FILTER_WINDOW_LENGTH == 5);
     assert(((block_width == 32) && (block_height == 32)) ||
-        ((block_width == 16) && (block_height == 16)));
-    if (plane > PLANE_TYPE_Y) assert(chroma_sq_error != NULL);
+           ((block_width == 16) && (block_height == 16)));
+    if (plane > PLANE_TYPE_Y)
+        assert(chroma_sq_error != NULL);
 
-    uint32_t acc_5x5_sse[BH][BW];
-    const double h = decay_control * (0.7 + log(sigma + 1.0));
-    uint16_t *frame_sse =
-        (plane == PLANE_TYPE_Y) ? luma_sq_error : chroma_sq_error;
+    uint32_t     acc_5x5_sse[BH][BW];
+    const double h         = decay_control * (0.7 + log(sigma + 1.0));
+    uint16_t *   frame_sse = (plane == PLANE_TYPE_Y) ? luma_sq_error : chroma_sq_error;
 
     if (block_width == 32) {
-        get_squared_error_32x32_avx2(frame1, stride, frame2, stride2, block_width,
-            block_height, frame_sse, SSE_STRIDE);
-    }
-    else {
-        get_squared_error_16x16_avx2(frame1, stride, frame2, stride2, block_width,
-            block_height, frame_sse, SSE_STRIDE);
+        get_squared_error_32x32_avx2(
+            frame1, stride, frame2, stride2, block_width, block_height, frame_sse, SSE_STRIDE);
+    } else {
+        get_squared_error_16x16_avx2(
+            frame1, stride, frame2, stride2, block_width, block_height, frame_sse, SSE_STRIDE);
     }
 
     __m256i vsrc[5];
@@ -175,28 +174,21 @@ static void apply_temporal_filter_planewise(
             __m256i vsum = _mm256_setzero_si256();
 
             // Add 5 consecutive rows
-            for (int i = 0; i < 5; i++) {
-                vsum = _mm256_add_epi32(vsum, vsrc[i]);
-            }
+            for (int i = 0; i < 5; i++) { vsum = _mm256_add_epi32(vsum, vsrc[i]); }
 
             // Push all elements by one element to the top
-            for (int i = 0; i < 4; i++) {
-                vsrc[i] = vsrc[i + 1];
-            }
+            for (int i = 0; i < 4; i++) { vsrc[i] = vsrc[i + 1]; }
 
             // Load next row to the last element
             if (row <= block_width - 4) {
                 vsrc[4] = xx_load_and_pad(src, col, block_width);
                 src += SSE_STRIDE;
-            }
-            else {
+            } else {
                 vsrc[4] = vsrc[3];
             }
 
             // Accumulate the sum horizontally
-            for (int i = 0; i < 4; i++) {
-                acc_5x5_sse[row][col + i] = xx_mask_and_hadd(vsum, i);
-            }
+            for (int i = 0; i < 4; i++) { acc_5x5_sse[row][col + i] = xx_mask_and_hadd(vsum, i); }
         }
     }
 
@@ -204,27 +196,26 @@ static void apply_temporal_filter_planewise(
         for (int j = 0; j < block_width; j++) {
             const int pixel_value = frame2[i * stride2 + j];
 
-            int diff_sse = acc_5x5_sse[i][j];
-            int num_ref_pixels =
-                TF_PLANEWISE_FILTER_WINDOW_LENGTH * TF_PLANEWISE_FILTER_WINDOW_LENGTH;
+            int diff_sse       = acc_5x5_sse[i][j];
+            int num_ref_pixels = TF_PLANEWISE_FILTER_WINDOW_LENGTH *
+                TF_PLANEWISE_FILTER_WINDOW_LENGTH;
 
-             //Filter U-plane and V-plane using Y-plane. This is because motion
-             //search is only done on Y-plane, so the information from Y-plane will
-             //be more accurate.
+            //Filter U-plane and V-plane using Y-plane. This is because motion
+            //search is only done on Y-plane, so the information from Y-plane will
+            //be more accurate.
             if (plane != PLANE_TYPE_Y) {
                 for (int ii = 0; ii < (1 << ss_y_shift); ++ii) {
                     for (int jj = 0; jj < (1 << ss_x_shift); ++jj) {
-                        const int yy = (i << ss_y_shift) + ii;  // Y-coord on Y-plane.
-                        const int xx = (j << ss_x_shift) + jj;  // X-coord on Y-plane.
+                        const int yy = (i << ss_y_shift) + ii; // Y-coord on Y-plane.
+                        const int xx = (j << ss_x_shift) + jj; // X-coord on Y-plane.
                         diff_sse += luma_sq_error[yy * SSE_STRIDE + xx];
                         ++num_ref_pixels;
                     }
                 }
             }
-            const double scaled_diff =
-                AOMMAX(-(double)(diff_sse / num_ref_pixels) / (2 * h * h), -15.0);
-            const int adjusted_weight =
-                (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
+            const double scaled_diff  = AOMMAX(-(double)(diff_sse / num_ref_pixels) / (2 * h * h),
+                                              -15.0);
+            const int adjusted_weight = (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
             // updated the index
             count[i * stride2 + j] += adjusted_weight;
             accumulator[i * stride2 + j] += adjusted_weight * pixel_value;
@@ -245,8 +236,8 @@ void svt_av1_apply_temporal_filter_planewise_avx2(
     assert((ss_x == 0 || ss_x == 1) && (ss_y == 0 || ss_y == 1) && "invalid chroma subsampling");
 
     const int num_planes = 3;
-    uint16_t luma_sq_error[SSE_STRIDE * BH];
-    uint16_t chroma_sq_error[SSE_STRIDE * BH];
+    uint16_t  luma_sq_error[SSE_STRIDE * BH];
+    uint16_t  chroma_sq_error[SSE_STRIDE * BH];
 
     for (int plane = 0; plane < num_planes; ++plane) {
         const uint32_t plane_h    = plane ? (block_height >> ss_y) : block_height;
@@ -262,11 +253,21 @@ void svt_av1_apply_temporal_filter_planewise_avx2(
         uint32_t *accum = plane == 0 ? y_accum : plane == 1 ? u_accum : v_accum;
         uint16_t *count = plane == 0 ? y_count : plane == 1 ? u_count : v_count;
 
-        apply_temporal_filter_planewise(
-            ref, src_stride, pred, pre_stride, plane_w, plane_h,
-            noise_levels[plane], decay_control, accum,
-            count, luma_sq_error, chroma_sq_error, plane,
-            ss_x_shift, ss_y_shift);
+        apply_temporal_filter_planewise(ref,
+                                        src_stride,
+                                        pred,
+                                        pre_stride,
+                                        plane_w,
+                                        plane_h,
+                                        noise_levels[plane],
+                                        decay_control,
+                                        accum,
+                                        count,
+                                        luma_sq_error,
+                                        chroma_sq_error,
+                                        plane,
+                                        ss_x_shift,
+                                        ss_y_shift);
     }
 }
 
@@ -516,3 +517,4 @@ void svt_av1_apply_temporal_filter_planewise_hbd_avx2(
                                             ss_y_shift);
     }
 }
+#endif

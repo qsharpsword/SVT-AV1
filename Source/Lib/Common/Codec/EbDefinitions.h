@@ -55,6 +55,8 @@ extern "C" {
 #define MR_MODE 0
 #define ENABLE_DIST_BASED_ME    1
 #define ENABLE_PR_1133          1
+#define ENABLE_ENHANCED_TF      1
+#define ENABLE_QPSM_1PASS       1 // Disable 1 pass QPS and QPM
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 
