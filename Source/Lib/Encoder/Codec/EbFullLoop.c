@@ -1822,12 +1822,11 @@ int32_t av1_quantize_inv_quantize(
             // effective.
             // TODO(any): Experiment with variance and mean based thresholds
             const int is_small_residual = 0;
-            //    ((uint64_t)block_mse_q8 <=
-            //    (uint64_t) 16 /*coeff_opt_dist_thresholds[5] */* qstep * qstep);
-            //// Turn OFF RDOQ if large resudual
+                ((uint64_t)block_mse_q8 <=
+                (uint64_t) 16 /*coeff_opt_dist_thresholds[5] */* qstep * qstep);
+            // Turn OFF RDOQ if large resudual
             perform_rdoq = is_small_residual;
         }
-        perform_rdoq = 0;
 #endif
     }
 #else
