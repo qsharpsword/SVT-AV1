@@ -2537,7 +2537,7 @@ static EbErrorType produce_temporally_filtered_pic(
                 // ------------
                 // Step 1: motion estimation + compensation
                 // ------------
-#if ENABLE_DIST_ME
+#if ENABLE_DIST_BASED_ME
                 me_context_ptr->me_context_ptr->tf_frame_index = frame_index ;
                 me_context_ptr->me_context_ptr->tf_index_center = index_center;
 #endif
