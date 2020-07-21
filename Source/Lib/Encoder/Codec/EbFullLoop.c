@@ -1827,6 +1827,7 @@ int32_t av1_quantize_inv_quantize(
             //// Turn OFF RDOQ if large resudual
             perform_rdoq = is_small_residual;
         }
+        perform_rdoq = 0;
 #endif
     }
 #else
