@@ -10333,6 +10333,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     uint8_t  best_tx_depth     = 0;
     uint64_t best_cost_search  = (uint64_t)~0;
     uint8_t  is_best_has_coeff = 1;
+#if TX_EARLY_EXIT
+    uint64_t cost[MAX_TX_DEPTH];
+#endif
     init_tx_candidate_buffer(
         candidate_buffer,
         context_ptr,
@@ -10378,8 +10381,13 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
             if (!is_best_has_coeff) continue;
         }
 #if TX_EARLY_EXIT
-        if (/*context_ptr->source_variance < 256 && */context_ptr->tx_depth == 2 && best_tx_depth == 0 )
+        if (context_ptr->tx_depth == 2) {
+            uint32_t txs_weight = 100;
+            // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
+            if (cost[1] > ((cost[0] * txs_weight) / 100));
+
             continue;
+        }
 #endif
 
         tx_reset_neighbor_arrays(pcs_ptr, context_ptr, is_inter, context_ptr->tx_depth);
@@ -10498,13 +10506,23 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                                                 pcs_ptr,
                                                 context_ptr->tx_depth,
                                                 block_has_coeff);
-
+#if TX_EARLY_EXIT
+        cost[context_ptr->tx_depth] = RDCOST(full_lambda,
+            (tx_y_coeff_bits + tx_size_bits),
+            tx_y_full_distortion[DIST_CALC_RESIDUAL]);
+#else
         uint64_t cost = RDCOST(full_lambda,
                                (tx_y_coeff_bits + tx_size_bits),
                                tx_y_full_distortion[DIST_CALC_RESIDUAL]);
+#endif
 
+#if TX_EARLY_EXIT
+            if (cost[context_ptr->tx_depth] < best_cost_search) {
+                best_cost_search = cost[context_ptr->tx_depth];
+#else
             if (cost < best_cost_search) {
                 best_cost_search                      = cost;
+#endif
                 best_tx_depth                         = context_ptr->tx_depth;
                 is_best_has_coeff                     = block_has_coeff;
                 y_full_distortion[DIST_CALC_RESIDUAL] = tx_y_full_distortion[DIST_CALC_RESIDUAL];
