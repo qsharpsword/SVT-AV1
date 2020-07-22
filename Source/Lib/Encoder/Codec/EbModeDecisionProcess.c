@@ -39,28 +39,49 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->candidate_buffer_tx_depth_2->candidate_ptr);
     EB_DELETE(obj->candidate_buffer_tx_depth_2);
     EB_DELETE(obj->trans_quant_buffers_ptr);
-    if (obj->hbd_mode_decision > EB_8_BIT_MD) EB_FREE_ALIGNED_ARRAY(obj->cfl_temp_luma_recon16bit);
-    if (obj->hbd_mode_decision != EB_10_BIT_MD) EB_FREE_ALIGNED_ARRAY(obj->cfl_temp_luma_recon);
-    if (obj->is_md_rate_estimation_ptr_owner) EB_FREE_ARRAY(obj->md_rate_estimation_ptr);
+    if (obj->hbd_mode_decision > EB_8_BIT_MD)
+        EB_FREE_ALIGNED_ARRAY(obj->cfl_temp_luma_recon16bit);
+    if (obj->hbd_mode_decision != EB_10_BIT_MD)
+        EB_FREE_ALIGNED_ARRAY(obj->cfl_temp_luma_recon);
+    if (obj->is_md_rate_estimation_ptr_owner)
+        EB_FREE_ARRAY(obj->md_rate_estimation_ptr);
     EB_FREE_ARRAY(obj->fast_candidate_array);
     EB_FREE_ARRAY(obj->fast_candidate_ptr_array);
     EB_FREE_ARRAY(obj->fast_cost_array);
     EB_FREE_ARRAY(obj->full_cost_array);
     EB_FREE_ARRAY(obj->full_cost_skip_ptr);
     EB_FREE_ARRAY(obj->full_cost_merge_ptr);
+#if ENABLE_PR_1133
     if (obj->md_local_blk_unit) {
+#else
+    if (obj->md_blk_arr_nsq) {
+        EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].av1xd);
+#endif
         if (obj->hbd_mode_decision > EB_8_BIT_MD) {
+
+#if ENABLE_PR_1133
             EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_left_recon_16bit[0]);
             EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_top_recon_16bit[0]);
         }
         if (obj->hbd_mode_decision != EB_10_BIT_MD) {
             EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_left_recon[0]);
             EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_top_recon[0]);
+#else
+            EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].neigh_left_recon_16bit[0]);
+            EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].neigh_top_recon_16bit[0]);
+        }
+    if (obj->hbd_mode_decision != EB_10_BIT_MD) {
+        EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].neigh_left_recon[0]);
+        EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].neigh_top_recon[0]);
+
+#endif
         }
     }
+#if ENABLE_PR_1133
     if (obj->md_blk_arr_nsq) {
         EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].av1xd);
     }
+#endif
     EB_FREE_ARRAY(obj->md_local_blk_unit);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     EB_FREE_ARRAY(obj->md_ep_pipe_sb);
@@ -149,48 +170,109 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
     EB_NEW(context_ptr->candidate_buffer_tx_depth_2,
            mode_decision_scratch_candidate_buffer_ctor,
            context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT);
-
     EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_tx_depth_2->candidate_ptr, 1);
+#if ENABLE_PR_1133
     context_ptr->md_local_blk_unit[0].neigh_left_recon[0]       = NULL;
     context_ptr->md_local_blk_unit[0].neigh_top_recon[0]        = NULL;
     context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0] = NULL;
     context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0]  = NULL;
     uint16_t sz                                                 = sizeof(uint16_t);
+#else
+    context_ptr->md_blk_arr_nsq[0].av1xd = NULL;
+    context_ptr->md_blk_arr_nsq[0].neigh_left_recon[0]       = NULL;
+    context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0]        = NULL;
+    context_ptr->md_blk_arr_nsq[0].neigh_left_recon_16bit[0] = NULL;
+    context_ptr->md_blk_arr_nsq[0].neigh_top_recon_16bit[0]  = NULL;
+    EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].av1xd, BLOCK_MAX_COUNT_SB_128);
+    uint16_t sz = sizeof(uint16_t);
+
+
+
+
+#endif
     if (context_ptr->hbd_mode_decision > EB_8_BIT_MD) {
+#if ENABLE_PR_1133
         EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0],
                         BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
+
         EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0],
                         BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
     }
     if (context_ptr->hbd_mode_decision != EB_10_BIT_MD) {
+
         EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_left_recon[0],
                         BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+
         EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_top_recon[0],
                         BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+#else
+        EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].neigh_left_recon_16bit[0],
+                        BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
+        EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].neigh_top_recon_16bit[0],
+                        BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
     }
+    if (context_ptr->hbd_mode_decision != EB_10_BIT_MD) {
+        EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].neigh_left_recon[0],
+                        BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+        EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0],
+                        BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+#endif
+    }
+#if ENABLE_PR_1133
     uint32_t coded_leaf_index;
+#else
+    uint32_t coded_leaf_index, txb_index;
+#endif
     for (coded_leaf_index = 0; coded_leaf_index < BLOCK_MAX_COUNT_SB_128; ++coded_leaf_index) {
+#if !ENABLE_PR_1133
+        for (txb_index = 0; txb_index < TRANSFORM_UNIT_MAX_COUNT; ++txb_index)
+            context_ptr->md_blk_arr_nsq[coded_leaf_index].txb_array[txb_index].txb_index =
+                txb_index;
+        const BlockGeom *blk_geom = get_blk_geom_mds(coded_leaf_index);
+        UNUSED(blk_geom);
+        context_ptr->md_blk_arr_nsq[coded_leaf_index].av1xd = context_ptr->md_blk_arr_nsq[0].av1xd +
+            coded_leaf_index;
+        context_ptr->md_blk_arr_nsq[coded_leaf_index].segment_id = 0;
+#endif
         for (int i = 0; i < 3; i++) {
             size_t offset = (coded_leaf_index * 128 * 3 + i * 128) * sz;
+#if ENABLE_PR_1133
             context_ptr->md_local_blk_unit[coded_leaf_index].neigh_left_recon_16bit[i] =
                 context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0] + offset;
             context_ptr->md_local_blk_unit[coded_leaf_index].neigh_top_recon_16bit[i] =
                 context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0] + offset;
+#else
+            context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_left_recon_16bit[i] =
+                context_ptr->md_blk_arr_nsq[0].neigh_left_recon_16bit[0] + offset;
+            context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_top_recon_16bit[i] =
+                context_ptr->md_blk_arr_nsq[0].neigh_top_recon_16bit[0] + offset;
+
+#endif
         }
         for (int i = 0; i < 3; i++) {
             size_t offset = coded_leaf_index * 128 * 3 + i * 128;
+#if ENABLE_PR_1133
+
             context_ptr->md_local_blk_unit[coded_leaf_index].neigh_left_recon[i] =
                 context_ptr->md_local_blk_unit[0].neigh_left_recon[0] + offset;
             context_ptr->md_local_blk_unit[coded_leaf_index].neigh_top_recon[i] =
                 context_ptr->md_local_blk_unit[0].neigh_top_recon[0] + offset;
+#else
+            context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_left_recon[i] =
+                context_ptr->md_blk_arr_nsq[0].neigh_left_recon[0] + offset;
+            context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_top_recon[i] =
+                context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0] + offset;
+#endif
         }
+#if ENABLE_PR_1133
     }
-    context_ptr->md_blk_arr_nsq[0].av1xd                     = NULL;
+    context_ptr->md_blk_arr_nsq[0].av1xd = NULL;
     EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].av1xd, BLOCK_MAX_COUNT_SB_128);
     for (coded_leaf_index = 0; coded_leaf_index < BLOCK_MAX_COUNT_SB_128; ++coded_leaf_index) {
-        context_ptr->md_blk_arr_nsq[coded_leaf_index].av1xd =
-            context_ptr->md_blk_arr_nsq[0].av1xd + coded_leaf_index;
+        context_ptr->md_blk_arr_nsq[coded_leaf_index].av1xd = context_ptr->md_blk_arr_nsq[0].av1xd +
+            coded_leaf_index;
         context_ptr->md_blk_arr_nsq[coded_leaf_index].segment_id = 0;
+#endif
         if (cfg_palette)
             EB_MALLOC_ARRAY(
                 context_ptr->md_blk_arr_nsq[coded_leaf_index].palette_info.color_idx_map,
@@ -202,30 +284,30 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
             EbPictureBufferDescInitData init_data;
 
             init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-            init_data.max_width          = SB_STRIDE_Y;
-            init_data.max_height         = SB_STRIDE_Y;
-            init_data.bit_depth          = EB_32BIT;
-            init_data.color_format       = EB_YUV420;
-            init_data.left_padding       = 0;
-            init_data.right_padding      = 0;
-            init_data.top_padding        = 0;
-            init_data.bot_padding        = 0;
-            init_data.split_mode         = EB_FALSE;
+            init_data.max_width = SB_STRIDE_Y;
+            init_data.max_height = SB_STRIDE_Y;
+            init_data.bit_depth = EB_32BIT;
+            init_data.color_format = EB_YUV420;
+            init_data.left_padding = 0;
+            init_data.right_padding = 0;
+            init_data.top_padding = 0;
+            init_data.bot_padding = 0;
+            init_data.split_mode = EB_FALSE;
 
             EB_NEW(context_ptr->md_blk_arr_nsq[coded_leaf_index].coeff_tmp,
                    eb_picture_buffer_desc_ctor,
                    (EbPtr)&init_data);
 
             init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
-            init_data.max_width          = SB_STRIDE_Y;
-            init_data.max_height         = SB_STRIDE_Y;
-            init_data.bit_depth          = EB_8BIT;
-            init_data.color_format       = EB_YUV420;
-            init_data.left_padding       = 0;
-            init_data.right_padding      = 0;
-            init_data.top_padding        = 0;
-            init_data.bot_padding        = 0;
-            init_data.split_mode         = EB_FALSE;
+            init_data.max_width = SB_STRIDE_Y;
+            init_data.max_height = SB_STRIDE_Y;
+            init_data.bit_depth = EB_8BIT;
+            init_data.color_format = EB_YUV420;
+            init_data.left_padding = 0;
+            init_data.right_padding = 0;
+            init_data.top_padding = 0;
+            init_data.bot_padding = 0;
+            init_data.split_mode = EB_FALSE;
 
             EB_NEW(context_ptr->md_blk_arr_nsq[coded_leaf_index].recon_tmp,
                    eb_picture_buffer_desc_ctor,
@@ -298,16 +380,16 @@ extern void lambda_assign_low_delay(uint32_t *fast_lambda, uint32_t *full_lambda
 
 {
     if (qp_hierarchical_position == 0) {
-        *fast_lambda            = lambda_mode_decision_ld_sad[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_ld_sad[qp];
-        *full_lambda            = lambda_mode_decision_ld_sse[qp];
-        *full_chroma_lambda     = lambda_mode_decision_ld_sse[qp];
+        *fast_lambda = lambda_mode_decision_ld_sad[qp];
+        *fast_chroma_lambda = lambda_mode_decision_ld_sad[qp];
+        *full_lambda = lambda_mode_decision_ld_sse[qp];
+        *full_chroma_lambda = lambda_mode_decision_ld_sse[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_ld_sse[chroma_qp];
     } else { // Hierarchical postions 1, 2, 3, 4, 5
-        *fast_lambda            = lambda_mode_decision_ld_sad_qp_scaling[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_ld_sad_qp_scaling[qp];
-        *full_lambda            = lambda_mode_decision_ld_sse_qp_scaling[qp];
-        *full_chroma_lambda     = lambda_mode_decision_ld_sse_qp_scaling[qp];
+        *fast_lambda = lambda_mode_decision_ld_sad_qp_scaling[qp];
+        *fast_chroma_lambda = lambda_mode_decision_ld_sad_qp_scaling[qp];
+        *full_lambda = lambda_mode_decision_ld_sse_qp_scaling[qp];
+        *full_chroma_lambda = lambda_mode_decision_ld_sse_qp_scaling[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_ld_sse_qp_scaling[chroma_qp];
     }
 }
@@ -319,23 +401,23 @@ void lambda_assign_random_access(uint32_t *fast_lambda, uint32_t *full_lambda,
 
 {
     if (qp_hierarchical_position == 0) {
-        *fast_lambda            = lambda_mode_decision_ra_sad[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_ra_sad[qp];
-        *full_lambda            = lambda_mode_decision_ra_sse[qp];
-        *full_chroma_lambda     = lambda_mode_decision_ra_sse[qp];
+        *fast_lambda = lambda_mode_decision_ra_sad[qp];
+        *fast_chroma_lambda = lambda_mode_decision_ra_sad[qp];
+        *full_lambda = lambda_mode_decision_ra_sse[qp];
+        *full_chroma_lambda = lambda_mode_decision_ra_sse[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_ra_sse[chroma_qp];
     } else if (qp_hierarchical_position < 3) { // Hierarchical postions 1, 2
 
-        *fast_lambda            = lambda_mode_decision_ra_sad_qp_scaling_l1[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_ra_sad_qp_scaling_l1[qp];
-        *full_lambda            = lambda_mode_decision_ra_sse_qp_scaling_l1[qp];
-        *full_chroma_lambda     = lambda_mode_decision_ra_sse_qp_scaling_l1[qp];
+        *fast_lambda = lambda_mode_decision_ra_sad_qp_scaling_l1[qp];
+        *fast_chroma_lambda = lambda_mode_decision_ra_sad_qp_scaling_l1[qp];
+        *full_lambda = lambda_mode_decision_ra_sse_qp_scaling_l1[qp];
+        *full_chroma_lambda = lambda_mode_decision_ra_sse_qp_scaling_l1[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_ra_sse_qp_scaling_l1[chroma_qp];
     } else { // Hierarchical postions 3, 4, 5
-        *fast_lambda            = lambda_mode_decision_ra_sad_qp_scaling_l3[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_ra_sad_qp_scaling_l3[qp];
-        *full_lambda            = lambda_mode_decision_ra_sse_qp_scaling_l3[qp];
-        *full_chroma_lambda     = lambda_mode_decision_ra_sse_qp_scaling_l3[qp];
+        *fast_lambda = lambda_mode_decision_ra_sad_qp_scaling_l3[qp];
+        *fast_chroma_lambda = lambda_mode_decision_ra_sad_qp_scaling_l3[qp];
+        *full_lambda = lambda_mode_decision_ra_sse_qp_scaling_l3[qp];
+        *full_chroma_lambda = lambda_mode_decision_ra_sse_qp_scaling_l3[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_ra_sse_qp_scaling_l3[chroma_qp];
     }
 }
@@ -347,10 +429,10 @@ void lambda_assign_i_slice(uint32_t *fast_lambda, uint32_t *full_lambda,
 
 {
     if (qp_hierarchical_position == 0) {
-        *fast_lambda            = lambda_mode_decision_i_slice_sad[qp];
-        *fast_chroma_lambda     = lambda_mode_decision_i_slice_sad[qp];
-        *full_lambda            = lambda_mode_decision_i_slice_sse[qp];
-        *full_chroma_lambda     = lambda_mode_decision_i_slice_sse[qp];
+        *fast_lambda = lambda_mode_decision_i_slice_sad[qp];
+        *fast_chroma_lambda = lambda_mode_decision_i_slice_sad[qp];
+        *full_lambda = lambda_mode_decision_i_slice_sse[qp];
+        *full_chroma_lambda = lambda_mode_decision_i_slice_sse[qp];
         *full_chroma_lambda_sao = lambda_mode_decision_i_slice_sse[chroma_qp];
     }
 }
@@ -361,20 +443,18 @@ const EbLambdaAssignFunc lambda_assignment_function_table[4] = {
     lambda_assign_i_slice // I_SLICE
 };
 
-void av1_lambda_assign_md(
-    ModeDecisionContext   *context_ptr)
-{
-        context_ptr->full_lambda_md[0] = av1_lambda_mode_decision8_bit_sse[context_ptr->qp_index];
-        context_ptr->fast_lambda_md[0] = av1_lambda_mode_decision8_bit_sad[context_ptr->qp_index];
+void av1_lambda_assign_md(ModeDecisionContext *context_ptr) {
+    context_ptr->full_lambda_md[0] = av1_lambda_mode_decision8_bit_sse[context_ptr->qp_index];
+    context_ptr->fast_lambda_md[0] = av1_lambda_mode_decision8_bit_sad[context_ptr->qp_index];
 
-        context_ptr->full_lambda_md[1] = av1lambda_mode_decision10_bit_sse[context_ptr->qp_index];
-        context_ptr->fast_lambda_md[1] = av1lambda_mode_decision10_bit_sad[context_ptr->qp_index];
+    context_ptr->full_lambda_md[1] = av1lambda_mode_decision10_bit_sse[context_ptr->qp_index];
+    context_ptr->fast_lambda_md[1] = av1lambda_mode_decision10_bit_sad[context_ptr->qp_index];
 
-        context_ptr->full_lambda_md[1] *= 16;
-        context_ptr->fast_lambda_md[1] *= 4;
+    context_ptr->full_lambda_md[1] *= 16;
+    context_ptr->fast_lambda_md[1] *= 4;
 }
-void av1_lambda_assign(uint32_t *fast_lambda, uint32_t *full_lambda, uint8_t bit_depth, uint16_t qp_index,
-                       EbBool multiply_lambda) {
+void av1_lambda_assign(uint32_t *fast_lambda, uint32_t *full_lambda, uint8_t bit_depth,
+                       uint16_t qp_index, EbBool multiply_lambda) {
     if (bit_depth == 8) {
         *full_lambda = av1_lambda_mode_decision8_bit_sse[qp_index];
         *fast_lambda = av1_lambda_mode_decision8_bit_sad[qp_index];
@@ -408,12 +488,12 @@ void reset_mode_decision(SequenceControlSet *scs_ptr, ModeDecisionContext *conte
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     context_ptr->hbd_mode_decision = pcs_ptr->hbd_mode_decision;
     // QP
-    uint16_t picture_qp   = pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
-    context_ptr->qp       = picture_qp;
+    uint16_t picture_qp = pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
+    context_ptr->qp = picture_qp;
     context_ptr->qp_index = context_ptr->qp;
     // Asuming cb and cr offset to be the same for chroma QP in both slice and pps for lambda computation
     context_ptr->chroma_qp = (uint8_t)context_ptr->qp;
-    context_ptr->qp_index  = (uint8_t)frm_hdr->quantization_params.base_q_idx;
+    context_ptr->qp_index = (uint8_t)frm_hdr->quantization_params.base_q_idx;
     av1_lambda_assign_md(context_ptr);
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
     if (context_ptr->is_md_rate_estimation_ptr_owner) {
@@ -463,10 +543,9 @@ void mode_decision_configure_sb(ModeDecisionContext *context_ptr, PictureControl
     /* Note(CHKN) : when Qp modulation varies QP on a sub-SB(CU) basis,  Lamda has to change based on Cu->QP , and then this code has to move inside the CU loop in MD */
 
     // Lambda Assignement
-    context_ptr->qp_index =
-        pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
-            ? (uint8_t)quantizer_to_qindex[sb_qp]
-            : (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
+    context_ptr->qp_index = pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
+        ? (uint8_t)quantizer_to_qindex[sb_qp]
+        : (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
 
     av1_lambda_assign_md(context_ptr);
 

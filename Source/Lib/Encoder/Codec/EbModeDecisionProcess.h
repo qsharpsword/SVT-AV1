@@ -25,8 +25,7 @@ extern "C" {
      * Defines
      **************************************/
 #define MODE_DECISION_CANDIDATE_MAX_COUNT_Y 1855
-#define MODE_DECISION_CANDIDATE_MAX_COUNT \
-    (MODE_DECISION_CANDIDATE_MAX_COUNT_Y + 84)
+#define MODE_DECISION_CANDIDATE_MAX_COUNT (MODE_DECISION_CANDIDATE_MAX_COUNT_Y + 84)
 #define DEPTH_ONE_STEP 21
 #define DEPTH_TWO_STEP 5
 #define DEPTH_THREE_STEP 1
@@ -87,17 +86,19 @@ typedef struct MdBlkStruct {
     PartitionContextType left_neighbor_partition;
     PartitionContextType above_neighbor_partition;
     uint64_t             cost;
-    uint64_t             default_cost; // Similar to cost but does not get updated @ d1_non_square_block_decision() and d2_inter_depth_block_decision()
-    CandidateMv          ed_ref_mv_stack[MODE_CTX_REF_FRAMES]
+    uint64_t
+                default_cost; // Similar to cost but does not get updated @ d1_non_square_block_decision() and d2_inter_depth_block_decision()
+    CandidateMv ed_ref_mv_stack[MODE_CTX_REF_FRAMES]
                                [MAX_REF_MV_STACK_SIZE]; //to be used in MD and EncDec
     uint8_t avail_blk_flag; //tells whether this CU is tested in MD and have a valid cu data
-    IntMv ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
+#if ENABLE_PR_1133
+    IntMv    ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
     uint32_t best_d1_blk;
     uint8_t *neigh_left_recon[3]; //only for MD
     uint8_t *neigh_top_recon[3];
     uint16_t *neigh_left_recon_16bit[3];
     uint16_t *neigh_top_recon_16bit[3];
-    uint8_t merge_flag;
+    uint8_t   merge_flag;
     // wm
     EbWarpedMotionParams wm_params_l0;
     EbWarpedMotionParams wm_params_l1;
@@ -105,12 +106,13 @@ typedef struct MdBlkStruct {
     int8_t ref_frame_index_l0;
     int8_t ref_frame_index_l1;
     // compound
-    uint8_t compound_idx;
+    uint8_t                compound_idx;
     InterInterCompoundData interinter_comp;
     // txb
     uint8_t u_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
     uint8_t v_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
     uint8_t y_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -126,13 +128,13 @@ typedef struct ModeDecisionContext {
     ModeDecisionCandidate **      fast_candidate_ptr_array;
     ModeDecisionCandidate *       fast_candidate_array;
     ModeDecisionCandidateBuffer **candidate_buffer_ptr_array;
-    ModeDecisionCandidateBuffer *candidate_buffer_tx_depth_1;
-    ModeDecisionCandidateBuffer *candidate_buffer_tx_depth_2;
+    ModeDecisionCandidateBuffer * candidate_buffer_tx_depth_1;
+    ModeDecisionCandidateBuffer * candidate_buffer_tx_depth_2;
     MdRateEstimationContext *     md_rate_estimation_ptr;
     EbBool                        is_md_rate_estimation_ptr_owner;
     InterPredictionContext *      inter_prediction_context;
-    MdBlkStruct *                md_local_blk_unit;
-    BlkStruct *                  md_blk_arr_nsq;
+    MdBlkStruct *                 md_local_blk_unit;
+    BlkStruct *                   md_blk_arr_nsq;
 
     NeighborArrayUnit *intra_luma_mode_neighbor_array;
     NeighborArrayUnit *intra_chroma_mode_neighbor_array;
@@ -180,8 +182,11 @@ typedef struct ModeDecisionContext {
     uint32_t full_lambda_md[2];
 
     //  Context Variables---------------------------------
-    SuperBlock *     sb_ptr;
-    BlkStruct *     blk_ptr;
+    SuperBlock *sb_ptr;
+#if ENABLE_PR_1133
+    TransformUnit *txb_ptr;
+#endif
+    BlkStruct *      blk_ptr;
     const BlockGeom *blk_geom;
     PredictionUnit * pu_ptr;
     MvUnit           mv_unit;
@@ -305,25 +310,25 @@ typedef struct ModeDecisionContext {
     DECLARE_ALIGNED(32, int16_t, diff10[MAX_SB_SQUARE]);
     unsigned int prediction_mse;
     EbBool       variance_ready;
-    MdStage md_stage;
+    MdStage      md_stage;
     uint32_t     cand_buff_indices[CAND_CLASS_TOTAL][MAX_NFL_BUFF];
     uint8_t      md_staging_mode;
     uint8_t      md_staging_count_level;
     uint8_t      bypass_md_stage_1[CAND_CLASS_TOTAL];
-    uint8_t bypass_md_stage_2[CAND_CLASS_TOTAL];
-    uint32_t md_stage_0_count[CAND_CLASS_TOTAL];
-    uint32_t md_stage_1_count[CAND_CLASS_TOTAL];
-    uint32_t md_stage_2_count[CAND_CLASS_TOTAL];
-    uint32_t md_stage_3_count[CAND_CLASS_TOTAL];
-    uint32_t md_stage_1_total_count;
-    uint32_t md_stage_2_total_count;
-    uint32_t md_stage_3_total_count;
-    uint32_t md_stage_3_total_intra_count;
-    uint64_t best_intra_cost;
-    uint64_t best_inter_cost;
-    uint16_t skip_cfl_cost_dev_th;
-    uint16_t mds3_intra_prune_th;
-    uint8_t combine_class12; // 1:class1 and 2 are combined.
+    uint8_t      bypass_md_stage_2[CAND_CLASS_TOTAL];
+    uint32_t     md_stage_0_count[CAND_CLASS_TOTAL];
+    uint32_t     md_stage_1_count[CAND_CLASS_TOTAL];
+    uint32_t     md_stage_2_count[CAND_CLASS_TOTAL];
+    uint32_t     md_stage_3_count[CAND_CLASS_TOTAL];
+    uint32_t     md_stage_1_total_count;
+    uint32_t     md_stage_2_total_count;
+    uint32_t     md_stage_3_total_count;
+    uint32_t     md_stage_3_total_intra_count;
+    uint64_t     best_intra_cost;
+    uint64_t     best_inter_cost;
+    uint16_t     skip_cfl_cost_dev_th;
+    uint16_t     mds3_intra_prune_th;
+    uint8_t      combine_class12; // 1:class1 and 2 are combined.
 
     CandClass target_class;
 
@@ -395,8 +400,7 @@ typedef struct ModeDecisionContext {
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
-                                      uint8_t bit_depth, uint16_t qp_index,
-                                      EbBool multiply_lambda);
+                                      uint8_t bit_depth, uint16_t qp_index, EbBool multiply_lambda);
 
 typedef void (*EbLambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
                                    uint32_t *fast_chroma_lambda, uint32_t *full_chroma_lambda,
@@ -439,7 +443,8 @@ static const uint8_t quantizer_to_qindex[] = {
     192, 196, 200, 204, 208, 212, 216, 220, 224, 228, 232, 236, 240, 244, 249, 255};
 
 extern void reset_mode_decision(SequenceControlSet *scs_ptr, ModeDecisionContext *context_ptr,
-                                PictureControlSet *pcs_ptr, uint16_t tile_row_idx, uint32_t segment_index);
+                                PictureControlSet *pcs_ptr, uint16_t tile_row_idx,
+                                uint32_t segment_index);
 
 extern void mode_decision_configure_sb(ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
                                        uint8_t sb_qp);

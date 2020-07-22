@@ -229,9 +229,9 @@ typedef struct PictureControlSet {
     EB_SLICE ref_slice_type_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     uint64_t ref_pic_referenced_area_avg_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     // GOP
-    uint64_t      picture_number;
-    uint8_t       temporal_layer_index;
-    EbColorFormat color_format;
+    uint64_t         picture_number;
+    uint8_t          temporal_layer_index;
+    EbColorFormat    color_format;
     EncDecSegments **enc_dec_segment_ctrl;
     uint16_t         enc_dec_coded_sb_count;
 
@@ -240,10 +240,10 @@ typedef struct PictureControlSet {
     EbHandle          entropy_coding_pic_mutex;
     EbBool            entropy_coding_pic_reset_flag;
     uint8_t           tile_size_bytes_minus_1;
-    EbHandle intra_mutex;
-    uint32_t intra_coded_area;
-    uint32_t tot_seg_searched_cdef;
-    EbHandle cdef_search_mutex;
+    EbHandle          intra_mutex;
+    uint32_t          intra_coded_area;
+    uint32_t          tot_seg_searched_cdef;
+    EbHandle          cdef_search_mutex;
 
     uint16_t cdef_segments_total_count;
     uint8_t  cdef_segments_column_count;
@@ -344,20 +344,20 @@ typedef struct PictureControlSet {
     NeighborArrayUnit **  ref_frame_type_neighbor_array;
     NeighborArrayUnit32 **interpolation_type_neighbor_array;
 
-    NeighborArrayUnit **segmentation_id_pred_array;
+    NeighborArrayUnit **     segmentation_id_pred_array;
     SegmentationNeighborMap *segmentation_neighbor_map;
 
     ModeInfo **mi_grid_base; //2 SB Rows of mi Data are enough
 
     ModeInfo *mip;
 
-    int32_t   mi_stride;
-    EbReflist colocated_pu_ref_list;
-    EbBool    is_low_delay;
-    EbEncMode enc_mode;
-    int32_t     cdef_preset[MAX_TILE_CNTS][4];
-    WienerInfo  wiener_info[MAX_TILE_CNTS][MAX_MB_PLANE];
-    SgrprojInfo sgrproj_info[MAX_TILE_CNTS][MAX_MB_PLANE];
+    int32_t          mi_stride;
+    EbReflist        colocated_pu_ref_list;
+    EbBool           is_low_delay;
+    EbEncMode        enc_mode;
+    int32_t          cdef_preset[MAX_TILE_CNTS][4];
+    WienerInfo       wiener_info[MAX_TILE_CNTS][MAX_MB_PLANE];
+    SgrprojInfo      sgrproj_info[MAX_TILE_CNTS][MAX_MB_PLANE];
     SpeedFeatures    sf;
     SearchSiteConfig ss_cfg; //CHKN this might be a seq based
     HashTable        hash_table;
@@ -380,7 +380,9 @@ typedef struct PictureControlSet {
     uint16_t sb_total_count_pix;
     uint16_t sb_total_count_unscaled;
     // pointer to a scratch buffer used by self-guided restoration
-    int32_t* rst_tmpbuf;
+#if ENABLE_PR_1133
+    int32_t *rst_tmpbuf;
+#endif
 } PictureControlSet;
 
 // To optimize based on the max input size
@@ -457,32 +459,34 @@ typedef struct PictureParentControlSet {
     EbLinkedListNode *app_out_data_ll_head_ptr;
 
     EbBufferHeaderType *input_ptr; // input picture buffer
-    uint8_t        log2_tile_rows;
-    uint8_t        log2_tile_cols;
-    uint8_t        log2_sb_sz;
-    TileGroupInfo *tile_group_info;
-    uint8_t        tile_group_cols;
-    uint8_t        tile_group_rows;
+    uint8_t             log2_tile_rows;
+    uint8_t             log2_tile_cols;
+    uint8_t             log2_sb_sz;
+    TileGroupInfo *     tile_group_info;
+    uint8_t             tile_group_cols;
+    uint8_t             tile_group_rows;
 
-    EbBool           idr_flag;
-    EbBool           cra_flag;
-    EbBool           scene_change_flag;
-    EbBool           end_of_sequence_flag;
-    uint8_t          picture_qp;
-    uint64_t         picture_number;
-    uint8_t          wedge_mode;
-    uint32_t         cur_order_hint;
-    uint32_t         ref_order_hint[7];
-    EbPicnoiseClass  pic_noise_class;
-    EB_SLICE         slice_type;
-    uint8_t          pred_struct_index;
-    uint8_t          temporal_layer_index;
-    uint64_t         decode_order;
-    EbBool           is_used_as_reference_flag;
-    uint8_t          ref_list0_count;
-    uint8_t          ref_list1_count;
-    uint8_t          ref_list0_count_try;  //The number of references to try (in ME / MD) in list0.Should be <= ref_list0_count.
-    uint8_t          ref_list1_count_try;  // The number of references to try (in ME/MD) in list1. Should be <= ref_list1_count.
+    EbBool          idr_flag;
+    EbBool          cra_flag;
+    EbBool          scene_change_flag;
+    EbBool          end_of_sequence_flag;
+    uint8_t         picture_qp;
+    uint64_t        picture_number;
+    uint8_t         wedge_mode;
+    uint32_t        cur_order_hint;
+    uint32_t        ref_order_hint[7];
+    EbPicnoiseClass pic_noise_class;
+    EB_SLICE        slice_type;
+    uint8_t         pred_struct_index;
+    uint8_t         temporal_layer_index;
+    uint64_t        decode_order;
+    EbBool          is_used_as_reference_flag;
+    uint8_t         ref_list0_count;
+    uint8_t         ref_list1_count;
+    uint8_t
+        ref_list0_count_try; //The number of references to try (in ME / MD) in list0.Should be <= ref_list0_count.
+    uint8_t
+                     ref_list1_count_try; // The number of references to try (in ME/MD) in list1. Should be <= ref_list1_count.
     MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
     uint8_t          tot_ref_frame_types;
     // Rate Control
@@ -626,10 +630,10 @@ typedef struct PictureParentControlSet {
     // Global quant matrix tables
     const QmVal *giqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
     const QmVal *gqmatrix[NUM_QM_LEVELS][3][TX_SIZES_ALL];
-    Quants quants_bd; // follows input bit depth
-    Dequants deq_bd;  // follows input bit depth
-    Quants quants_8bit;  // 8bit
-    Dequants deq_8bit; // 8bit
+    Quants       quants_bd; // follows input bit depth
+    Dequants     deq_bd; // follows input bit depth
+    Quants       quants_8bit; // 8bit
+    Dequants     deq_8bit; // 8bit
     int32_t      min_qmlevel;
     int32_t      max_qmlevel;
     // Encoder
@@ -701,7 +705,7 @@ typedef struct PictureParentControlSet {
     struct PictureParentControlSet *alt_ref_ppcs_ptr;
     uint8_t                         altref_strength;
 #if ENABLE_ENHANCED_TF
-    double                          noise_levels[MAX_MB_PLANE];
+    double noise_levels[MAX_MB_PLANE];
 #endif
     int32_t                         pic_decision_reorder_queue_idx;
     struct PictureParentControlSet *temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
@@ -734,15 +738,15 @@ typedef struct PictureParentControlSet {
     struct StatStruct stat_struct; // stat_struct used in the second pass
     uint64_t          referenced_area_avg; // average referenced area per frame
     uint8_t           referenced_area_has_non_zero;
-    uint8_t gm_level;
-    uint8_t tx_size_early_exit;
+    uint8_t           gm_level;
+    uint8_t           tx_size_early_exit;
 
-    SbParams *sb_params_array;
-    SbGeom *sb_geom;
+    SbParams *        sb_params_array;
+    SbGeom *          sb_geom;
     EbInputResolution input_resolution;
-    uint16_t picture_sb_width;
-    uint16_t picture_sb_height;
-    uint16_t sb_total_count_unscaled;
+    uint16_t          picture_sb_width;
+    uint16_t          picture_sb_height;
+    uint16_t          sb_total_count_unscaled;
 
     // Picture dimensions (resized or not)
     // aligned to be a multiple of 8 pixels
@@ -754,7 +758,7 @@ typedef struct PictureParentControlSet {
     uint16_t frame_width;
     uint16_t frame_height;
 
-    EbBool frame_superres_enabled;
+    EbBool  frame_superres_enabled;
     uint8_t superres_denom;
     uint8_t prune_ref_based_me;
 } PictureParentControlSet;
@@ -770,7 +774,9 @@ typedef struct PictureControlSetInitData {
     EbColorFormat  color_format;
     uint32_t       sb_sz;
     uint8_t        cfg_palette;
-    uint8_t        serial_rate_est;
+#if ENABLE_PR_1133
+    uint8_t serial_rate_est;
+#endif
     uint32_t
         sb_size_pix; //since we still have lot of code assuming 64x64 SB, we add a new paramter supporting both128x128 and 64x64,
     //ultimately the fixed code supporting 64x64 should be upgraded to use 128x128 and the above could be removed.
@@ -799,10 +805,10 @@ typedef struct PictureControlSetInitData {
     uint8_t log2_tile_cols;
     uint8_t log2_sb_sz; //in mi unit
     uint8_t allocate_ois_struct; //allocate ois results
-    EbBool is_16bit_pipeline;
+    EbBool  is_16bit_pipeline;
 
-    uint16_t  non_m8_pad_w;
-    uint16_t  non_m8_pad_h;
+    uint16_t non_m8_pad_w;
+    uint16_t non_m8_pad_h;
 
 } PictureControlSetInitData;
 

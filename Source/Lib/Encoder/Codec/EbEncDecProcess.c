@@ -2998,7 +2998,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = 0;
                             e_depth = 0;
                         } else
-
+#if ENABLE_PR_1133
                             if (context_ptr->md_local_blk_unit[blk_index].best_d1_blk == blk_index) {
                                 s_depth = -1;
                                 e_depth = 0;
@@ -3006,6 +3006,15 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 s_depth = 0;
                                 e_depth = 1;
                             }
+#else
+                            if (context_ptr->md_blk_arr_nsq[blk_index].best_d1_blk == blk_index) {
+                            s_depth = -1;
+                            e_depth = 0;
+                        } else {
+                            s_depth = 0;
+                            e_depth = 1;
+                        }
+#endif
                     }
 
                     // Add current pred depth block(s)

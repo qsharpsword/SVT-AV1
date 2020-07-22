@@ -225,8 +225,14 @@ typedef struct MacroBlockPlane {
 } MacroBlockPlane;
 
 typedef struct macroblockd_plane {
-    int          subsampling_x;
-    int          subsampling_y;
+    int subsampling_x;
+    int subsampling_y;
+#if !ENABLE_PR_1133
+
+    struct Buf2D dst;
+    struct Buf2D pre[2];
+    uint8_t      width, height;
+#endif
 } MACROBLOCKD_PLANE;
 
 typedef struct MacroBlockD {
@@ -307,9 +313,22 @@ typedef struct BlkStruct {
     unsigned               block_has_coeff : 1;
     unsigned               split_flag_context : 2;
     uint16_t               qp;
-    uint8_t                split_flag;
-    uint8_t                skip_flag;
-    uint8_t                mdc_split_flag;
+#if ENABLE_PR_1133
+    uint8_t split_flag;
+    uint8_t skip_flag;
+    uint8_t mdc_split_flag;
+#else
+    uint16_t ref_qp;
+    int16_t  delta_qp; // can be signed 8bits
+
+    // Coded Tree
+    struct {
+        unsigned leaf_index : 8;
+        unsigned split_flag : 1;
+        unsigned skip_flag : 1;
+        unsigned mdc_split_flag : 1;
+    };
+#endif
 #if NO_ENCDEC
     EbPictureBufferDesc *quant_tmp;
     EbPictureBufferDesc *coeff_tmp;
@@ -319,7 +338,10 @@ typedef struct BlkStruct {
     MacroBlockD *av1xd;
     // uint8_t ref_mv_count[MODE_CTX_REF_FRAMES];
     int16_t inter_mode_ctx[MODE_CTX_REF_FRAMES];
-    uint8_t drl_index;
+#if !ENABLE_PR_1133
+    IntMv ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
+#endif
+    uint8_t        drl_index;
     PredictionMode pred_mode;
     IntMv          predmv[2];
     uint8_t        skip_coeff_context;
@@ -331,13 +353,26 @@ typedef struct BlkStruct {
     uint8_t        segment_id;
     uint8_t        seg_id_predicted; // valid only when temporal_update is enabled
     PartitionType  part;
+#if !ENABLE_PR_1133
+    Part shape;
+#endif
     uint16_t
-                   mds_idx; //equivalent of leaf_index in the nscu context. we will keep both for now and use the right one on a case by case basis.
+        mds_idx; //equivalent of leaf_index in the nscu context. we will keep both for now and use the right one on a case by case basis.
+#if !ENABLE_PR_1133
+    uint8_t *      neigh_left_recon[3]; //only for MD
+    uint8_t *      neigh_top_recon[3];
+    uint16_t *     neigh_left_recon_16bit[3];
+    uint16_t *     neigh_top_recon_16bit[3];
+    uint32_t       best_d1_blk;
+#endif
     uint8_t        tx_depth;
     InterIntraMode interintra_mode;
     uint8_t        is_interintra_used;
     uint8_t        use_wedge_interintra;
     int32_t        interintra_wedge_index;
+#if !ENABLE_PR_1133
+    int32_t        ii_wedge_sign;
+#endif
     uint8_t        filter_intra_mode;
     PaletteInfo    palette_info;
     uint8_t        do_not_process_block;
@@ -366,7 +401,7 @@ typedef struct SuperBlock {
     EbDctor                   dctor;
     struct PictureControlSet *pcs_ptr;
 
-    BlkStruct   *final_blk_arr;
+    BlkStruct *final_blk_arr;
     //for memory free only
     MacroBlockD *  av1xd;
     PartitionType *cu_partition_array;

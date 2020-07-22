@@ -844,8 +844,9 @@ void *picture_manager_kernel(void *input_ptr) {
                         child_pcs_ptr->sb_total_count = entry_pcs_ptr->sb_total_count;
 
                         child_pcs_ptr->enc_dec_coded_sb_count = 0;
+#if ENABLE_PR_1133
                         child_pcs_ptr->parent_pcs_ptr->av1_cm->rst_tmpbuf = child_pcs_ptr->rst_tmpbuf;
-
+#endif
                         //3.make all  init for ChildPCS
                         pic_width_in_sb = (uint8_t)((entry_pcs_ptr->aligned_width +
                                                      entry_scs_ptr->sb_size_pix - 1) /

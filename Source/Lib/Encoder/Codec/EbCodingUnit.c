@@ -49,10 +49,17 @@ EbErrorType largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t
     uint32_t tot_blk_num                    = sb_size_pix == 128 ? 1024 : 256;
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_blk_arr, tot_blk_num);
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, tot_blk_num);
-
+#if ENABLE_PR_1133
     for (cu_i = 0; cu_i < tot_blk_num; ++cu_i)
         larget_coding_unit_ptr->final_blk_arr[cu_i].av1xd = larget_coding_unit_ptr->av1xd + cu_i;
-
+#else
+    for (cu_i = 0; cu_i < tot_blk_num; ++cu_i) {
+        for (txb_index = 0; txb_index < TRANSFORM_UNIT_MAX_COUNT; ++txb_index)
+            larget_coding_unit_ptr->final_blk_arr[cu_i].txb_array[txb_index].txb_index = txb_index;
+        larget_coding_unit_ptr->final_blk_arr[cu_i].leaf_index = cu_i;
+        larget_coding_unit_ptr->final_blk_arr[cu_i].av1xd = larget_coding_unit_ptr->av1xd + cu_i;
+    }
+#endif
     uint32_t max_block_count = sb_size_pix == 128 ? BLOCK_MAX_COUNT_SB_128 : BLOCK_MAX_COUNT_SB_64;
 
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->cu_partition_array, max_block_count);
