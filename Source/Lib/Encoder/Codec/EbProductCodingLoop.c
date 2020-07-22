@@ -10929,38 +10929,8 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
 
     int32_t       mb_row = context_ptr->blk_origin_y >> 4;
     int32_t       mb_col = context_ptr->blk_origin_x >> 4;
-//    int           mi_stride = pcs_ptr->parent_pcs_ptr->av1_cm->mi_stride;
-  //  AV1_COMP *cpi, ThreadData *td, YV12_BUFFER_CONFIG *const this_frame,
-  //  const TileInfo *const tile, const int mb_row, const int mb_col,
-  //  const int y_offset, const int uv_offset, const BLOCK_SIZE fp_block_size,
-  //  const int qindex, FRAME_STATS *const stats) {
-  //  const AV1_COMMON *const cm = &cpi->common;
-  //  const CommonModeInfoParams *const mi_params = &cm->mi_params;
-  //  const SequenceHeader *const seq_params = &cm->seq_params;
-  //  MACROBLOCK *const x = &td->mb;
-  //  MACROBLOCKD *const xd = &x->e_mbd;
- //   const int mb_scale = mi_size_wide[fp_block_size];
     const int use_dc_pred = (mb_col || mb_row) && (!mb_col || !mb_row);
-  //  const int num_planes = av1_num_planes(cm);
     const BlockSize bsize = context_ptr->blk_geom->bsize;
-
-  //  aom_clear_system_state();
-  //  set_mi_offsets(mi_params, xd, mb_row * mb_scale, mb_col * mb_scale);
-  //  xd->plane[0].dst.buf = this_frame->y_buffer + y_offset;
-  //  xd->plane[1].dst.buf = this_frame->u_buffer + uv_offset;
-  //  xd->plane[2].dst.buf = this_frame->v_buffer + uv_offset;
-  //  xd->left_available = (mb_col != 0);
-  //  xd->mi[0]->sb_type = bsize;
-  //  xd->mi[0]->ref_frame[0] = INTRA_FRAME;
-  //  set_mi_row_col(xd, tile, mb_row * mb_scale, mi_size_high[bsize],
-  //     mb_col * mb_scale, mi_size_wide[bsize], mi_params->mi_rows,
-  //      mi_params->mi_cols);
-  //  set_plane_n4(xd, mi_size_wide[bsize], mi_size_high[bsize], num_planes);
-  //  xd->mi[0]->segment_id = 0;
-  //  xd->lossless[xd->mi[0]->segment_id] = (qindex == 0);
-  //  xd->mi[0]->mode = DC_PRED;
-  //  xd->mi[0]->tx_size =
-  //      use_dc_pred ? (bsize >= fp_block_size ? TX_16X16 : TX_8X8) : TX_4X4;
 
     // Initialize tx_depth
     candidate_buffer->candidate_ptr->tx_depth = // anaghdin check this logic
@@ -11113,26 +11083,12 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
 
     int32_t       mb_row = context_ptr->blk_origin_y >> 4;
     int32_t       mb_col = context_ptr->blk_origin_x >> 4;
-  //  AV1_COMP *cpi, ThreadData *td, const YV12_BUFFER_CONFIG *const last_frame,
-  //  const YV12_BUFFER_CONFIG *const golden_frame,
-  //  const YV12_BUFFER_CONFIG *const alt_ref_frame, const int mb_row,
-  //  const int mb_col, const int recon_yoffset, const int recon_uvoffset,
-  //  const int src_yoffset, const int alt_ref_frame_yoffset,
-  //  const BLOCK_SIZE fp_block_size, const int this_intra_error,
- //   const int raw_motion_err_counts, int *raw_motion_err_list, MV *best_ref_mv,
- //   MV *last_mv, FRAME_STATS *stats) {
+    const uint32_t mb_cols = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
+    const uint32_t mb_rows = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
     int this_inter_error = this_intra_error;
-   // AV1_COMMON *const cm = &cpi->common;
-   // const CommonModeInfoParams *const mi_params = &cm->mi_params;
-   // CurrentFrame *const current_frame = &cm->current_frame;
-   // MACROBLOCK *const x = &td->mb;
-   // MACROBLOCKD *const xd = &x->e_mbd;
     const int is_high_bitdepth = context_ptr->hbd_mode_decision;
     const int bitdepth = pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth;
     const BlockSize bsize = context_ptr->blk_geom->bsize;
-   // const int mb_scale = mi_size_wide[bsize];
-   // const BLOCK_SIZE bsize = get_bsize(mi_params, mb_row, mb_col);
-  //  const int fp_block_size_height = block_size_wide[bsize];
     // Assume 0,0 motion with no mv overhead.
     FULLPEL_MV mv = kZeroFullMv;
   //  FULLPEL_MV tmp_mv = kZeroFullMv;
@@ -11154,21 +11110,12 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     int motion_error = 0;
            // get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
        //     &x->plane[0].src, &xd->plane[0].pre[0]);
-#if 1
     // Compute the motion error of the 0,0 motion using the last source
     // frame as the reference. Skip the further motion search on
     // reconstructed frame if this error is small.
-    //struct buf_2d unscaled_last_source_buf_2d;
-    //unscaled_last_source_buf_2d.buf =
-    //    cpi->unscaled_last_source->y_buffer + src_yoffset;
-    //unscaled_last_source_buf_2d.stride = cpi->unscaled_last_source->y_stride;
-    //const int raw_motion_error = get_prediction_error_bitdepth(
-    //    is_high_bitdepth, bitdepth, bsize, &x->plane[0].src,
-    //    &unscaled_last_source_buf_2d);
+    const int raw_motion_error = raw_motion_err_list[raw_motion_err_counts]; //anaghdin: check this for non multiple of 16 and fix the index
 
-      const int raw_motion_error = raw_motion_err_list[raw_motion_err_counts]; //anaghdin: check this for non multiple of 16
-#endif
-    // TODO(pengchong): Replace the hard-coded threshold
+                                                                             // TODO(pengchong): Replace the hard-coded threshold
     if (raw_motion_error > LOW_MOTION_ERROR_THRESH) {
         //// Test last reference frame using the previous best mv as the
         //// starting point (best reference) for the search.
@@ -11233,9 +11180,10 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
                 context_ptr->blk_geom->bheight));
 
         const MV temp_full_mv = get_mv_from_fullmv(&mv);
+        // Assume 0,0 motion with no mv overhead.
         if(mv.col != 0 && mv.row != 0)
-        motion_error += mv_err_cost(&temp_full_mv, last_mv, context_ptr->md_rate_estimation_ptr->nmv_vec_cost, context_ptr->md_rate_estimation_ptr->nmvcoststack, errorperbit) +
-            NEW_MV_MODE_PENALTY;
+            motion_error += mv_err_cost(&temp_full_mv, last_mv, context_ptr->md_rate_estimation_ptr->nmv_vec_cost, context_ptr->md_rate_estimation_ptr->nmvcoststack, errorperbit) +
+                NEW_MV_MODE_PENALTY;
 
         // Motion search in 2nd reference frame.
         int gf_motion_error = motion_error;
@@ -11286,13 +11234,15 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
                     context_ptr->blk_geom->bwidth,
                     context_ptr->blk_geom->bheight));
             FULLPEL_MV gf_mv;
-            gf_mv.col = candidate_buffer->candidate_ptr->motion_vector_xl0 >> 3;
-            gf_mv.row = candidate_buffer->candidate_ptr->motion_vector_yl0 >> 3;
+            gf_mv.col = candidate_buffer->candidate_ptr->motion_vector_xl1 >> 3;
+            gf_mv.row = candidate_buffer->candidate_ptr->motion_vector_yl1 >> 3;
             const MV temp_full_mv = get_mv_from_fullmv(&gf_mv);
             // anaghdin: check the refmv for golden
             MV temp_last_mv;
-            temp_last_mv.col = candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_1];
-            temp_last_mv.row = candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_1];
+            temp_last_mv.col = 0;// candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_1];
+            temp_last_mv.row = 0;// candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_1];
+            // Assume 0,0 motion with no mv overhead.
+            if (temp_full_mv.col != 0 && temp_full_mv.row != 0)
             gf_motion_error += mv_err_cost(&temp_full_mv, &temp_last_mv, context_ptr->md_rate_estimation_ptr->nmv_vec_cost, context_ptr->md_rate_estimation_ptr->nmvcoststack, errorperbit) +
                 NEW_MV_MODE_PENALTY;
         }
@@ -11340,11 +11290,6 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
             // stats->tr_coded_error += AOMMIN(alt_motion_error, this_intra_error).
             stats->tr_coded_error += motion_error;
         }
-
-        // Reset to last frame as reference buffer.
-      //  xd->plane[0].pre[0].buf = last_frame->y_buffer + recon_yoffset;
-      //  xd->plane[1].pre[0].buf = last_frame->u_buffer + recon_uvoffset;
-      //  xd->plane[2].pre[0].buf = last_frame->v_buffer + recon_uvoffset;
     }
     else {
         stats->sr_coded_error += motion_error;
@@ -11374,14 +11319,6 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
         }
         const MV best_mv = get_mv_from_fullmv(&mv);
         this_inter_error = motion_error;
-      /*  xd->mi[0]->mode = NEWMV;
-        xd->mi[0]->mv[0].as_mv = best_mv;
-        xd->mi[0]->tx_size = TX_4X4;
-        xd->mi[0]->ref_frame[0] = LAST_FRAME;
-        xd->mi[0]->ref_frame[1] = NONE_FRAME;
-        av1_enc_build_inter_predictor(cm, xd, mb_row * mb_scale, mb_col * mb_scale,
-            NULL, bsize, AOM_PLANE_Y, AOM_PLANE_Y);
-        av1_encode_sby_pass1(cpi, x, bsize);*/
         stats->sum_mvr += best_mv.row;
         stats->sum_mvr_abs += abs(best_mv.row);
         stats->sum_mvc += best_mv.col;
@@ -11391,8 +11328,6 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
         ++stats->inter_count;
 
         *best_ref_mv = best_mv;
-        const uint32_t mb_cols = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
-        const uint32_t mb_rows = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
         accumulate_mv_stats(best_mv, mv, mb_row, mb_col, mb_rows,
             mb_cols, last_mv, stats);
     }
@@ -14513,9 +14448,7 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         ref_fast_cost,
         mb_stats);
 
-
     int this_inter_error = this_intra_error;
-
     if (pcs_ptr->slice_type != I_SLICE && fast_candidate_total_count > 1) {
         MV firstpass_top_mv = kZeroMv;
         int raw_motion_err_counts = 0;// anaghdin to set
@@ -14540,34 +14473,7 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
             best_ref_mv,
             &last_mv,
             mb_stats);
-        //cand_index++;
-        ////const int this_inter_error = 0;
-        //for (; cand_index <fast_candidate_total_count; cand_index++) {
-        //    candidate_buffer = candidate_buffer_ptr_array[cand_index];
-        //    candidate_ptr = candidate_buffer->candidate_ptr =
-        //        &fast_candidate_array[cand_index];
-        //    context_ptr->best_candidate_index_array[cand_index] = cand_index;
-        //    // Initialize tx_depth
-        //    candidate_buffer->candidate_ptr->tx_depth = 2;
-        //    candidate_buffer->candidate_ptr->fast_luma_rate = 0;
-        //    candidate_buffer->candidate_ptr->fast_chroma_rate = 0;
-        //    candidate_buffer->candidate_ptr->interp_filters = 0;
-        //    first_pass_loop_core(pcs_ptr,
-        //        context_ptr->sb_ptr,
-        //        blk_ptr,
-        //        context_ptr,
-        //        candidate_buffer,
-        //        candidate_ptr,
-        //        input_picture_ptr,
-        //        input_origin_index,
-        //        input_cb_origin_in_index,
-        //        blk_origin_index,
-        //        blk_chroma_origin_index,
-        //        ref_fast_cost);
-        //}
-        //if (mb_col_in_tile == 0) {
-        //    *first_top_mv = last_mv;
-        //}
+
         mb_stats->coded_error += this_inter_error;
         ++raw_motion_err_counts;
     } else {

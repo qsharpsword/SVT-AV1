@@ -3042,7 +3042,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(
     // Exit TX size search when all coefficients are zero
     // 0: OFF
     // 1: ON
-    pcs_ptr->tx_size_early_exit = 1;
+    pcs_ptr->tx_size_early_exit = 0;
 
 
     context_ptr->tf_level = 0;

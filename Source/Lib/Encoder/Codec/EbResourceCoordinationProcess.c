@@ -1358,7 +1358,7 @@ void *resource_coordination_kernel(void *input_ptr) {
                 if (scs_ptr->use_input_stat_file || scs_ptr->use_output_stat_file)
                     setup_two_pass(scs_ptr);
             }
-
+            pcs_ptr->ts_duration = 10000000 / (scs_ptr->frame_rate >> 16);
 #else
             if (scs_ptr->use_input_stat_file && !end_of_sequence_flag)
                 read_stat_from_file(pcs_ptr, scs_ptr);

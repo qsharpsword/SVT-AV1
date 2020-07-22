@@ -4245,6 +4245,23 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                         }
 
                                         // CBF Tu decision
+#if FIRST_PASS_SETUP
+                                        if (scs_ptr->use_output_stat_file) {
+                                            context_ptr->md_context
+                                                ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                                                .y_has_coeff[context_ptr->txb_itr] =
+                                                count_non_zero_coeffs[0] != 0 ? EB_TRUE : EB_FALSE;
+                                            context_ptr->md_context
+                                                ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                                                .u_has_coeff[context_ptr->txb_itr] =
+                                                count_non_zero_coeffs[1] != 0 ? EB_TRUE : EB_FALSE;
+                                            context_ptr->md_context
+                                                ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                                                .v_has_coeff[context_ptr->txb_itr] =
+                                                count_non_zero_coeffs[2] != 0 ? EB_TRUE : EB_FALSE;
+                                        }
+                                        else
+#endif
                                         if (zero_luma_cbf_md == EB_FALSE)
 
                                             av1_encode_txb_calc_cost(context_ptr,

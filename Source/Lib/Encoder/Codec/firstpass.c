@@ -53,7 +53,7 @@
 #include "av1/encoder/reconinter_enc.h"
 #endif
 
-#define OUTPUT_FPF 0
+#define OUTPUT_FPF 1
 
 #define FIRST_PASS_Q 10.0
 #define INTRA_MODE_PENALTY 1024
@@ -883,7 +883,7 @@ void setup_firstpass_data(PictureParentControlSet *pcs_ptr) {
     //anaghdin: set the init in another place. It might not be initialized for LAD=0
  //   memset(firstpass_data->raw_motion_err_list, 0, sizeof(*firstpass_data->raw_motion_err_list) * num_mbs);
     memset(firstpass_data->mb_stats, 0, sizeof(*firstpass_data->mb_stats) * num_mbs);
-    for (int i = 0; i < num_mbs; i++)
+    for (uint32_t i = 0; i < num_mbs; i++)
         firstpass_data->mb_stats[i].image_data_start_row = INVALID_ROW;
 }
 #if 0
