@@ -1802,7 +1802,7 @@ int32_t av1_quantize_inv_quantize(
              (unsigned int) ~0, 3200, 1728, 864, 432, 216, 86};
 
         // Further refine based on the energy of the residual
-        if (is_inter && perform_rdoq) {
+        if (/*is_inter &&*/ perform_rdoq) {
             uint64_t block_sse =
                 aom_sum_squares_2d_i16(residual, residual_stride, width, height);
             unsigned int block_mse_q8 =
