@@ -10334,7 +10334,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     uint64_t best_cost_search  = (uint64_t)~0;
     uint8_t  is_best_has_coeff = 1;
 #if TX_EARLY_EXIT
-    uint64_t cost[MAX_TX_DEPTH];
+    uint64_t cost[MAX_TX_DEPTH + 1];
 #endif
     init_tx_candidate_buffer(
         candidate_buffer,
@@ -10382,7 +10382,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
         }
 #if TX_EARLY_EXIT
         if (context_ptr->tx_depth == 2) {
-            uint32_t txs_weight = 125;
+            uint32_t txs_weight = 100;
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
             if (cost[0] <= ((cost[1] * txs_weight) / 100))
 
