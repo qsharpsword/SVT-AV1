@@ -10384,7 +10384,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
         if (context_ptr->tx_depth == 2) {
             uint32_t txs_weight = 100;
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
-            if (cost[1] > ((cost[0] * txs_weight) / 100));
+            if (cost[1] > ((cost[0] * txs_weight) / 100))
 
             continue;
         }
