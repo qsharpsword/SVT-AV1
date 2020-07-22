@@ -1590,17 +1590,9 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
             &lambdasad_,
             &lambda_sse,
-#if !NEW_MD_LAMBDA
-            &lambdasad_,
-            &lambda_sse,
-#endif
             (uint8_t)pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth,
             context_ptr->qp_index,
-#if OMARK_LAMBDA
             EB_TRUE);
-#else
-            pcs_ptr->hbd_mode_decision);
-#endif
         context_ptr->lambda      = (uint64_t)lambdasad_;
 #endif
         md_rate_estimation_array = pcs_ptr->md_rate_estimation_array;
