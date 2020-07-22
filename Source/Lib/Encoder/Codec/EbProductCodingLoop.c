@@ -10378,7 +10378,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
             if (!is_best_has_coeff) continue;
         }
 #if TX_EARLY_EXIT
-        if (context_ptr->source_variance < 256 && context_ptr->tx_depth == 2 && best_tx_depth == 0 )
+        if (/*context_ptr->source_variance < 256 && */context_ptr->tx_depth == 2 && best_tx_depth == 0 )
             continue;
 #endif
 
