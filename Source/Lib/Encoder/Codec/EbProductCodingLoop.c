@@ -5228,6 +5228,27 @@ void md_nsq_motion_search(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
     }
 }
 #endif
+#if FIX_MV_BOUND
+/*
+   clips input MV (in 1/8 precision) to stay within boundaries of a given ref pic
+*/
+void clip_mv_on_pic_boundary(int32_t blk_origin_x, int32_t blk_origin_y, int32_t bwidth, int32_t bheight,
+    EbPictureBufferDesc *ref_pic, int16_t* mvx, int16_t* mvy)
+{
+    if (blk_origin_x + (*mvx >> 3) + bwidth > ref_pic->max_width + ref_pic->origin_x)
+        *mvx = (ref_pic->max_width - blk_origin_x) << 3;
+
+    if (blk_origin_y + (*mvy >> 3) + bheight > ref_pic->max_height + ref_pic->origin_y)
+        *mvy = (ref_pic->max_height - blk_origin_y) << 3;
+
+    if (blk_origin_x + (*mvx >> 3) < -ref_pic->origin_x)
+        *mvx = (-blk_origin_x - bwidth) << 3;
+
+    if (blk_origin_y + (*mvy >> 3) < -ref_pic->origin_y)
+        *mvy = (-blk_origin_y - bheight) << 3;
+
+}
+#endif
 #if PERFORM_SUB_PEL_MD
 void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
     EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
@@ -5492,6 +5513,12 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             uint8_t          list_idx = get_list_idx(rf[0]);
             uint8_t          ref_idx = get_ref_frame_idx(rf[0]);
 
+#if FIX_MV_BOUND
+            EbReferenceObject *ref_obj = pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+            EbPictureBufferDesc *ref_pic = hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
+#endif
+
+
             // Get the ME MV
 #if DECOUPLE_ME_RES
             const MeSbResults *me_results =
@@ -5676,6 +5703,15 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                 context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][1] =
                     me_mv_y;
 #endif
+
+#if FIX_MV_BOUND
+                clip_mv_on_pic_boundary(context_ptr->blk_origin_x, context_ptr->blk_origin_y,
+                    context_ptr->blk_geom->bwidth, context_ptr->blk_geom->bheight, ref_pic,
+                    &context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][0],
+                    &context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][list_idx][ref_idx][1]);
+#endif
+
+
             }
         }
     }

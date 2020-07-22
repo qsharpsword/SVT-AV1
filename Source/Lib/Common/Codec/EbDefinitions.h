@@ -616,8 +616,17 @@ extern "C" {
 #define LOW_DELAY_TUNE 1
 #define FORCED_BLK_SIZE 16
 //first_pass_opt
+
+#define FIX_MV_BOUND       1 //Clip inherited ME MVs to stay within pic boundaries
+#define NEW_DELAY          1 //Change delay some sorts of I in PicDecision
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
+
+#if NEW_DELAY
+#define SCD_LAD            6  //number of future frames
+#define MAX_TPL_GROUP_SIZE 64 //enough to cover 6L gop
+#endif
 
 #if DECOUPLE_ME_RES
 #define UPDATED_LINKS 100 //max number of pictures a dep-Cnt-cleanUp triggering picture can process
