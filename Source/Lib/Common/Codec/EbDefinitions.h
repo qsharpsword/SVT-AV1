@@ -501,7 +501,7 @@ extern "C" {
 #define M6_M7_NIC           1 // NIC=1 @ md_stage_3() in M6 & M7
 #define M6_LOOP_FILTER_MODE 1 // Use M5_LOOP_FILTER in M6
 #endif
-#define  ON_OFF_FEATURE_MRP     0 // ON/OFF Feature MRP
+#define  ON_OFF_FEATURE_MRP     1 // ON/OFF Feature MRP
 #define UNIFY_SC_NSC        1 // Unify the SC/NSC settings, except for Palette, IBC, and ME
 #define REMOVE_PRINT_STATEMENTS 1 // remove print statements
 #define SOFT_CYCLES_M6M7        1
@@ -532,18 +532,16 @@ extern "C" {
 #define ENABLE_ADAPTIVE_NSQ_ALL_FRAMES 1    // Enable the adaptive NSQ algorithm for all frames (no longer REF only)
 
 #define MEM_OPT_UV_MODE     1 // Memory optimization for independant uv mode
+#define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
 
+#define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
+#define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
 #if SVT_01
 
 
 
 
 
-
-#define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
-
-#define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
-#define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
