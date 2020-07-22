@@ -6131,16 +6131,43 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
 }
 
 #if TWOPASS_RC
+int av1_rc_get_default_min_gf_interval(int width, int height,
+                                       double framerate) {
+  // Assume we do not need any constraint lower than 4K 20 fps
+  static const double factor_safe = 3840 * 2160 * 20.0;
+  const double factor = width * height * framerate;
+  const int default_interval =
+      clamp((int)(framerate * 0.125), MIN_GF_INTERVAL, MAX_GF_INTERVAL);
+
+  if (factor <= factor_safe)
+    return default_interval;
+  else
+    return AOMMAX(default_interval,
+                  (int)(MIN_GF_INTERVAL * factor / factor_safe + 0.5));
+  // Note this logic makes:
+  // 4K24: 5
+  // 4K30: 6
+  // 4K60: 12
+}
+
+int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
+  int interval = AOMMIN(MAX_GF_INTERVAL, (int)(framerate * 0.75));
+  interval += (interval & 0x01);  // Round to even value
+  interval = AOMMAX(MAX_GF_INTERVAL, interval);
+  return AOMMAX(interval, min_gf_interval);
+}
+
 #define INT_MAX 0x7fffffff
 #define BPER_MB_NORMBITS 9
 #define FRAME_OVERHEAD_BITS 200
-
 void av1_rc_init(PictureControlSet *pcs_ptr) {
   //const RateControlCfg *const rc_cfg = &oxcf->rc_cfg;
   SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                         = &encode_context_ptr->rc;
   const RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
+  const uint32_t width  = scs_ptr->seq_header.max_frame_width;
+  const uint32_t height = scs_ptr->seq_header.max_frame_height;
   int pass = 2;//kelvinhack
   int i;
 
@@ -6189,18 +6216,23 @@ void av1_rc_init(PictureControlSet *pcs_ptr) {
   rc->rate_correction_factors[KF_STD] = 1.0;
   rc->min_gf_interval = encode_context_ptr->gf_cfg.min_gf_interval;
   rc->max_gf_interval = encode_context_ptr->gf_cfg.max_gf_interval;
-#if 0
+#if 1
   if (rc->min_gf_interval == 0)
     rc->min_gf_interval = av1_rc_get_default_min_gf_interval(
-        oxcf->frm_dim_cfg.width, oxcf->frm_dim_cfg.height,
-        oxcf->input_cfg.init_framerate);
+        width, height,/*oxcf->frm_dim_cfg.width, oxcf->frm_dim_cfg.height,*/
+        scs_ptr->double_frame_rate/*oxcf->input_cfg.init_framerate*/);
   if (rc->max_gf_interval == 0)
     rc->max_gf_interval = av1_rc_get_default_max_gf_interval(
-        oxcf->input_cfg.init_framerate, rc->min_gf_interval);
+        scs_ptr->double_frame_rate /*oxcf->input_cfg.init_framerate*/, rc->min_gf_interval);
   rc->baseline_gf_interval = (rc->min_gf_interval + rc->max_gf_interval) / 2;
-  rc->avg_frame_low_motion = 0;
-#endif
+//  rc->avg_frame_low_motion = 0;
+#else
   rc->baseline_gf_interval = 16; //kelvinhack
+#endif
+
+  // Set absolute upper and lower quality limits
+  rc->worst_quality = rc_cfg->worst_allowed_q;
+  rc->best_quality  = rc_cfg->best_allowed_q;
 }
 
 static void set_rc_gf_group(PictureControlSet *pcs_ptr,
@@ -6221,6 +6253,7 @@ static void set_rc_gf_group(PictureControlSet *pcs_ptr,
                             : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
                                                                                  : LF_UPDATE;
     gf_group->layer_depth[gf_group->index] = pcs_ptr->parent_pcs_ptr->temporal_layer_index;
+    gf_group->size = 24;
     // TODO
 }
 
@@ -7126,8 +7159,8 @@ void *rate_control_kernel(void *input_ptr) {
                         if (pcs_ptr->picture_number == 0) {
                             av1_rc_init(pcs_ptr);
                         }
-                        av1_get_second_pass_params(pcs_ptr);
                         set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
+                        av1_get_second_pass_params(pcs_ptr);
                     } else
 #endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,

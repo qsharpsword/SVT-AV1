@@ -214,6 +214,9 @@ typedef struct SequenceControlSet {
     int32_t       lap_enabled;
     TWO_PASS      twopass;
 #endif
+#if TWOPASS_RC
+    double   double_frame_rate;
+#endif
 } SequenceControlSet;
 
 typedef struct EbSequenceControlSetInitData {

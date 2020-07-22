@@ -1832,7 +1832,7 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
     int tmp_q;
     // rc factor is a weight factor that corrects for local rate control drift.
     double rc_factor = 1.0;
-    int64_t bits = scs_ptr->target_bitrate;//oxcf->target_bandwidth;
+    int64_t bits = scs_ptr->static_config.target_bit_rate;//oxcf->target_bandwidth;
 
     if (bits > 0) {
       int rate_error;
@@ -2412,8 +2412,10 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   rc->use_arf_in_this_kf_group = is_altref_enabled(
       gf_cfg->lag_in_frames, gf_cfg->enable_auto_arf);
 
+#if 0
   // Reset the GF group data structures.
   av1_zero(*gf_group);
+#endif
 
   // Clear the alt ref active flag and last group multi arf flags as they
   // can never be set for a key frame.
@@ -2461,7 +2463,7 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   kf_mod_err = calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), this_frame);
 
   //kelvinhack force frames_to_key first
-#if 0
+#if 1
   frames_to_key =
       define_kf_interval(pcs_ptr, this_frame, &kf_group_err, kf_cfg->key_freq_max);
 
@@ -2470,7 +2472,7 @@ static void find_next_key_frame(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *thi
   else
     rc->frames_to_key = kf_cfg->key_freq_max;
 
-  if (scs_ptr->lap_enabled) correct_frames_to_key(cpi);
+  //if (scs_ptr->lap_enabled) correct_frames_to_key(cpi);
 #else
   rc->frames_to_key = (int)MIN((uint64_t)scs_ptr->intra_period_length + 1, scs_ptr->static_config.frames_to_be_encoded);
 #endif
@@ -2956,14 +2958,94 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(pcs_ptr);
+  //printf("kelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
+}
+
+// from aom ratectrl.c
+
+void av1_rc_set_gf_interval_range(SequenceControlSet *scs_ptr,
+                                  RATE_CONTROL *const rc) {
+  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  const uint32_t width  = scs_ptr->seq_header.max_frame_width;
+  const uint32_t height = scs_ptr->seq_header.max_frame_height;
+
+  // Special case code for 1 pass fixed Q mode tests
+  if (0/*(has_no_stats_stage(cpi))*/ && (encode_context_ptr->rc_cfg.mode == AOM_Q)) {
+    rc->max_gf_interval = FIXED_GF_INTERVAL;
+    rc->min_gf_interval = FIXED_GF_INTERVAL;
+    rc->static_scene_max_gf_interval = FIXED_GF_INTERVAL;
+  } else {
+    // Set Maximum gf/arf interval
+    rc->max_gf_interval = encode_context_ptr->gf_cfg.max_gf_interval;
+    rc->min_gf_interval = encode_context_ptr->gf_cfg.min_gf_interval;
+    if (rc->min_gf_interval == 0)
+      rc->min_gf_interval = av1_rc_get_default_min_gf_interval(
+          width, height, scs_ptr->double_frame_rate);
+          //oxcf->frm_dim_cfg.width, oxcf->frm_dim_cfg.height, cpi->framerate);
+    if (rc->max_gf_interval == 0)
+      rc->max_gf_interval = av1_rc_get_default_max_gf_interval(
+          scs_ptr->double_frame_rate/*cpi->framerate*/, rc->min_gf_interval);
+    /*
+     * Extended max interval for genuinely static scenes like slide shows.
+     * The no.of.stats available in the case of LAP is limited,
+     * hence setting to max_gf_interval.
+     */
+    if (scs_ptr->lap_enabled)
+      rc->static_scene_max_gf_interval = rc->max_gf_interval + 1;
+    else
+      rc->static_scene_max_gf_interval = MAX_STATIC_GF_GROUP_LENGTH;
+
+    if (rc->max_gf_interval > rc->static_scene_max_gf_interval)
+      rc->max_gf_interval = rc->static_scene_max_gf_interval;
+
+    // Clamp min to max
+    rc->min_gf_interval = AOMMIN(rc->min_gf_interval, rc->max_gf_interval);
+  }
+}
+
+// Max rate target for 1080P and below encodes under normal circumstances
+// (1920 * 1080 / (16 * 16)) * MAX_MB_RATE bits per MB
+#define MAX_MB_RATE 250
+#define MAXRATE_1080P 2025000
+#define FRAME_OVERHEAD_BITS 200
+void av1_rc_update_framerate(SequenceControlSet *scs_ptr, int width, int height) {
+  //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
+  //RATE_CONTROL *const rc = &cpi->rc;
+  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *const rc = &encode_context_ptr->rc;
+  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  int vbr_max_bits;
+  const int MBs = frame_info->num_mbs;//av1_get_MBs(width, height);
+
+  rc->avg_frame_bandwidth = (int)(scs_ptr->static_config.target_bit_rate/*oxcf->target_bandwidth*/ / scs_ptr->double_frame_rate);
+  rc->min_frame_bandwidth =
+      (int)(rc->avg_frame_bandwidth * encode_context_ptr->two_pass_cfg.vbrmin_section / 100);
+
+  rc->min_frame_bandwidth =
+      AOMMAX(rc->min_frame_bandwidth, FRAME_OVERHEAD_BITS);
+
+  // A maximum bitrate for a frame is defined.
+  // The baseline for this aligns with HW implementations that
+  // can support decode of 1080P content up to a bitrate of MAX_MB_RATE bits
+  // per 16x16 MB (averaged over a frame). However this limit is extended if
+  // a very high rate is given on the command line or the the rate cannnot
+  // be acheived because of a user specificed max q (e.g. when the user
+  // specifies lossless encode.
+  vbr_max_bits = (int)(((int64_t)rc->avg_frame_bandwidth *
+                        encode_context_ptr->two_pass_cfg.vbrmax_section) /
+                       100);
+  rc->max_frame_bandwidth =
+      AOMMAX(AOMMAX((MBs * MAX_MB_RATE), MAXRATE_1080P), vbr_max_bits);
+
+  av1_rc_set_gf_interval_range(scs_ptr, rc);
 }
 
 // from aom encoder.c
 void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
   //cpi->framerate = framerate < 0.1 ? 30 : framerate;
-  scs_ptr->static_config.frame_rate = framerate < 0.1 ? 30 : framerate;
-  // kelvinhack
-  //av1_rc_update_framerate(cpi, cpi->common.width, cpi->common.height);
+  scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : 30.000004285727396;//kelvinhack framerate;
+  av1_rc_update_framerate(scs_ptr, scs_ptr->seq_header.max_frame_width, scs_ptr->seq_header.max_frame_height);
 }
 
 //void av1_init_second_pass(AV1_COMP *cpi)
@@ -2984,17 +3066,23 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       frame_info->mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
       frame_info->mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
       frame_info->num_mbs = frame_info->mb_cols * frame_info->mb_rows;
+      frame_info->bit_depth = scs_ptr->static_config.encoder_bit_depth;
       // kelvinhack should input from options
       encode_context_ptr->two_pass_cfg.vbrmin_section = 0;
       encode_context_ptr->two_pass_cfg.vbrmax_section = 2000;
       encode_context_ptr->two_pass_cfg.vbrbias        = 50;
       //oxcf->pass = 2;
       encode_context_ptr->rc_cfg.mode = AOM_VBR;
+      encode_context_ptr->rc_cfg.best_allowed_q = 0;
+      encode_context_ptr->rc_cfg.worst_allowed_q = 255;
+      encode_context_ptr->rc_cfg.over_shoot_pct  = 25;
+      encode_context_ptr->rc_cfg.under_shoot_pct = 25;
       encode_context_ptr->rc_cfg.cq_level = scs_ptr->static_config.qp;
       encode_context_ptr->gf_cfg.lag_in_frames = scs_ptr->static_config.look_ahead_distance + 1;
       encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
       encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
       encode_context_ptr->kf_cfg.auto_key      = 0;
+      encode_context_ptr->kf_cfg.key_freq_max  = 60;
   }
 
   stats = twopass->stats_buf_ctx->total_stats;

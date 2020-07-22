@@ -47,7 +47,7 @@
 
 #define MIN_GF_INTERVAL 4
 #define MAX_GF_INTERVAL 32
-//#define FIXED_GF_INTERVAL 8  // Used in some testing modes only
+#define FIXED_GF_INTERVAL 8  // Used in some testing modes only
 #define MAX_GF_LENGTH_LAP 16
 
 #define MAX_NUM_GF_INTERVALS 15
@@ -283,6 +283,8 @@ typedef struct RateControlLayerContext {
  **************************************/
 #if TWOPASS_RC
 double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
+int av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
+int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
 #endif
 
 EbErrorType rate_control_context_ctor(EbThreadContext *  thread_context_ptr,
