@@ -1778,6 +1778,29 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
 #endif
 #endif
         break;
+#if JULY22_M6
+    case 5:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 7;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 2;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[GLOBAL_GROUP]        = 7;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 1;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 1;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 1;
+        ref_pruning_ctrls->closest_refs[GLOBAL_GROUP]        = 1;
+        break;
+#else
     case 5:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
@@ -1812,6 +1835,7 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[GLOBAL_GROUP]        = 0;
 #endif
         break;
+#endif
     case 6:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
@@ -1936,15 +1960,23 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #endif
         nics_scling_level = 1;
     else if (pcs_ptr->enc_mode <= ENC_M1)
+#if JULY22_M1
+        nics_scling_level = 3;
+#else
 #if JUNE26_ADOPTIONS
         nics_scling_level = 4;
 #else
         nics_scling_level = 3;
 #endif
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M2)
 #if JUNE26_ADOPTIONS
         nics_scling_level = 6;
+#if JULY22_M6
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
         nics_scling_level = 8;
     else
         nics_scling_level = 9;
@@ -12191,8 +12223,15 @@ EbErrorType signal_derivation_block(
 #endif
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+#if JULY22_M6
+        else if (pcs->parent_pcs_ptr->enc_mode <= ENC_M5)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+#else
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+#endif
 #else
        else if (enc_mode <= ENC_M0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;

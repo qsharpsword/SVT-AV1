@@ -3497,7 +3497,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.set_chroma_mode ==
         DEFAULT) {
 #if UNIFY_SC_NSC
+#if JULY22_M6
+        if (enc_mode <= ENC_M6)
+#else
         if (enc_mode <= ENC_M5)
+#endif
             context_ptr->chroma_level = CHROMA_MODE_0;
         else
             context_ptr->chroma_level = CHROMA_MODE_1;
@@ -3679,6 +3683,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #if MAY12_ADOPTIONS
+#if JULY22_M4
+    else if (enc_mode <= ENC_M4) {
+#else
 #if JUNE23_ADOPTIONS
     else if (enc_mode <= ENC_M3) {
 #else
@@ -3689,6 +3696,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (enc_mode <= ENC_M1) {
 #else
     else if (enc_mode <= ENC_M2) {
+#endif
 #endif
 #endif
 #endif
@@ -5255,8 +5263,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_1_cand_prune_th = 75;
     else
 #if UNIFY_SC_NSC
+#if JULY22_M1
+        if (enc_mode <= ENC_M0)
+            context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+        else if (enc_mode <= ENC_M1)
+            context_ptr->md_stage_1_cand_prune_th = 110;
+#else
         if (enc_mode <= ENC_M1)
             context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+#endif
         else if (enc_mode <= ENC_M2)
             context_ptr->md_stage_1_cand_prune_th = 75;
         else

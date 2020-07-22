@@ -630,6 +630,11 @@ extern "C" {
 // sq64_presets
 #define USE_SQ_64 1 // Turn off NSQ and use SB_64x64 (all modes); use at least [-1,+1] depth refinement
 
+#define USE_2D_HME_M0 1 // Use 2D HME for M0
+#define JULY22_M1 1 // New M1 adopts for NSQ OFF, SB_64x64
+#define JULY22_M4 1 // New M4 adopts for NSQ OFF, SB_64x64
+#define JULY22_M6 1 // New M6 adopts for NSQ OFF, SB_64x64
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

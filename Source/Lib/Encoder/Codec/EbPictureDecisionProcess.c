@@ -1052,7 +1052,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
+#if JULY22_M6
+    if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -2171,7 +2175,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     Av1Common *cm = pcs_ptr->av1_cm;
 #if UNIFY_SC_NSC
+#if JULY22_M4
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
         cm->sg_filter_mode = 4;
     else
         cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 4 : 1;
@@ -2581,7 +2589,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         pcs_ptr->txs_in_inter_classes = 1;
 #if UNIFY_SC_NSC
+#if JULY22_M1
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
 #else
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M3))
@@ -2984,7 +2996,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (perform_filtering) {
         if (scs_ptr->static_config.tf_level == DEFAULT) {
 #if JUNE26_ADOPTIONS
+#if JULY22_M6
+            if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
 #if JUNE25_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -2997,12 +3013,14 @@ EbErrorType signal_derivation_multi_processes_oq(
                 else
                     context_ptr->tf_level = 0;
             }
+#if !JULY22_M6
             else if (pcs_ptr->enc_mode <= ENC_M6) {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 2;
                 else
                     context_ptr->tf_level = 0;
             }
+#endif
             else {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;

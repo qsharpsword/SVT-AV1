@@ -1591,7 +1591,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #else
 #if JUNE25_ADOPTIONS
+#if JULY22_M6
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
 #if JUNE23_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
@@ -1614,6 +1618,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
 #endif
+#endif
+#if JULY22_M6
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
+            pcs_ptr->parent_pcs_ptr->pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 0;
 #endif
         else
             pcs_ptr->parent_pcs_ptr->pic_obmc_level = 0;

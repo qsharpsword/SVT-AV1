@@ -383,6 +383,7 @@ void* set_me_hme_params_oq(
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 128;
     }
 #endif
+#if !JULY22_M4
 #if APR25_1PM_ADOPTIONS
 #if JUNE25_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -400,6 +401,7 @@ void* set_me_hme_params_oq(
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 32;
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 128;
     }
+#endif
 #endif
 #if UPGRADE_M6_M7_M8
 #if !APR25_11AM_ADOPTIONS
@@ -498,7 +500,11 @@ void* set_me_hme_params_oq(
 #if APR22_ADOPTIONS
 #if MAY19_ADOPTIONS
 #if JUNE23_ADOPTIONS
+#if JULY22_M4
+        if (pcs_ptr->enc_mode <= ENC_M3) {
+#else
         if (pcs_ptr->enc_mode <= ENC_M4) {
+#endif
 #else
 #if PRESET_SHIFITNG
         if (pcs_ptr->enc_mode <= ENC_M3) {
@@ -652,7 +658,15 @@ void* set_me_hme_params_oq(
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #else
 #if PRESET_SHIFITNG
+#if USE_2D_HME_M0
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_MR ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#else
+#if JULY22_M1
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M0 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#endif
+#endif
 #else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M2 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #endif
@@ -1341,7 +1355,11 @@ void* tf_set_me_hme_params_oq(
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
+#if JULY22_M6
+    if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1366,7 +1384,11 @@ void* tf_set_me_hme_params_oq(
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
+#if JULY22_M6
+    if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
