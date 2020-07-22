@@ -51,18 +51,19 @@ extern "C" {
 #endif
 
 #define MAX_TILE_CNTS 128 // Annex A.3
-        // Add support for other prediction structure
+// Add support for other prediction structure
 #define MR_MODE 0
-#define ENABLE_DIST_BASED_ME    1
-#define ENABLE_PR_1133          1
-#define ENABLE_ENHANCED_TF      1
-#define ENABLE_QPSM_1PASS       1 // Disable 1 pass QPS and QPM
+#define ENABLE_DIST_BASED_ME 1
+#define ENABLE_PR_1133 0
+#define ENABLE_ENHANCED_TF 1
+#define ENABLE_QPSM_1PASS 1 // Disable 1 pass QPS and QPM
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
-#define NO_ENCDEC         0 // bypass encDec to test cmpliance of MD. complained achieved when skip_flag is OFF. Port sample code from VCI-SW_AV1_Candidate1 branch
+#define NO_ENCDEC \
+    0 // bypass encDec to test cmpliance of MD. complained achieved when skip_flag is OFF. Port sample code from VCI-SW_AV1_Candidate1 branch
 #define AOM_INTERP_EXTEND 4
 #define AOM_LEFT_TOP_MARGIN_PX(subsampling) \
     ((AOM_BORDER_IN_PIXELS >> subsampling) - AOM_INTERP_EXTEND)
@@ -84,7 +85,7 @@ extern "C" {
 
 typedef enum MeHpMode {
     EX_HP_MODE         = 0, // Exhaustive  1/2-pel serach mode.
-    REFINEMENT_HP_MODE = 1,// Refinement 1/2-pel serach mode.
+    REFINEMENT_HP_MODE = 1, // Refinement 1/2-pel serach mode.
     SWITCHABLE_HP_MODE = 2 // Switch between EX_HP_MODE and REFINEMENT_HP_MODE mode.
 } MeHpMode;
 typedef enum GM_LEVEL {
@@ -2034,7 +2035,11 @@ typedef struct {
     PaletteModeInfo pmi;
     uint8_t  *color_idx_map;
 } PaletteInfo;
-
+#if !ENABLE_PR_1133
+/** The EB_NULL type is used to define the C style NULL pointer.
+*/
+#define EB_NULL ((void*) 0)
+#endif
 /** The EbHandle type is used to define OS object handles for threads,
 semaphores, mutexs, etc.
 */

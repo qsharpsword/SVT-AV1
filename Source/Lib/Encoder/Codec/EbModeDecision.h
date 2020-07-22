@@ -110,13 +110,19 @@ typedef struct ModeDecisionCandidate {
     int32_t cfl_alpha_signs;
 
     // Inter Mode
-    PredictionMode         inter_mode;
-    EbBool                 is_compound;
-    uint8_t                ref_frame_type;
-    uint8_t                ref_mv_index;
-    int8_t                 ref_frame_index_l0;
-    int8_t                 ref_frame_index_l1;
-    EbBool                 is_new_mv;
+    PredictionMode inter_mode;
+    EbBool         is_compound;
+#if !ENABLE_PR_1133
+    uint32_t pred_mv_weight;
+#endif
+    uint8_t ref_frame_type;
+    uint8_t ref_mv_index;
+    int8_t  ref_frame_index_l0;
+    int8_t  ref_frame_index_l1;
+    EbBool  is_new_mv;
+#if !ENABLE_PR_1133
+    EbBool is_zero_mv;
+#endif
     TxType                 transform_type[MAX_TXB_COUNT];
     TxType                 transform_type_uv;
     MacroblockPlane        candidate_plane[MAX_MB_PLANE];
@@ -139,6 +145,9 @@ typedef struct ModeDecisionCandidate {
     uint8_t                is_interintra_used;
     uint8_t                use_wedge_interintra;
     int32_t                interintra_wedge_index; //inter_intra wedge index
+#if !ENABLE_PR_1133
+    int32_t ii_wedge_sign; //inter_intra wedge sign=-1
+#endif
 } ModeDecisionCandidate;
 
 /**************************************
@@ -148,7 +157,7 @@ typedef EbErrorType (*EbPredictionFunc)(uint8_t                             hbd_
                                         struct ModeDecisionContext *        context_ptr,
                                         PictureControlSet *                 pcs_ptr,
                                         struct ModeDecisionCandidateBuffer *candidate_buffer_ptr);
-typedef uint64_t (*EbFastCostFunc)(BlkStruct *                  blk_ptr,
+typedef uint64_t (*EbFastCostFunc)(BlkStruct *                   blk_ptr,
                                    struct ModeDecisionCandidate *candidate_buffer, uint32_t qp,
                                    uint64_t luma_distortion, uint64_t chroma_distortion,
                                    uint64_t lambda, EbBool use_ssd, PictureControlSet *pcs_ptr,

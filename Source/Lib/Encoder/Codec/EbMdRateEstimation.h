@@ -63,12 +63,7 @@ extern "C" {
         int32_t ref_mv_mode_fac_bits[REFMV_MODE_CONTEXTS][2];
         int32_t drl_mode_fac_bits[DRL_MODE_CONTEXTS][2];
 
-        int32_t nmv_vec_cost[MV_JOINTS];
-        int32_t nmv_costs[2][MV_VALS];
-        int32_t nmv_costs_hp[2][MV_VALS];
-        int32_t *nmvcoststack[2];
-        int dv_cost[2][MV_VALS];
-        int dv_joint_cost[MV_JOINTS];
+
 #else
         EbBitFraction  split_flag_bits[NUMBER_OF_SPLIT_FLAG_CASES];
         EbBitFraction  mvd_bits[NUMBER_OF_MVD_CASES];
@@ -83,6 +78,12 @@ extern "C" {
         int32_t drl_mode_fac_bits[DRL_MODE_CONTEXTS][CDF_SIZE(2)];
 
 #endif
+        int32_t nmv_vec_cost[MV_JOINTS];
+        int32_t nmv_costs[2][MV_VALS];
+        int32_t nmv_costs_hp[2][MV_VALS];
+        int32_t *nmvcoststack[2];
+        int dv_cost[2][MV_VALS];
+        int dv_joint_cost[MV_JOINTS];
 #if ENABLE_PR_1133        
         // Compouned Mode
         int32_t inter_compound_mode_fac_bits[INTER_MODE_CONTEXTS][INTER_COMPOUND_MODES];

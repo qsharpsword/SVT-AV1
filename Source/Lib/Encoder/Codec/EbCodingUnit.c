@@ -30,6 +30,9 @@ EbErrorType largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t
                                      PictureControlSet *picture_control_set)
 
 {
+#if !ENABLE_PR_1133
+    uint32_t                    txb_index;
+#endif
     EbPictureBufferDescInitData coeff_init_data;
 
     larget_coding_unit_ptr->dctor = largest_coding_unit_dctor;

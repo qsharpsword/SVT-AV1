@@ -992,9 +992,12 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 count_non_zero_coeffs[0] = 0;
                 eob[0]                   = 0;
             }
+#if ENABLE_PR_1133
             context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                 .y_has_coeff[context_ptr->txb_itr] = count_non_zero_coeffs[0] ? EB_TRUE : EB_FALSE;
-
+#else
+            txb_ptr->y_has_coeff = count_non_zero_coeffs[0] ? EB_TRUE : EB_FALSE;
+#endif
             if (count_non_zero_coeffs[0] == 0) {
                 // INTER. Chroma follows Luma in transform type
                 if (blk_ptr->prediction_mode_flag == INTER_MODE) {
@@ -3399,13 +3402,16 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                     uint32_t component_mask = context_ptr->blk_geom->has_uv
                         ? PICTURE_BUFFER_DESC_FULL_MASK
                         : PICTURE_BUFFER_DESC_LUMA_MASK;
-
+#if ENABLE_PR_1133
                     if (context_ptr->md_context
                             ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                             .merge_flag == EB_FALSE) {
+#else
+                    if (blk_ptr->prediction_unit_array[0].merge_flag == EB_FALSE) {
+#endif
                         for (uint16_t tu_it = 0; tu_it < tot_tu; tu_it++) {
                             context_ptr->txb_itr = (uint8_t)tu_it;
-                            uint8_t uv_pass      = blk_ptr->tx_depth && tu_it ? 0
+                            uint8_t uv_pass = blk_ptr->tx_depth && tu_it ? 0
                                                                          : 1; //NM: 128x128 exeption
                             txb_origin_x = context_ptr->blk_origin_x +
                                 context_ptr->blk_geom
@@ -3417,7 +3423,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 context_ptr->blk_geom->origin_y;
 
                             context_ptr->md_context->luma_txb_skip_context = 0;
-                            context_ptr->md_context->luma_dc_sign_context  = 0;
+                            context_ptr->md_context->luma_dc_sign_context = 0;
                             get_txb_ctx(
                                 pcs_ptr,
                                 COMPONENT_LUMA,
@@ -3432,7 +3438,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                             if (context_ptr->blk_geom->has_uv && uv_pass) {
                                 context_ptr->md_context->cb_txb_skip_context = 0;
-                                context_ptr->md_context->cb_dc_sign_context  = 0;
+                                context_ptr->md_context->cb_dc_sign_context = 0;
                                 get_txb_ctx(
                                     pcs_ptr,
                                     COMPONENT_CHROMA,
@@ -3446,7 +3452,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                     &context_ptr->md_context->cb_dc_sign_context);
 
                                 context_ptr->md_context->cr_txb_skip_context = 0;
-                                context_ptr->md_context->cr_dc_sign_context  = 0;
+                                context_ptr->md_context->cr_dc_sign_context = 0;
                                 get_txb_ctx(
                                     pcs_ptr,
                                     COMPONENT_CHROMA,
@@ -3510,7 +3516,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 y_tu_full_distortion[DIST_CALC_PREDICTION] = RIGHT_SIGNED_SHIFT(
                                     y_tu_full_distortion[DIST_CALC_PREDICTION], shift);
 
-                                y_txb_coeff_bits  = 0;
+                                y_txb_coeff_bits = 0;
                                 cb_txb_coeff_bits = 0;
                                 cr_txb_coeff_bits = 0;
 
@@ -3741,6 +3747,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                     }
 
                     //Set Final CU data flags after skip/Merge decision.
+#if ENABLE_PR_1133
                     if (context_ptr->md_context
                             ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                             .merge_flag == EB_TRUE) {
@@ -3748,23 +3755,28 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                         context_ptr->md_context
                             ->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                             .merge_flag = (is_blk_skip) ? EB_FALSE : EB_TRUE;
+#else
+                    if (blk_ptr->prediction_unit_array[0].merge_flag == EB_TRUE) {
+                        blk_ptr->skip_flag = (is_blk_skip) ? EB_TRUE : EB_FALSE;
+                        blk_ptr->prediction_unit_array[0].merge_flag = (is_blk_skip) ? EB_FALSE: EB_TRUE;
+#endif
                     }
 
                     // Initialize the Transform Loop
 
                     context_ptr->txb_itr = 0;
-                    y_has_coeff          = 0;
-                    u_has_coeff          = 0;
-                    v_has_coeff          = 0;
-                    tot_tu               = context_ptr->blk_geom->txb_count[blk_ptr->tx_depth];
+                    y_has_coeff = 0;
+                    u_has_coeff = 0;
+                    v_has_coeff = 0;
+                    tot_tu = context_ptr->blk_geom->txb_count[blk_ptr->tx_depth];
 
                     //reset coeff buffer offsets at the start of a new Tx loop
-                    context_ptr->coded_area_sb    = coded_area_org;
+                    context_ptr->coded_area_sb = coded_area_org;
                     context_ptr->coded_area_sb_uv = coded_area_org_uv;
                     for (uint16_t tu_it = 0; tu_it < tot_tu; tu_it++) {
                         uint8_t uv_pass = blk_ptr->tx_depth && tu_it ? 0 : 1; //NM: 128x128 exeption
                         context_ptr->txb_itr = (uint8_t)tu_it;
-                        txb_origin_x         = context_ptr->blk_origin_x +
+                        txb_origin_x = context_ptr->blk_origin_x +
                             (context_ptr->blk_geom
                                  ->tx_org_x[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr] -
                              context_ptr->blk_geom->origin_x);
@@ -3773,7 +3785,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                  ->tx_org_y[is_inter][blk_ptr->tx_depth][context_ptr->txb_itr] -
                              context_ptr->blk_geom->origin_y);
                         context_ptr->md_context->luma_txb_skip_context = 0;
-                        context_ptr->md_context->luma_dc_sign_context  = 0;
+                        context_ptr->md_context->luma_dc_sign_context = 0;
                         get_txb_ctx(
                             pcs_ptr,
                             COMPONENT_LUMA,
@@ -3787,7 +3799,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                         if (context_ptr->blk_geom->has_uv && uv_pass) {
                             context_ptr->md_context->cb_txb_skip_context = 0;
-                            context_ptr->md_context->cb_dc_sign_context  = 0;
+                            context_ptr->md_context->cb_dc_sign_context = 0;
                             get_txb_ctx(
                                 pcs_ptr,
                                 COMPONENT_CHROMA,
@@ -3801,7 +3813,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 &context_ptr->md_context->cb_dc_sign_context);
 
                             context_ptr->md_context->cr_txb_skip_context = 0;
-                            context_ptr->md_context->cr_dc_sign_context  = 0;
+                            context_ptr->md_context->cr_dc_sign_context = 0;
                             get_txb_ctx(pcs_ptr,
                                         COMPONENT_CHROMA,
                                         pcs_ptr->ep_cr_dc_sign_level_coeff_neighbor_array[tile_idx],
@@ -4202,243 +4214,256 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 #else
                         if (blk_ptr->prediction_unit_array->ref_frame_index_l1 >= 0) {
 #endif
-                        eb_block_on_mutex(ref_obj_1->referenced_area_mutex);
-                        if (context_ptr->mv_unit.pred_direction == UNI_PRED_LIST_1 ||
-                            context_ptr->mv_unit.pred_direction == BI_PRED) {
-                            //List1-Y
-                            uint16_t origin_x = MAX(
-                                0,
-                                (int16_t)context_ptr->blk_origin_x +
-                                    (context_ptr->mv_unit.mv[REF_LIST_1].x >> 3));
-                            uint16_t origin_y = MAX(
-                                0,
-                                (int16_t)context_ptr->blk_origin_y +
-                                    (context_ptr->mv_unit.mv[REF_LIST_1].y >> 3));
-                            origin_x = MIN(
-                                origin_x,
-                                pcs_ptr->parent_pcs_ptr->aligned_width - blk_geom->bwidth);
-                            origin_y = MIN(
-                                origin_y,
-                                pcs_ptr->parent_pcs_ptr->aligned_height - blk_geom->bheight);
-                            uint16_t sb_origin_x2 = origin_x / context_ptr->sb_sz *
-                                context_ptr->sb_sz;
-                            uint16_t sb_origin_y2 = origin_y / context_ptr->sb_sz *
-                                context_ptr->sb_sz;
-                            uint32_t pic_width_in_sb = (pcs_ptr->parent_pcs_ptr->aligned_width +
-                                                        scs_ptr->sb_sz - 1) /
-                                scs_ptr->sb_sz;
-                            uint16_t sb_index = sb_origin_x2 / context_ptr->sb_sz +
-                                pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
-                            uint16_t width, height, weight;
-                            weight = 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
-
-                            width = MIN(sb_origin_x2 + context_ptr->sb_sz,
-                                        origin_x + blk_geom->bwidth) -
-                                origin_x;
-                            height = MIN(sb_origin_y2 + context_ptr->sb_sz,
-                                         origin_y + blk_geom->bheight) -
-                                origin_y;
-                            ref_obj_1->stat_struct.referenced_area[sb_index] += width * height *
-                                weight;
-                            if (origin_x + blk_geom->bwidth > sb_origin_x2 + context_ptr->sb_sz) {
-                                sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
+                            eb_block_on_mutex(ref_obj_1->referenced_area_mutex);
+                            if (context_ptr->mv_unit.pred_direction == UNI_PRED_LIST_1 ||
+                                context_ptr->mv_unit.pred_direction == BI_PRED) {
+                                //List1-Y
+                                uint16_t origin_x = MAX(
+                                    0,
+                                    (int16_t)context_ptr->blk_origin_x +
+                                        (context_ptr->mv_unit.mv[REF_LIST_1].x >> 3));
+                                uint16_t origin_y = MAX(
+                                    0,
+                                    (int16_t)context_ptr->blk_origin_y +
+                                        (context_ptr->mv_unit.mv[REF_LIST_1].y >> 3));
+                                origin_x = MIN(
+                                    origin_x,
+                                    pcs_ptr->parent_pcs_ptr->aligned_width - blk_geom->bwidth);
+                                origin_y = MIN(
+                                    origin_y,
+                                    pcs_ptr->parent_pcs_ptr->aligned_height - blk_geom->bheight);
+                                uint16_t sb_origin_x2 = origin_x / context_ptr->sb_sz *
                                     context_ptr->sb_sz;
-                                sb_origin_y2 = origin_y / context_ptr->sb_sz * context_ptr->sb_sz;
-                                sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                uint16_t sb_origin_y2 = origin_y / context_ptr->sb_sz *
+                                    context_ptr->sb_sz;
+                                uint32_t pic_width_in_sb = (pcs_ptr->parent_pcs_ptr->aligned_width +
+                                                            scs_ptr->sb_sz - 1) /
+                                    scs_ptr->sb_sz;
+                                uint16_t sb_index = sb_origin_x2 / context_ptr->sb_sz +
                                     pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
-                                width = origin_x + blk_geom->bwidth - MAX(sb_origin_x2, origin_x);
+                                uint16_t width, height, weight;
+                                weight = 1 << (4 - pcs_ptr->parent_pcs_ptr->temporal_layer_index);
+
+                                width = MIN(sb_origin_x2 + context_ptr->sb_sz,
+                                            origin_x + blk_geom->bwidth) -
+                                    origin_x;
                                 height = MIN(sb_origin_y2 + context_ptr->sb_sz,
                                              origin_y + blk_geom->bheight) -
                                     origin_y;
                                 ref_obj_1->stat_struct.referenced_area[sb_index] += width * height *
                                     weight;
+                                if (origin_x + blk_geom->bwidth >
+                                    sb_origin_x2 + context_ptr->sb_sz) {
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = origin_y / context_ptr->sb_sz *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = origin_x + blk_geom->bwidth -
+                                        MAX(sb_origin_x2, origin_x);
+                                    height = MIN(sb_origin_y2 + context_ptr->sb_sz,
+                                                 origin_y + blk_geom->bheight) -
+                                        origin_y;
+                                    ref_obj_1->stat_struct.referenced_area[sb_index] += width *
+                                        height * weight;
+                                }
+                                if (origin_y + blk_geom->bheight >
+                                    sb_origin_y2 + context_ptr->sb_sz) {
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = MIN(sb_origin_x2 + context_ptr->sb_sz,
+                                                origin_x + blk_geom->bwidth) -
+                                        origin_x;
+                                    height = origin_y + blk_geom->bheight -
+                                        MAX(sb_origin_y2, origin_y);
+                                    ref_obj_1->stat_struct.referenced_area[sb_index] += width *
+                                        height * weight;
+                                }
+                                if (origin_x + blk_geom->bwidth >
+                                        sb_origin_x2 + context_ptr->sb_sz &&
+                                    origin_y + blk_geom->bheight >
+                                        sb_origin_y2 + context_ptr->sb_sz) {
+                                    sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
+                                        context_ptr->sb_sz;
+                                    sb_index = sb_origin_x2 / context_ptr->sb_sz +
+                                        pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
+                                    width = origin_x + blk_geom->bwidth -
+                                        MAX(sb_origin_x2, origin_x);
+                                    height = origin_y + blk_geom->bheight -
+                                        MAX(sb_origin_y2, origin_y);
+                                    ref_obj_1->stat_struct.referenced_area[sb_index] += width *
+                                        height * weight;
+                                }
                             }
-                            if (origin_y + blk_geom->bheight > sb_origin_y2 + context_ptr->sb_sz) {
-                                sb_origin_x2 = (origin_x / context_ptr->sb_sz) * context_ptr->sb_sz;
-                                sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
-                                    context_ptr->sb_sz;
-                                sb_index = sb_origin_x2 / context_ptr->sb_sz +
-                                    pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
-                                width = MIN(sb_origin_x2 + context_ptr->sb_sz,
-                                            origin_x + blk_geom->bwidth) -
-                                    origin_x;
-                                height = origin_y + blk_geom->bheight - MAX(sb_origin_y2, origin_y);
-                                ref_obj_1->stat_struct.referenced_area[sb_index] += width * height *
-                                    weight;
-                            }
-                            if (origin_x + blk_geom->bwidth > sb_origin_x2 + context_ptr->sb_sz &&
-                                origin_y + blk_geom->bheight > sb_origin_y2 + context_ptr->sb_sz) {
-                                sb_origin_x2 = (origin_x / context_ptr->sb_sz + 1) *
-                                    context_ptr->sb_sz;
-                                sb_origin_y2 = (origin_y / context_ptr->sb_sz + 1) *
-                                    context_ptr->sb_sz;
-                                sb_index = sb_origin_x2 / context_ptr->sb_sz +
-                                    pic_width_in_sb * (sb_origin_y2 / context_ptr->sb_sz);
-                                width = origin_x + blk_geom->bwidth - MAX(sb_origin_x2, origin_x);
-                                height = origin_y + blk_geom->bheight - MAX(sb_origin_y2, origin_y);
-                                ref_obj_1->stat_struct.referenced_area[sb_index] += width * height *
-                                    weight;
-                            }
+                            eb_release_mutex(ref_obj_1->referenced_area_mutex);
                         }
-                        eb_release_mutex(ref_obj_1->referenced_area_mutex);
                     }
+                } else {
+                    CHECK_REPORT_ERROR_NC(encode_context_ptr->app_callback_ptr, EB_ENC_CL_ERROR2);
                 }
+                if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit &&
+                    (context_ptr->bit_depth == EB_8BIT)) {
+                    EbPictureBufferDesc *recon_buffer_16bit;
+                    EbPictureBufferDesc *recon_buffer_8bit;
+                    if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
+                        //get the 16bit form of the input SB
+                        recon_buffer_16bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                                                  ->reference_picture_wrapper_ptr->object_ptr)
+                                                 ->reference_picture16bit;
+                    else // non ref pictures
+                        recon_buffer_16bit = pcs_ptr->recon_picture16bit_ptr;
+
+                    if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
+                        //get the 16bit form of the input SB
+                        recon_buffer_8bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                                                 ->reference_picture_wrapper_ptr->object_ptr)
+                                                ->reference_picture;
+                    else // non ref pictures
+                        recon_buffer_8bit = pcs_ptr->recon_picture_ptr;
+
+                    uint32_t pred_buf_x_offest = context_ptr->blk_origin_x;
+                    uint32_t pred_buf_y_offest = context_ptr->blk_origin_y;
+
+                    uint16_t *dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_y) +
+                        pred_buf_x_offest + recon_buffer_16bit->origin_x +
+                        (pred_buf_y_offest + recon_buffer_16bit->origin_y) *
+                            recon_buffer_16bit->stride_y;
+                    int32_t dst_stride_16bit = recon_buffer_16bit->stride_y;
+
+                    uint8_t *dst;
+                    int32_t dst_stride;
+
+                    dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest +
+                        recon_buffer_8bit->origin_x +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y) *
+                            recon_buffer_8bit->stride_y;
+                    dst_stride = recon_buffer_8bit->stride_y;
+
+                    convert_16bit_to_8bit(dst_16bit,
+                                          dst_stride_16bit,
+                                          dst,
+                                          dst_stride,
+                                          context_ptr->blk_geom->bwidth,
+                                          context_ptr->blk_geom->bheight);
+
+                    //copy recon from 16bit to 8bit
+                    pred_buf_x_offest = ((context_ptr->blk_origin_x >> 3) << 3) >> 1;
+                    pred_buf_y_offest = ((context_ptr->blk_origin_y >> 3) << 3) >> 1;
+
+                    dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cb) + pred_buf_x_offest +
+                        recon_buffer_16bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
+                            recon_buffer_16bit->stride_cb;
+                    dst_stride_16bit = recon_buffer_16bit->stride_cb;
+
+                    dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest +
+                        recon_buffer_8bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                            recon_buffer_8bit->stride_cb;
+                    dst_stride = recon_buffer_8bit->stride_cb;
+
+                    convert_16bit_to_8bit(dst_16bit,
+                                          dst_stride_16bit,
+                                          dst,
+                                          dst_stride,
+                                          context_ptr->blk_geom->bwidth_uv,
+                                          context_ptr->blk_geom->bheight_uv);
+
+                    dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cr) +
+                        (pred_buf_x_offest + recon_buffer_16bit->origin_x / 2 +
+                         (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
+                             recon_buffer_16bit->stride_cr);
+                    dst_stride_16bit = recon_buffer_16bit->stride_cr;
+                    dst = recon_buffer_8bit->buffer_cr + pred_buf_x_offest +
+                        recon_buffer_8bit->origin_x / 2 +
+                        (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                            recon_buffer_8bit->stride_cr;
+                    dst_stride = recon_buffer_8bit->stride_cr;
+
+                    convert_16bit_to_8bit(dst_16bit,
+                                          dst_stride_16bit,
+                                          dst,
+                                          dst_stride,
+                                          context_ptr->blk_geom->bwidth_uv,
+                                          context_ptr->blk_geom->bheight_uv);
+                }
+                update_av1_mi_map(blk_ptr,
+                                  context_ptr->blk_origin_x,
+                                  context_ptr->blk_origin_y,
+                                  blk_geom,
+                                  pcs_ptr);
+                if (pcs_ptr->update_cdf) {
+                    // Update the partition Neighbor Array
+                    PartitionContext partition;
+                    partition.above = partition_context_lookup[blk_geom->bsize].above;
+                    partition.left = partition_context_lookup[blk_geom->bsize].left;
+
+                    neighbor_array_unit_mode_write(
+                        pcs_ptr->ep_partition_context_neighbor_array[tile_idx],
+                        (uint8_t *)&partition,
+                        context_ptr->blk_origin_x,
+                        context_ptr->blk_origin_y,
+                        blk_geom->bwidth,
+                        blk_geom->bheight,
+                        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
+
+                    // Update the CDFs based on the current block
+                    blk_ptr->av1xd->tile_ctx = &pcs_ptr->ec_ctx_array[sb_addr];
+                    update_stats(pcs_ptr,
+                                 blk_ptr,
+                                 context_ptr->blk_origin_y >> MI_SIZE_LOG2,
+                                 context_ptr->blk_origin_x >> MI_SIZE_LOG2);
+                }
+
+                if (dlf_enable_flag) {}
+
+                {{// Set the PU Loop Variables
+                  pu_ptr = blk_ptr->prediction_unit_array;
+                // Set MvUnit
+                context_ptr->mv_unit.pred_direction = (uint8_t)pu_ptr->inter_pred_direction_index;
+                context_ptr->mv_unit.mv[REF_LIST_0].mv_union = pu_ptr->mv[REF_LIST_0].mv_union;
+                context_ptr->mv_unit.mv[REF_LIST_1].mv_union = pu_ptr->mv[REF_LIST_1].mv_union;
             }
-            else {
-                CHECK_REPORT_ERROR_NC(encode_context_ptr->app_callback_ptr, EB_ENC_CL_ERROR2);
-            }
-            if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit &&
-                (context_ptr->bit_depth == EB_8BIT)) {
-                EbPictureBufferDesc *recon_buffer_16bit;
-                EbPictureBufferDesc *recon_buffer_8bit;
-                if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
-                    //get the 16bit form of the input SB
-                    recon_buffer_16bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
-                                              ->reference_picture_wrapper_ptr->object_ptr)
-                                             ->reference_picture16bit;
-                else // non ref pictures
-                    recon_buffer_16bit = pcs_ptr->recon_picture16bit_ptr;
+        }
 
-                if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
-                    //get the 16bit form of the input SB
-                    recon_buffer_8bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
-                                             ->reference_picture_wrapper_ptr->object_ptr)
-                                            ->reference_picture;
-                else // non ref pictures
-                    recon_buffer_8bit = pcs_ptr->recon_picture_ptr;
+        {
+            BlkStruct *src_cu = &context_ptr->md_context->md_blk_arr_nsq[d1_itr];
+            BlkStruct *dst_cu = &sb_ptr->final_blk_arr[final_blk_itr++];
+            move_blk_data(pcs_ptr, context_ptr, src_cu, dst_cu);
+        }
+        if (scs_ptr->mfmv_enabled && pcs_ptr->slice_type != I_SLICE &&
+            pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
+            uint32_t mi_stride = pcs_ptr->mi_stride;
+            int32_t mi_row = context_ptr->blk_origin_y >> MI_SIZE_LOG2;
+            int32_t mi_col = context_ptr->blk_origin_x >> MI_SIZE_LOG2;
+            const int32_t offset = mi_row * mi_stride + mi_col;
+            ModeInfo *mi_ptr = *(pcs_ptr->mi_grid_base + offset);
+            const int x_mis = AOMMIN(context_ptr->blk_geom->bwidth >> MI_SIZE_LOG2,
+                                     pcs_ptr->parent_pcs_ptr->av1_cm->mi_cols - mi_col);
+            const int y_mis = AOMMIN(context_ptr->blk_geom->bheight >> MI_SIZE_LOG2,
+                                     pcs_ptr->parent_pcs_ptr->av1_cm->mi_rows - mi_row);
+            EbReferenceObject *obj_l0 = (EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                                            ->reference_picture_wrapper_ptr->object_ptr;
 
-                uint32_t pred_buf_x_offest = context_ptr->blk_origin_x;
-                uint32_t pred_buf_y_offest = context_ptr->blk_origin_y;
-
-                uint16_t *dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_y) +
-                    pred_buf_x_offest + recon_buffer_16bit->origin_x +
-                    (pred_buf_y_offest + recon_buffer_16bit->origin_y) *
-                        recon_buffer_16bit->stride_y;
-                int32_t dst_stride_16bit = recon_buffer_16bit->stride_y;
-
-                uint8_t *dst;
-                int32_t dst_stride;
-
-                dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest +
-                    recon_buffer_8bit->origin_x +
-                    (pred_buf_y_offest + recon_buffer_8bit->origin_y) * recon_buffer_8bit->stride_y;
-                dst_stride = recon_buffer_8bit->stride_y;
-
-                convert_16bit_to_8bit(dst_16bit,
-                                      dst_stride_16bit,
-                                      dst,
-                                      dst_stride,
-                                      context_ptr->blk_geom->bwidth,
-                                      context_ptr->blk_geom->bheight);
-
-                //copy recon from 16bit to 8bit
-                pred_buf_x_offest = ((context_ptr->blk_origin_x >> 3) << 3) >> 1;
-                pred_buf_y_offest = ((context_ptr->blk_origin_y >> 3) << 3) >> 1;
-
-                dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cb) + pred_buf_x_offest +
-                    recon_buffer_16bit->origin_x / 2 +
-                    (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
-                        recon_buffer_16bit->stride_cb;
-                dst_stride_16bit = recon_buffer_16bit->stride_cb;
-
-                dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest +
-                    recon_buffer_8bit->origin_x / 2 +
-                    (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
-                        recon_buffer_8bit->stride_cb;
-                dst_stride = recon_buffer_8bit->stride_cb;
-
-                convert_16bit_to_8bit(dst_16bit,
-                                      dst_stride_16bit,
-                                      dst,
-                                      dst_stride,
-                                      context_ptr->blk_geom->bwidth_uv,
-                                      context_ptr->blk_geom->bheight_uv);
-
-                dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cr) +
-                    (pred_buf_x_offest + recon_buffer_16bit->origin_x / 2 +
-                     (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
-                         recon_buffer_16bit->stride_cr);
-                dst_stride_16bit = recon_buffer_16bit->stride_cr;
-                dst = recon_buffer_8bit->buffer_cr + pred_buf_x_offest +
-                    recon_buffer_8bit->origin_x / 2 +
-                    (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
-                        recon_buffer_8bit->stride_cr;
-                dst_stride = recon_buffer_8bit->stride_cr;
-
-                convert_16bit_to_8bit(dst_16bit,
-                                      dst_stride_16bit,
-                                      dst,
-                                      dst_stride,
-                                      context_ptr->blk_geom->bwidth_uv,
-                                      context_ptr->blk_geom->bheight_uv);
-            }
-            update_av1_mi_map(
-                blk_ptr, context_ptr->blk_origin_x, context_ptr->blk_origin_y, blk_geom, pcs_ptr);
-            if (pcs_ptr->update_cdf) {
-                // Update the partition Neighbor Array
-                PartitionContext partition;
-                partition.above = partition_context_lookup[blk_geom->bsize].above;
-                partition.left = partition_context_lookup[blk_geom->bsize].left;
-
-                neighbor_array_unit_mode_write(
-                    pcs_ptr->ep_partition_context_neighbor_array[tile_idx],
-                    (uint8_t *)&partition,
-                    context_ptr->blk_origin_x,
-                    context_ptr->blk_origin_y,
-                    blk_geom->bwidth,
-                    blk_geom->bheight,
-                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-                // Update the CDFs based on the current block
-                blk_ptr->av1xd->tile_ctx = &pcs_ptr->ec_ctx_array[sb_addr];
-                update_stats(pcs_ptr,
-                             blk_ptr,
-                             context_ptr->blk_origin_y >> MI_SIZE_LOG2,
-                             context_ptr->blk_origin_x >> MI_SIZE_LOG2);
-            }
-
-            if (dlf_enable_flag) {}
-
-            {{// Set the PU Loop Variables
-              pu_ptr = blk_ptr->prediction_unit_array;
-            // Set MvUnit
-            context_ptr->mv_unit.pred_direction = (uint8_t)pu_ptr->inter_pred_direction_index;
-            context_ptr->mv_unit.mv[REF_LIST_0].mv_union = pu_ptr->mv[REF_LIST_0].mv_union;
-            context_ptr->mv_unit.mv[REF_LIST_1].mv_union = pu_ptr->mv[REF_LIST_1].mv_union;
+            av1_copy_frame_mvs(pcs_ptr,
+                               pcs_ptr->parent_pcs_ptr->av1_cm,
+                               mi_ptr->mbmi,
+                               mi_row,
+                               mi_col,
+                               x_mis,
+                               y_mis,
+                               obj_l0);
         }
     }
-
-    {
-        BlkStruct *src_cu = &context_ptr->md_context->md_blk_arr_nsq[d1_itr];
-        BlkStruct *dst_cu = &sb_ptr->final_blk_arr[final_blk_itr++];
-        move_blk_data(pcs_ptr, context_ptr, src_cu, dst_cu);
-    }
-    if (scs_ptr->mfmv_enabled && pcs_ptr->slice_type != I_SLICE &&
-        pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
-        uint32_t mi_stride = pcs_ptr->mi_stride;
-        int32_t mi_row = context_ptr->blk_origin_y >> MI_SIZE_LOG2;
-        int32_t mi_col = context_ptr->blk_origin_x >> MI_SIZE_LOG2;
-        const int32_t offset = mi_row * mi_stride + mi_col;
-        ModeInfo *mi_ptr = *(pcs_ptr->mi_grid_base + offset);
-        const int x_mis = AOMMIN(context_ptr->blk_geom->bwidth >> MI_SIZE_LOG2,
-                                 pcs_ptr->parent_pcs_ptr->av1_cm->mi_cols - mi_col);
-        const int y_mis = AOMMIN(context_ptr->blk_geom->bheight >> MI_SIZE_LOG2,
-                                 pcs_ptr->parent_pcs_ptr->av1_cm->mi_rows - mi_row);
-        EbReferenceObject *obj_l0 =
-            (EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr;
-
-        av1_copy_frame_mvs(pcs_ptr,
-                           pcs_ptr->parent_pcs_ptr->av1_cm,
-                           mi_ptr->mbmi,
-                           mi_row,
-                           mi_col,
-                           x_mis,
-                           y_mis,
-                           obj_l0);
-    }
-}
-blk_it +=
-    ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
+    blk_it +=
+        ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
 }
 else blk_it +=
     d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
