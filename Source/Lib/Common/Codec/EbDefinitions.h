@@ -615,6 +615,7 @@ extern "C" {
 #define MAX_LAG_BUFFERS 35
 #define LOW_DELAY_TUNE 1
 #define FORCED_BLK_SIZE 16
+//first_pass_opt
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

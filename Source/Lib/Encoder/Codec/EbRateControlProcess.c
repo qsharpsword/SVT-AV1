@@ -7269,6 +7269,7 @@ void *rate_control_kernel(void *input_ptr) {
                     else {
 #if FIRST_PASS_SETUP
                         new_qindex = 33;
+                        //anaghdin: call find_fp_qindex
 #else
                         new_qindex = cqp_qindex_calc(
                             pcs_ptr,

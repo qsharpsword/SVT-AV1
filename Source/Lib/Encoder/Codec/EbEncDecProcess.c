@@ -7971,7 +7971,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // inter-depth 2                                              Interpolation
     // search at full loop 3                                              Chroma
     // blind interpolation search at fast loop 4 Interpolation search at fast loop
-    context_ptr->interpolation_search_level = IT_SEARCH_OFF;//anaghdin check aom?
+    context_ptr->interpolation_search_level = IT_SEARCH_OFF;
 
     // Set Chroma Mode
     // Level                Settings
@@ -7979,7 +7979,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // CHROMA_MODE_1  1     Fast chroma search @ MD
     // CHROMA_MODE_2  2     Chroma blind @ MD + CFL @ EP
     // CHROMA_MODE_3  3     Chroma blind @ MD + no CFL @ EP
-    context_ptr->chroma_level = CHROMA_MODE_0; // or CHROMA_MODE_3
+    context_ptr->chroma_level = CHROMA_MODE_2; //anaghdin first_pass_opt // or CHROMA_MODE_3
 
     // Chroma independent modes search
     // Level                Settings
@@ -8129,10 +8129,10 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // 0                    ON for 8x8 and above
     // 1                    ON for 16x16 and above
     // 2                    ON for 32x32 and above
-    context_ptr->interpolation_filter_search_blk_size = 0;//anaghdin to check
+    context_ptr->interpolation_filter_search_blk_size = 0;
 
     // Derive Spatial SSE Flag
-    context_ptr->spatial_sse_full_loop = EB_TRUE;//anaghdin to check
+    context_ptr->spatial_sse_full_loop = EB_TRUE;
 
     context_ptr->blk_skip_decision = EB_FALSE;
 
@@ -8245,14 +8245,14 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_nsq_mv_search_level = 0;
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
 
-    context_ptr->md_subpel_search_level = 0; //anaghdin to check
+    context_ptr->md_subpel_search_level = 0;
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
 
     // Set max_ref_count @ MD
-    context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level, 4, 4, 1); // anaghdin
+    context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level, 4, 4, 1);
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
-    context_ptr->md_skip_mvp_generation = EB_FALSE; //anaghdin
+    context_ptr->md_skip_mvp_generation = EB_FALSE;
 
     // Set dc_cand_only_flag
     context_ptr->dc_cand_only_flag = EB_TRUE;
@@ -8264,7 +8264,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
 
     // Set full_cost_derivation_fast_rate_blind_flag
-    context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;//anaghdin
+    context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
 
     context_ptr->skip_intra = 0;
 
@@ -11382,7 +11382,7 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
 #if FIRST_PASS_SETUP
             if (scs_ptr->use_output_stat_file) {
-                first_pass_frame_end(pcs_ptr->parent_pcs_ptr, pcs_ptr->parent_pcs_ptr->ts_duration);//anaghdin check second input
+                first_pass_frame_end(pcs_ptr->parent_pcs_ptr, pcs_ptr->parent_pcs_ptr->ts_duration);
 
                 if(pcs_ptr->parent_pcs_ptr->end_of_sequence_flag)
                     av1_end_first_pass(pcs_ptr->parent_pcs_ptr);

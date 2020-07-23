@@ -53,7 +53,7 @@
 #include "av1/encoder/reconinter_enc.h"
 #endif
 
-#define OUTPUT_FPF 1
+#define OUTPUT_FPF 0
 
 #define FIRST_PASS_Q 10.0
 #define INTRA_MODE_PENALTY 1024
@@ -871,6 +871,32 @@ static FRAME_STATS accumulate_frame_stats(FRAME_STATS *mb_stats, int mb_rows,
   return stats;
 }
 /**************************************************
+* average_non_16x16_stats
+* Handle stat for non 16x16 blocks. For non 16x16 blocks, some of the stats are increased multiple times
+* First find the last block in the 16x16 area and then devide the stats by the number of small blocks
+ **************************************************/
+// Handle stat for non 16x16 blocks. For non 16x16 blocks, some of the stats are increased multiple times
+// First find the last block in the 16x16 area and then devide the stats by the number of small blocks
+void average_non_16x16_stats(FRAME_STATS *mb_stats, int blk_num) {
+    mb_stats->brightness_factor /= blk_num;
+    mb_stats->frame_avg_wavelet_energy /= blk_num;
+    mb_stats->inter_count /= blk_num;
+    mb_stats->intra_skip_count /= blk_num;
+    mb_stats->mv_count /= blk_num;
+    mb_stats->neutral_count /= blk_num; //anaghdin check the calculation
+    mb_stats->new_mv_count /= blk_num;
+    mb_stats->second_ref_count /= blk_num;
+    mb_stats->sum_in_vectors /= blk_num;
+    mb_stats->sum_mvc /= blk_num;
+    mb_stats->sum_mvc_abs /= blk_num;
+    mb_stats->sum_mvcs /= blk_num;
+    mb_stats->sum_mvr /= blk_num;
+    mb_stats->sum_mvr_abs /= blk_num;
+    mb_stats->sum_mvrs /= blk_num;
+    mb_stats->third_ref_count /= blk_num;
+    mb_stats->intra_factor /= blk_num;
+}
+/**************************************************
  * Reset first pass stat
  **************************************************/
 void setup_firstpass_data(PictureParentControlSet *pcs_ptr) {
@@ -1202,7 +1228,7 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
   stats.brightness_factor = stats.brightness_factor / (double)num_mbs;
   //FIRSTPASS_STATS *this_frame_stats = twopass->stats_buf_ctx->stats_in_end;
   update_firstpass_stats(pcs_ptr, &stats, raw_err_stdev,
-                         pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
+                         (const int)pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
 
 #if 0
   // Copy the previous Last Frame back into gf buffer if the prediction is good
@@ -1259,22 +1285,20 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
         frame_is_intra_only(pcs_ptr) ? 0 : mb_rows * mb_cols;
     const double raw_err_stdev =
         raw_motion_error_stdev(raw_motion_err_list, total_raw_motion_err_count);
-#if 0
-    free_firstpass_data(&cpi->firstpass_data);
+   // free_firstpass_data(&cpi->firstpass_data);
     // anaghdin check this
     // Clamp the image start to rows/2. This number of rows is discarded top
     // and bottom as dead data so rows / 2 means the frame is blank.
-    if ((stats.image_data_start_row > mi_params->mb_rows / 2) ||
+    if ((stats.image_data_start_row > mb_rows / 2) ||
         (stats.image_data_start_row == INVALID_ROW)) {
-        stats.image_data_start_row = mi_params->mb_rows / 2;
+        stats.image_data_start_row = mb_rows / 2;
     }
     // Exclude any image dead zone
     if (stats.image_data_start_row > 0) {
         stats.intra_skip_count =
             AOMMAX(0, stats.intra_skip_count -
-            (stats.image_data_start_row * mi_params->mb_cols * 2));
+            (stats.image_data_start_row * mb_cols * 2));
     }
-#endif
 #if TWOPASS_STAT_BUF
     TWO_PASS *twopass = &scs_ptr->twopass;
 #else
@@ -1288,7 +1312,7 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
     stats.brightness_factor = stats.brightness_factor / (double)num_mbs;
     //FIRSTPASS_STATS *this_frame_stats = twopass->stats_buf_ctx->stats_in_end;
     update_firstpass_stats(pcs_ptr, &stats, raw_err_stdev,
-        pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
+        (const int)pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
 
 }
 #endif

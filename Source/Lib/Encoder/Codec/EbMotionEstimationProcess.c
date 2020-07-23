@@ -1338,7 +1338,7 @@ EbErrorType first_pass_signal_derivation_me_kernel(
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
 
     // HME Search Method
-    context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH; //anaghdin
+    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH; //anaghdin first_pass_opt
 
     // ME Search Method
     context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
@@ -2018,8 +2018,8 @@ EbErrorType compute_zz_ssd(MotionEstimationContext_t *context_ptr, PictureParent
                 ? pcs_ptr->aligned_height - sb_origin_y
                 : BLOCK_SIZE_64;
 
-            for (uint32_t y_blk_index = 0; y_blk_index < sb_height / FORCED_BLK_SIZE; ++y_blk_index) {
-                for (uint32_t x_blk_index = 0; x_blk_index < sb_width / FORCED_BLK_SIZE; ++x_blk_index) {
+            for (uint32_t y_blk_index = 0; y_blk_index < (sb_height + FORCED_BLK_SIZE - 1) / FORCED_BLK_SIZE; ++y_blk_index) {
+                for (uint32_t x_blk_index = 0; x_blk_index < (sb_width + FORCED_BLK_SIZE-1) / FORCED_BLK_SIZE; ++x_blk_index) {
                     blk_origin_x = sb_origin_x + x_blk_index * FORCED_BLK_SIZE;
                     blk_origin_y = sb_origin_y + y_blk_index* FORCED_BLK_SIZE;
 

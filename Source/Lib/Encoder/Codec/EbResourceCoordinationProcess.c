@@ -155,8 +155,7 @@ EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet *     s
     scs_ptr->seq_header.pic_based_rate_est = 0;
     scs_ptr->seq_header.enable_restoration = 0;
     scs_ptr->seq_header.enable_cdef = 0;
-
-    scs_ptr->seq_header.enable_warped_motion = 0;//anaghdin to fix
+    scs_ptr->seq_header.enable_warped_motion = 0;
 
     return return_error;
 }
@@ -1358,7 +1357,7 @@ void *resource_coordination_kernel(void *input_ptr) {
                 if (scs_ptr->use_input_stat_file || scs_ptr->use_output_stat_file)
                     setup_two_pass(scs_ptr);
             }
-            pcs_ptr->ts_duration = 10000000 / (scs_ptr->frame_rate >> 16);
+            pcs_ptr->ts_duration = (int64_t)10000000*(1<<16) / scs_ptr->frame_rate;
 #else
             if (scs_ptr->use_input_stat_file && !end_of_sequence_flag)
                 read_stat_from_file(pcs_ptr, scs_ptr);
