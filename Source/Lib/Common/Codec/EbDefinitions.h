@@ -619,6 +619,11 @@ extern "C" {
 #define ENABLE_GM_LIST1    1 // Enable GM_LIST1
 #define CDEF_CLI           1 // Improve CLI Support for CDEF
 #define REF_PRUNE_CAT_TUNE 1 // Tune the allowable references per category to improve trade-offs
+
+
+
+#define IFS_SWITCH_STAGE_1_STAGE_3 1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
