@@ -1997,7 +1997,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESET_SHIFITNG
 #if M6_LOOP_FILTER_MODE
 #if UNIFY_SC_NSC
+#if JULY23_M7
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M6 || pcs_ptr->sc_content_detected)
 #endif
@@ -2670,7 +2674,16 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #if JUNE8_ADOPTIONS
+#if JULY23_M2
+            if (pcs_ptr->enc_mode <= ENC_M1)
+                pcs_ptr->enable_inter_intra = 2;
+            else if (pcs_ptr->enc_mode <= ENC_M2)
+                pcs_ptr->enable_inter_intra = pcs_ptr->temporal_layer_index == 0 ? 2 : 0;
+            else
+                pcs_ptr->enable_inter_intra = 0;
+#else
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#endif
 #else
 #if PRESET_SHIFITNG
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M1 ? 2 : 3;
@@ -3222,6 +3235,10 @@ EbErrorType signal_derivation_multi_processes_oq(
 #else
             else if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
+                pcs_ptr->mrp_level = 6;
+#endif
+#if JULY23_M7
+            else if (pcs_ptr->enc_mode <= ENC_M7)
                 pcs_ptr->mrp_level = 6;
 #endif
             else

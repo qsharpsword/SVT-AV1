@@ -1028,7 +1028,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     {
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
+#if JULY23_M7
+        if (enc_mode <= ENC_M7)
+#else
         if (enc_mode <= ENC_M6)
+#endif
 #else
         if (enc_mode <= ENC_M5)
 #endif

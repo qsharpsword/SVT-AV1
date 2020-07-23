@@ -1971,7 +1971,11 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #endif
     else if (pcs_ptr->enc_mode <= ENC_M2)
 #if JUNE26_ADOPTIONS
+#if JULY23_M2
+        nics_scling_level = 5;
+#else
         nics_scling_level = 6;
+#endif
 #if JULY22_M6
     else if (pcs_ptr->enc_mode <= ENC_M6)
 #else

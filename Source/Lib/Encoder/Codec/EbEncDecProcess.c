@@ -4152,7 +4152,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
+#if JULY23_M7
+            if (enc_mode <= ENC_M7)
+#else
             if (enc_mode <= ENC_M6)
+#endif
 #else
             if (enc_mode <= ENC_M5)
 #endif
@@ -4354,7 +4358,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if JUNE11_ADOPTIONS
     {
 #if JUNE23_ADOPTIONS
+#if JULY23_M2
+        if (enc_mode <= ENC_M1)
+#else
         if (enc_mode <= ENC_M2)
+#endif
 #else
         if (enc_mode <= ENC_M3)
 #endif
@@ -4584,7 +4592,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 else
 #endif
 #if JUNE23_ADOPTIONS
+#if JULY23_M2
+                    if (enc_mode <= ENC_M2)
+#else
                     if (enc_mode <= ENC_M1)
+#endif
 #else
 #if MAY23_M0_ADOPTIONS
                     if (enc_mode <= ENC_M0)
