@@ -11200,9 +11200,8 @@ EbErrorType motion_estimate_sb(
                                                                    ME_RES_CAND_MRP_MODE_0);
             // Assining the ME candidates to the me Results buffer
             for (cand_index = 0; cand_index < total_me_candidate_index; ++cand_index) {
-#if ENABLE_PR_1133
                 me_candidate = &(context_ptr->me_candidate[cand_index].pu[pu_index]);
-#else
+#if !ENABLE_PR_1133
                 pcs_ptr->me_results[sb_index]->me_candidate[pu_index][cand_index].distortion =
                     me_candidate->distortion;
 #endif

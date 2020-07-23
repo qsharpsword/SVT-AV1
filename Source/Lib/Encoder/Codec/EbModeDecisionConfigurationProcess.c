@@ -20,6 +20,7 @@
 #include "EbUtility.h"
 #include "EbPictureControlSet.h"
 #include "EbModeDecisionConfigurationProcess.h"
+#include "EbModeDecisionConfiguration.h"
 #include "EbRateControlResults.h"
 #include "EbEncDecTasks.h"
 #include "EbReferenceObject.h"
@@ -477,7 +478,7 @@ EbErrorType mode_decision_configuration_context_ctor(EbThreadContext *  thread_c
 #if !ENABLE_PR_1133
 
 /******************************************************	
-* Predict the SB partitionning	
+* Predict the SB partitionning
 ******************************************************/
 void perform_early_sb_partitionning(ModeDecisionConfigurationContext *context_ptr,
                                     SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
