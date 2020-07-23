@@ -622,8 +622,8 @@ extern "C" {
 
 
 
-#define IFS_SWITCH_STAGE_1_STAGE_3 1
-
+#define IFS_SWITCH_STAGE_1_STAGE_3 0
+#define TX_EARLY_EXIT              1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
