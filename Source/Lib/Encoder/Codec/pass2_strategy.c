@@ -2958,7 +2958,7 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(pcs_ptr);
-  //printf("kelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
+  printf("kelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
 // from aom ratectrl.c
@@ -3077,8 +3077,11 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->rc_cfg.worst_allowed_q = 255;
       encode_context_ptr->rc_cfg.over_shoot_pct  = 25;
       encode_context_ptr->rc_cfg.under_shoot_pct = 25;
-      encode_context_ptr->rc_cfg.cq_level = scs_ptr->static_config.qp;
-      encode_context_ptr->gf_cfg.lag_in_frames = scs_ptr->static_config.look_ahead_distance + 1;
+      encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
+      encode_context_ptr->gf_cfg.lag_in_frames = 25;//kelvinhack scs_ptr->static_config.look_ahead_distance + 1;
+      encode_context_ptr->gf_cfg.gf_min_pyr_height = scs_ptr->static_config.hierarchical_levels;
+      encode_context_ptr->gf_cfg.gf_max_pyr_height = scs_ptr->static_config.hierarchical_levels;
+      encode_context_ptr->gf_cfg.enable_auto_arf   = 1;
       encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
       encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
       encode_context_ptr->kf_cfg.auto_key      = 0;

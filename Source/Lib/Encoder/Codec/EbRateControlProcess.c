@@ -6688,15 +6688,15 @@ static int get_q(PictureControlSet *pcs_ptr,
  * assigns the q_index per frame using first pass statistics per frame.
  * used in the second pass of two pass encoding
  ******************************************************/
-static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr, int qindex) {
+static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
     TWO_PASS *const twopass                  = &scs_ptr->twopass;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
-    const int           cq_level             = qindex;
+    const int           cq_level             = encode_context_ptr->rc_cfg.cq_level;
     int                 active_best_quality  = 0;
-    int                 active_worst_quality = qindex;
+    int                 active_worst_quality = rc->active_worst_quality;
     rc->arf_q                                = 0;
     int q;
     int is_src_frame_alt_ref, refresh_golden_frame, refresh_alt_ref_frame, is_intrl_arf_boost,
@@ -7305,14 +7305,17 @@ void *rate_control_kernel(void *input_ptr) {
                     if (scs_ptr->use_input_stat_file &&
                         !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
-                        int32_t qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
-                        int32_t new_qindex = qindex;
+                        int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
                         if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
+                            if (pcs_ptr->picture_number == 0) {
+                                printf("kelvinhack debugging purpose ---> before QPS, forcing r0 to %f from %f\n", 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
+                            }
                             process_tpl_stats_frame_gfu_boost(pcs_ptr);
                         }
                         // VBR Qindex calculating
-                        new_qindex = rc_pick_q_and_bounds(pcs_ptr, qindex);
+                        new_qindex = rc_pick_q_and_bounds(pcs_ptr);
                         frm_hdr->quantization_params.base_q_idx = (uint8_t)CLIP3(
                             (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed],
                             (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed],
