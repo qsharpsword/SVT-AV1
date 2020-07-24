@@ -1009,6 +1009,8 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
+
+        if (inter_direction == 0) {
 #if UNIPRED_3x3_REF_MASKING
 #if PRUNING_PER_INTER_TYPE
         if (!is_valid_unipred_ref(context_ptr, MIN(TOT_INTER_GROUP-1,UNI_3x3_GROUP), REF_LIST_0, list0_ref_index)) continue;
@@ -1016,8 +1018,6 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         if (!context_ptr->ref_filtering_res[REF_LIST_0][list0_ref_index].do_ref) continue;
 #endif
 #endif
-
-        if (inter_direction == 0) {
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 
@@ -1185,6 +1185,8 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
+
+        if (inter_direction == 1) {
 #if UNIPRED_3x3_REF_MASKING
 #if PRUNING_PER_INTER_TYPE
         if (!is_valid_unipred_ref(context_ptr, MIN(TOT_INTER_GROUP-1,UNI_3x3_GROUP), REF_LIST_1, list1_ref_index)) continue;
@@ -1192,8 +1194,6 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         if (!context_ptr->ref_filtering_res[REF_LIST_1][list1_ref_index].do_ref) continue;
 #endif
 #endif
-
-        if (inter_direction == 1) {
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 
@@ -1421,6 +1421,7 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
             const uint8_t      inter_direction      = me_block_results_ptr->direction;
             const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
             const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
+            if (inter_direction == 2) {
 #if BIPRED_3x3_REF_MASKING
 #if PRUNING_PER_INTER_TYPE
            if (!is_valid_bipred_ref(
@@ -1429,7 +1430,6 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
             if (!context_ptr->ref_filtering_res[me_block_results_ptr->ref0_list][list0_ref_index].do_ref || !context_ptr->ref_filtering_res[me_block_results_ptr->ref1_list][list1_ref_index].do_ref) continue;
 #endif
 #endif
-            if (inter_direction == 2) {
                 if (list0_ref_index > context_ptr->md_max_ref_count - 1 ||
                     list1_ref_index > context_ptr->md_max_ref_count - 1)
                     continue;
@@ -4049,6 +4049,7 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                NEW_NEWMV
             ************* */
             if (allow_bipred) {
+                if (inter_direction == 2) {
 #if NEW_MV_REF_MASKING
 #if PRUNING_PER_INTER_TYPE
                 if (!is_valid_bipred_ref(context_ptr, PA_ME_GROUP, me_block_results_ptr->ref0_list, list0_ref_index, me_block_results_ptr->ref1_list, list1_ref_index))
@@ -4057,7 +4058,6 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
 #endif
                     continue;
 #endif
-                if (inter_direction == 2) {
                     if (list0_ref_index > context_ptr->md_max_ref_count - 1 ||
                         list1_ref_index > context_ptr->md_max_ref_count - 1)
                         continue;
