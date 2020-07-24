@@ -4499,6 +4499,44 @@ static int kf_high_motion_minq_cqp_12[QINDEX_RANGE] = {
         183,    184,    186,    188,
         190,    191,    193,    195
 };
+#if TWOPASS_RC
+static int kf_low_motion_minq_org_8[QINDEX_RANGE] = {
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   2,   2,   2,   2,   2,   2,   2,   3,
+    3,   3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5,   5,   5,
+    5,   5,   6,   6,   6,   6,   6,   6,   6,   7,   7,   7,   7,   7,   7,   7,   7,   8,   8,
+    8,   8,   8,   9,   9,   9,   9,   10,  10,  10,  10,  11,  11,  11,  11,  12,  12,  12,  12,
+    13,  13,  13,  13,  14,  14,  14,  15,  15,  15,  16,  16,  16,  17,  17,  18,  18,  18,  19,
+    19,  19,  20,  20,  20,  21,  21,  22,  22,  23,  23,  24,  24,  24,  25,  25,  26,  26,  27,
+    27,  28,  28,  29,  30,  30,  31,  31,  32,  32,  33,  34,  34,  35,  36,  36,  37,  37,  38,
+    39,  39,  40,  41,  42,  42,  43,  44,  45,  45,  46,  47,  48,  49,  50,  51,  51,  52,  53,
+    54,  55,  56,  57,  58,  59,  60,  61,  62,  64,  65,  66,  67,  69,  70,  71,  72,  74,  75,
+    77,  78,  80,  82,  83,  85,  87,  89,  91,  93,  95,  96,  97,  99,  100, 101, 103, 104, 105,
+    107, 109, 110, 112, 114, 116, 118, 120, 122, 124, 125, 127, 129, 131, 134, 136, 138, 140, 142,
+    144, 147, 149, 151, 154, 156, 158, 161, 163};
+
+static int kf_high_motion_minq_org_8[QINDEX_RANGE] = {
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   2,   2,   3,   3,   4,   4,   5,
+    5,   5,   6,   6,   7,   7,   8,   8,   8,   9,   9,   10,  10,  11,  11,  11,  12,  12,  13,
+    13,  14,  14,  14,  15,  15,  16,  16,  16,  17,  17,  18,  18,  19,  19,  19,  20,  20,  21,
+    21,  21,  22,  22,  23,  23,  24,  24,  24,  25,  25,  26,  26,  26,  27,  27,  28,  28,  28,
+    29,  29,  30,  30,  30,  31,  31,  32,  32,  32,  33,  33,  34,  34,  34,  35,  35,  36,  36,
+    36,  37,  38,  39,  39,  40,  41,  42,  42,  43,  44,  45,  46,  46,  47,  48,  49,  49,  50,
+    51,  51,  52,  53,  54,  54,  55,  56,  57,  58,  59,  61,  62,  63,  64,  65,  66,  67,  68,
+    69,  70,  71,  72,  73,  74,  76,  77,  78,  80,  81,  82,  84,  85,  86,  88,  89,  90,  92,
+    93,  95,  96,  97,  97,  98,  99,  100, 100, 101, 102, 103, 104, 105, 106, 107, 107, 108, 109,
+    110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 121, 122, 123, 124, 124, 125, 126,
+    127, 127, 128, 129, 130, 130, 131, 132, 133, 134, 135, 135, 136, 137, 138, 139, 139, 140, 141,
+    141, 142, 143, 144, 144, 145, 146, 147, 148, 149, 149, 150, 151, 152, 153, 154, 154, 155, 156,
+    157, 158, 159, 160, 161, 162, 163, 164, 166, 167, 168, 169, 171, 172, 173, 175, 176, 178, 179,
+    181, 183, 184, 186, 188, 190, 191, 193, 195};
+
+#define kf_low_motion_minq_org_10 kf_low_motion_minq_10
+#define kf_low_motion_minq_org_12 kf_low_motion_minq_12
+#define kf_high_motion_minq_org_10 kf_high_motion_minq_10
+#define kf_high_motion_minq_org_12 kf_high_motion_minq_12
+#endif
 static int kf_low_motion_minq_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4866,6 +4904,17 @@ static int get_kf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
     return get_active_quality(
         q, rc->kf_boost, kf_low, kf_high, kf_low_motion_minq, kf_high_motion_minq);
 }
+
+#if TWOPASS_RC
+static int get_kf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
+    int *kf_low_motion_minq_org;
+    int *kf_high_motion_minq_org;
+    ASSIGN_MINQ_TABLE(bit_depth, kf_low_motion_minq_org);
+    ASSIGN_MINQ_TABLE(bit_depth, kf_high_motion_minq_org);
+    return get_active_quality(
+        q, rc->kf_boost, kf_low, kf_high, kf_low_motion_minq_org, kf_high_motion_minq_org);
+}
+#endif
 
 static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *arfgf_low_motion_minq;
@@ -6357,7 +6406,7 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
         rc->best_quality    = MINQ;
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
-        active_best_quality = get_kf_active_quality(rc, active_worst_quality, bit_depth);
+        active_best_quality = get_kf_active_quality_org(rc, active_worst_quality, bit_depth);
         if (/*is_stat_consumption_stage_twopass(cpi) &&*/
                 twopass->kf_zeromotion_pct >= STATIC_KF_GROUP_THRESH) {
             active_best_quality /= 3;
@@ -6762,8 +6811,25 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
 
     adjust_active_best_and_worst_quality(pcs_ptr, rc, rf_level, &active_worst_quality, &active_best_quality);
     q = get_q(pcs_ptr, active_worst_quality, active_best_quality);
-    q = active_best_quality;
+#if 1
+    // Special case when we are targeting the max allowed rate.
+    if (rc->this_frame_target >= rc->max_frame_bandwidth &&
+            q > active_worst_quality) {
+        active_worst_quality = q;
+    }
+
+#if 0
+    //*top_index = active_worst_quality;
+    //*bottom_index = active_best_quality;
+
+    //assert(*top_index <= rc->worst_quality && *top_index >= rc->best_quality);
+    //assert(*bottom_index <= rc->worst_quality &&
+    //        *bottom_index >= rc->best_quality);
+#endif
+    assert(q <= rc->worst_quality && q >= rc->best_quality);
+#else
     clamp(q, active_best_quality, active_worst_quality);
+#endif
 
     return q;
 }
@@ -7061,16 +7127,16 @@ static void update_rc_counts(PictureControlSet *pcs_ptr) {
   }
 
   //update_frames_till_gf_update(cpi);
-#if 0
+#if 1
   // TODO(weitinglin): Updating this counter for is_frame_droppable
   // is a work-around to handle the condition when a frame is drop.
   // We should fix the cpi->common.show_frame flag
   // instead of checking the other condition to update the counter properly.
-  if (/*cpi->common.show_frame ||*/
-      is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)) {
+  if (1/*cpi->common.show_frame ||*/
+      /*is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)*/) {
     // Decrement count down till next gf
-    if (cpi->rc.frames_till_gf_update_due > 0)
-      cpi->rc.frames_till_gf_update_due--;
+    if (rc->frames_till_gf_update_due > 0)
+      rc->frames_till_gf_update_due--;
   }
 #endif
 

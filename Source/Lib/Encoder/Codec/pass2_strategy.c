@@ -2795,8 +2795,8 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
 
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
-#if 0
-  if (rc->frames_till_gf_update_due > 0 && !(frame_flags & FRAMEFLAGS_KEY)) {
+#if 1
+  if (rc->frames_till_gf_update_due > 0 && !frame_is_intra_only(pcs_ptr->parent_pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
     assert(gf_group->index < gf_group->size);
     const int update_type = gf_group->update_type[gf_group->index];
 
@@ -2812,11 +2812,14 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
         frame_params->frame_type = INTER_FRAME;
       }
 
+#if 0
       // Do the firstpass stats indicate that this frame is skippable for the
       // partition search?
       if (cpi->sf.part_sf.allow_partition_search_skip /*&& oxcf->pass == 2*/) {
         cpi->partition_search_skippable_frame = is_skippable_frame(cpi);
       }
+#endif
+      printf("kelvin return for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target);
 
       return;
     }
