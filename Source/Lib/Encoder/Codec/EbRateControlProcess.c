@@ -7151,6 +7151,75 @@ static void update_rc_counts(PictureControlSet *pcs_ptr) {
   }
 
 }
+
+void av1_rc_set_frame_target(PictureControlSet *pcs_ptr, int target, int width, int height) {
+    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *rc = &encode_context_ptr->rc;
+
+    rc->this_frame_target = target;
+    // Modify frame size target when down-scaled.
+    //if (av1_frame_scaled(cm))
+    //    rc->this_frame_target =
+    //    (int)(rc->this_frame_target *
+    //        resize_rate_factor(&cpi->oxcf.frm_dim_cfg, width, height));
+
+    // Target rate per SB64 (including partial SB64s.
+    rc->sb64_target_rate =
+        (int)(((int64_t)rc->this_frame_target << 12) / (width * height));
+}
+#define VBR_PCT_ADJUSTMENT_LIMIT 50
+// For VBR...adjustment to the frame target based on error from previous frames
+static void vbr_rate_correction(PictureControlSet *pcs_ptr, int *this_frame_target) {
+    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *rc = &encode_context_ptr->rc;
+    TWO_PASS *const twopass = &scs_ptr->twopass;
+    int64_t vbr_bits_off_target = rc->vbr_bits_off_target;
+    const int stats_count =
+        twopass->stats_buf_ctx->total_stats != NULL
+        ? (int)twopass->stats_buf_ctx->total_stats->count
+        : 0;
+    const int frame_window = AOMMIN(
+        16, (int)(stats_count - (int)pcs_ptr->picture_number));
+    assert(VBR_PCT_ADJUSTMENT_LIMIT <= 100);
+    if (frame_window > 0) {
+        const int max_delta = (int)AOMMIN(
+            abs((int)(vbr_bits_off_target / frame_window)),
+            ((int64_t)(*this_frame_target) * VBR_PCT_ADJUSTMENT_LIMIT) / 100);
+
+        // vbr_bits_off_target > 0 means we have extra bits to spend
+        // vbr_bits_off_target < 0 we are currently overshooting
+        *this_frame_target += (vbr_bits_off_target >= 0) ? max_delta : -max_delta;
+    }
+
+    // Fast redistribution of bits arising from massive local undershoot.
+    // Dont do it for kf,arf,gf or overlay frames.
+    if (!frame_is_kf_gf_arf(pcs_ptr) && !rc->is_src_frame_alt_ref &&
+        rc->vbr_bits_off_target_fast) {
+        int one_frame_bits = AOMMAX(rc->avg_frame_bandwidth, *this_frame_target);
+        int fast_extra_bits;
+        fast_extra_bits = (int)AOMMIN(rc->vbr_bits_off_target_fast, one_frame_bits);
+        fast_extra_bits = (int)AOMMIN(
+            fast_extra_bits,
+            AOMMAX(one_frame_bits / 8, rc->vbr_bits_off_target_fast / 8));
+        *this_frame_target += (int)fast_extra_bits;
+        rc->vbr_bits_off_target_fast -= fast_extra_bits;
+    }
+}
+
+void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
+    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *rc = &encode_context_ptr->rc;
+    int target_rate = rc->base_frame_target;
+
+    // Correction to rate target based on prior over or under shoot.
+   //anaghdin fix the condition
+    // if (cpi->oxcf.rc_cfg.mode == AOM_VBR || cpi->oxcf.rc_cfg.mode == AOM_CQ)
+        vbr_rate_correction(pcs_ptr, &target_rate);
+    av1_rc_set_frame_target(pcs_ptr, target_rate, width, height);
+}
 #endif
 void *rate_control_kernel(void *input_ptr) {
     // Context
@@ -7227,6 +7296,10 @@ void *rate_control_kernel(void *input_ptr) {
                         }
                         set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                         av1_get_second_pass_params(pcs_ptr);
+                        //anaghdin to check the location
+                        av1_set_target_rate(pcs_ptr,
+                            pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
+                            pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
                     } else
 #endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,

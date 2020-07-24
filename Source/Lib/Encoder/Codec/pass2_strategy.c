@@ -3179,7 +3179,7 @@ void av1_init_single_pass_lap(AV1_COMP *cpi) {
 #endif
 
 //static INLINE int frame_is_kf_gf_arf(const AV1_COMP *cpi)
-static INLINE int frame_is_kf_gf_arf(PictureControlSet *pcs_ptr) {
+INLINE int frame_is_kf_gf_arf(PictureControlSet *pcs_ptr) {
   //const GF_GROUP *const gf_group = &cpi->gf_group;
   SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
