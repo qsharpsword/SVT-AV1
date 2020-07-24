@@ -626,6 +626,9 @@ extern "C" {
 
 #define PR_1349 1 //Port fixes for SIMD kernels from AOM
 #define PR_1359 1 //Valgrind fix
+
+#define UPGRADE_SUBPEL  1 // Upgrade subpel of me and of pme to use libaom subpel search
+#define TX_EARLY_EXIT   1 // Variance/cost_depth_1-to-cost_depth_0 based early txs exit
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
@@ -654,7 +657,12 @@ extern "C" {
 #endif
 #endif
 #define ALT_REF_QP_THRESH 20
+#if UPGRADE_SUBPEL
+// Q threshold for high precision mv.
+#define HIGH_PRECISION_MV_QTHRESH 128
+#else
 #define HIGH_PRECISION_MV_QTHRESH 150
+#endif
 #define NON8_FIX_REST 1
 
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
