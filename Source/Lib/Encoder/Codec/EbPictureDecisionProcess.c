@@ -2677,7 +2677,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if JULY23_M2
             if (pcs_ptr->enc_mode <= ENC_M1)
                 pcs_ptr->enable_inter_intra = 2;
+#if JULY24_M3
+            else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
             else if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
                 pcs_ptr->enable_inter_intra = pcs_ptr->temporal_layer_index == 0 ? 2 : 0;
             else
                 pcs_ptr->enable_inter_intra = 0;

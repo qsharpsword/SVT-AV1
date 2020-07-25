@@ -900,7 +900,11 @@ void *resource_coordination_kernel(void *input_ptr) {
                 scs_ptr->seq_header.enable_interintra_compound =
 #if MAY12_ADOPTIONS
 #if UNIFY_SC_NSC
+#if JULY24_M3
+                (scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
+#else
                 (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+#endif
 #else
 #if PRESET_SHIFITNG
                 (scs_ptr->static_config.enc_mode <= ENC_M2 &&

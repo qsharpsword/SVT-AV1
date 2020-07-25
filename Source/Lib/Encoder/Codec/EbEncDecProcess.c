@@ -5284,7 +5284,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (enc_mode <= ENC_M1)
             context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
 #endif
+#if JULY24_M3
+        else if (enc_mode <= ENC_M3)
+#else
         else if (enc_mode <= ENC_M2)
+#endif
             context_ptr->md_stage_1_cand_prune_th = 75;
         else
             context_ptr->md_stage_1_cand_prune_th = 45;
@@ -5371,7 +5375,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PRESETS_SHIFT
 #if APR25_10AM_ADOPTIONS
 #if UNIFY_SC_NSC
+#if JULY24_M3
+        if (enc_mode <= ENC_M3)
+#else
         if (enc_mode <= ENC_M2)
+#endif
 #else
 #if PRESET_SHIFITNG
         if (enc_mode <= ENC_M2 ||
@@ -6175,8 +6183,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else {
 #if JUNE23_ADOPTIONS
+#if JULY24_M3
+        context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M3 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M3 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
         context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M2 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M2 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #else
         context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;

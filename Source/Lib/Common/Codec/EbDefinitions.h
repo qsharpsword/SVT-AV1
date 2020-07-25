@@ -638,6 +638,8 @@ extern "C" {
 #define JULY23_M7 1 // New M7 adopts for NSQ OFF, SB_64x64
 #define JULY23_M2 1 // New M2 adopts for NSQ OFF, SB_64x64
 
+#define JULY24_M3 1 // New M3 adopts for NSQ OFF, SB_64x64
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
