@@ -51,8 +51,6 @@ jobs:
       arch: arm64
     - name: PowerPC GCC build
       arch: ppc64le
-    - name: IBM Z GCC build
-      arch: s390x
     # Valgrind on Linux
     - name: Valgrind
       env: build_type=debug
