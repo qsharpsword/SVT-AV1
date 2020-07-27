@@ -54,19 +54,30 @@
 
 #define MAX_ARF_LAYERS 6
 
+//enum {
+//    KF_UPDATE            = 0,
+//    LF_UPDATE            = 1,
+//    GF_UPDATE            = 2,
+//    ARF_UPDATE           = 3,
+//    OVERLAY_UPDATE       = 4,
+//    BRF_UPDATE           = 5, // Backward Reference Frame
+//    LAST_BIPRED_UPDATE   = 6, // Last Bi-predictive Frame
+//    BIPRED_UPDATE        = 7, // Bi-predictive Frame, but not the last one
+//    INTNL_OVERLAY_UPDATE = 8, // Internal Overlay Frame
+//    INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
+//    FRAME_UPDATE_TYPES   = 10
+//} frame_update_type;
+
 enum {
-    KF_UPDATE            = 0,
-    LF_UPDATE            = 1,
-    GF_UPDATE            = 2,
-    ARF_UPDATE           = 3,
-    OVERLAY_UPDATE       = 4,
-    BRF_UPDATE           = 5, // Backward Reference Frame
-    LAST_BIPRED_UPDATE   = 6, // Last Bi-predictive Frame
-    BIPRED_UPDATE        = 7, // Bi-predictive Frame, but not the last one
-    INTNL_OVERLAY_UPDATE = 8, // Internal Overlay Frame
-    INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
-    FRAME_UPDATE_TYPES   = 10
-} frame_update_type;
+    KF_UPDATE,
+    LF_UPDATE,
+    GF_UPDATE,
+    ARF_UPDATE,
+    OVERLAY_UPDATE,
+    INTNL_OVERLAY_UPDATE,  // Internal Overlay Frame
+    INTNL_ARF_UPDATE,      // Internal Altref Frame
+    FRAME_UPDATE_TYPES
+} UENUM1BYTE(FRAME_UPDATE_TYPE);//anaghdin: do we need both?
 
 enum {
     INTER_NORMAL       = 0,

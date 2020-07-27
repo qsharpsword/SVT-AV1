@@ -1537,7 +1537,142 @@ static void init_gf_stats(GF_GROUP_STATS *gf_stats) {
   gf_stats->avg_raw_err_stdev = 0.0;
   gf_stats->non_zero_stdev_count = 0;
 }
+#if 1 //anaghdin function from gop_structure.c
+// Set parameters for frames between 'start' and 'end' (excluding both).
+static void set_multi_layer_params(const TWO_PASS *twopass,
+    GF_GROUP *const gf_group, RATE_CONTROL *rc,
+    FRAME_INFO *frame_info, int start, int end,
+    int *cur_frame_idx, int *frame_ind,
+    int layer_depth) {
+    const int num_frames_to_process = end - start - 1;
+    assert(num_frames_to_process >= 0);
+    if (num_frames_to_process == 0) return;
 
+    // Either we are at the last level of the pyramid, or we don't have enough
+    // frames between 'l' and 'r' to create one more level.
+    if (layer_depth > gf_group->max_layer_depth_allowed ||
+        num_frames_to_process < 3) {
+        // Leaf nodes.
+        while (++start < end) {
+            gf_group->update_type[*frame_ind] = LF_UPDATE;
+            gf_group->arf_src_offset[*frame_ind] = 0;
+            ++*cur_frame_idx;
+            gf_group->cur_frame_idx[*frame_ind] = *cur_frame_idx;
+            gf_group->frame_disp_idx[*frame_ind] = start;
+            gf_group->layer_depth[*frame_ind] = MAX_ARF_LAYERS;
+            gf_group->arf_boost[*frame_ind] = av1_calc_arf_boost(
+                twopass, rc, frame_info, start, end - start, 0, NULL, NULL);
+            gf_group->max_layer_depth =
+                AOMMAX(gf_group->max_layer_depth, layer_depth);
+            ++(*frame_ind);
+        }
+    }
+    else {
+        const int m = (start + end) / 2;
+
+        // Internal ARF.
+        gf_group->update_type[*frame_ind] = INTNL_ARF_UPDATE;
+        gf_group->arf_src_offset[*frame_ind] = m - start - 1;
+        gf_group->cur_frame_idx[*frame_ind] = *cur_frame_idx;
+        gf_group->frame_disp_idx[*frame_ind] = m;
+        gf_group->layer_depth[*frame_ind] = layer_depth;
+
+        // Get the boost factor for intermediate ARF frames.
+        gf_group->arf_boost[*frame_ind] = av1_calc_arf_boost(
+            twopass, rc, frame_info, m, end - m, m - start, NULL, NULL);
+        ++(*frame_ind);
+
+        // Frames displayed before this internal ARF.
+        set_multi_layer_params(twopass, gf_group, rc, frame_info, start, m,
+            cur_frame_idx, frame_ind, layer_depth + 1);
+
+        // Overlay for internal ARF.
+        gf_group->update_type[*frame_ind] = INTNL_OVERLAY_UPDATE;
+        gf_group->arf_src_offset[*frame_ind] = 0;
+        ++(*cur_frame_idx);
+        gf_group->cur_frame_idx[*frame_ind] = *cur_frame_idx;
+        gf_group->frame_disp_idx[*frame_ind] = m;
+        gf_group->arf_boost[*frame_ind] = 0;
+        gf_group->layer_depth[*frame_ind] = layer_depth;
+        ++(*frame_ind);
+
+        // Frames displayed after this internal ARF.
+        set_multi_layer_params(twopass, gf_group, rc, frame_info, m, end,
+            cur_frame_idx, frame_ind, layer_depth + 1);
+    }
+}
+static int construct_multi_layer_gf_structure(
+    PictureControlSet *pcs_ptr, TWO_PASS *twopass, GF_GROUP *const gf_group,
+    RATE_CONTROL *rc, FRAME_INFO *const frame_info, int gf_interval,
+    FRAME_UPDATE_TYPE first_frame_update_type) {
+    int frame_index = 0;
+    int cur_frame_index = 0;
+
+    // Keyframe / Overlay frame / Golden frame.
+    assert(gf_interval >= 1);
+    assert(first_frame_update_type == KF_UPDATE ||
+        first_frame_update_type == OVERLAY_UPDATE ||
+        first_frame_update_type == GF_UPDATE);
+
+    gf_group->update_type[frame_index] = first_frame_update_type;
+    gf_group->arf_src_offset[frame_index] = 0;
+    ++cur_frame_index;
+    gf_group->cur_frame_idx[frame_index] = cur_frame_index;
+    gf_group->layer_depth[frame_index] =
+        first_frame_update_type == OVERLAY_UPDATE ? MAX_ARF_LAYERS + 1 : 0;
+    gf_group->max_layer_depth = 0;
+    ++frame_index;
+
+    // ALTREF.
+    const int use_altref = gf_group->max_layer_depth_allowed > 0;
+    if (use_altref) {
+        gf_group->update_type[frame_index] = ARF_UPDATE;
+        gf_group->arf_src_offset[frame_index] = gf_interval - 1;
+        gf_group->cur_frame_idx[frame_index] = cur_frame_index;
+        gf_group->frame_disp_idx[frame_index] = gf_interval;
+        gf_group->layer_depth[frame_index] = 1;
+        gf_group->arf_boost[frame_index] = rc->gfu_boost;
+        gf_group->max_layer_depth = 1;
+        ++frame_index;
+    }
+
+    // Rest of the frames.
+    set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
+        &cur_frame_index, &frame_index, use_altref + 1);
+
+    // The end frame will be Overlay frame for an ARF GOP; otherwise set it to
+    // be GF, for consistency, which will be updated in the next GOP.
+    gf_group->update_type[frame_index] = use_altref ? OVERLAY_UPDATE : GF_UPDATE;
+    gf_group->arf_src_offset[frame_index] = 0;
+    return frame_index;
+}
+
+void av1_gop_setup_structure(PictureControlSet *pcs_ptr,
+    const EncodeFrameParams *const frame_params) {
+        SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+        EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+        RATE_CONTROL *const rc = &encode_context_ptr->rc;
+        TWO_PASS *const twopass = &scs_ptr->twopass;
+        GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+        FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+        const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
+        const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
+
+
+    const int key_frame = (frame_params->frame_type == KEY_FRAME);
+    const FRAME_UPDATE_TYPE first_frame_update_type =
+        key_frame ? KF_UPDATE
+        : rc->source_alt_ref_active ? OVERLAY_UPDATE : GF_UPDATE;
+    gf_group->size = construct_multi_layer_gf_structure(
+        pcs_ptr, twopass, gf_group, rc, frame_info, rc->baseline_gf_interval,
+        first_frame_update_type);
+
+#if CHECK_GF_PARAMETER
+    check_frame_params(gf_group, rc->baseline_gf_interval);
+#endif
+}
+
+#endif
 // Analyse and define a gf/arf group.
 #define MAX_GF_BOOST 5400
 //static void define_gf_group(AV1_COMP *cpi, FIRSTPASS_STATS *this_frame,
@@ -1856,9 +1991,9 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
   // Adjust KF group bits and error remaining.
   if (is_final_pass)
     twopass->kf_group_error_left -= (int64_t)gf_stats.gf_group_err;
-#if 0 //kelvinTODO gop_structure.c
+#if 1 //kelvinTODO gop_structure.c
   // Set up the structure of this Group-Of-Pictures (same as GF_GROUP)
-  av1_gop_setup_structure(cpi, frame_params);
+  av1_gop_setup_structure(pcs_ptr, frame_params);
 #endif
 
   // Reset the file position.

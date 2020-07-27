@@ -7138,8 +7138,9 @@ static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
   //update_keyframe_counters(cpi);
   if (1/*cpi->common.show_frame*/) {
-    if (/*!cpi->common.show_existing_frame || */rc->is_src_frame_alt_ref ||
-        ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
+      //anaghdin: check this condition temp solution
+    if (1/*!cpi->common.show_existing_frame || rc->is_src_frame_alt_ref ||
+        ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
       // If this is a show_existing_frame with a source other than altref,
       // or if it is not a displayed forward keyframe, the keyframe update
       // counters were incremented when it was originally encoded.
@@ -7167,8 +7168,9 @@ static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // a show_existing_frame with a source other than altref, or if it is not
   // a displayed forward keyframe, the index was incremented when it was
   // originally encoded.
-  if (/*!cpi->common.show_existing_frame || */rc->is_src_frame_alt_ref ||
-      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
+      //anaghdin: check this condition temp solution
+  if (1/*!cpi->common.show_existing_frame || rc->is_src_frame_alt_ref ||
+      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
     ++gf_group->index;
   }
 
