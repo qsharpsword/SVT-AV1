@@ -3179,25 +3179,25 @@ void av1_init_single_pass_lap(AV1_COMP *cpi) {
 #endif
 
 //static INLINE int frame_is_kf_gf_arf(const AV1_COMP *cpi)
-INLINE int frame_is_kf_gf_arf(PictureControlSet *pcs_ptr) {
+INLINE int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr) {
   //const GF_GROUP *const gf_group = &cpi->gf_group;
-  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
   const /*frame_update_type*/int update_type = gf_group->update_type[gf_group->index];
 
-  return frame_is_intra_only(pcs_ptr->parent_pcs_ptr) || update_type == ARF_UPDATE ||
+  return frame_is_intra_only(ppcs_ptr) || update_type == ARF_UPDATE ||
          update_type == GF_UPDATE;
 }
 
 #define MINQ_ADJ_LIMIT 48
 #define MINQ_ADJ_LIMIT_CQ 20
 #define HIGH_UNDERSHOOT_RATIO 2
-void av1_twopass_postencode_update(PictureControlSet *pcs_ptr) {
+void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
   //TWO_PASS *const twopass = &cpi->twopass;
   //RATE_CONTROL *const rc = &cpi->rc;
   //const RateControlCfg *const rc_cfg = &cpi->oxcf.rc_cfg;
-  SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+  SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *const rc = &encode_context_ptr->rc;
   TWO_PASS *const twopass = &scs_ptr->twopass;
@@ -3231,7 +3231,7 @@ void av1_twopass_postencode_update(PictureControlSet *pcs_ptr) {
     const int pyramid_level = gf_group->layer_depth[gf_group->index];
     int i;
     for (i = pyramid_level; i <= MAX_ARF_LAYERS; ++i) {
-      rc->active_best_quality[i] = quantizer_to_qindex[pcs_ptr->picture_qp];//cpi->common.quant_params.base_qindex;
+      rc->active_best_quality[i] = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;//cpi->common.quant_params.base_qindex;
       // if (pyramid_level >= 2) {
       //   rc->active_best_quality[pyramid_level] =
       //     AOMMAX(rc->active_best_quality[pyramid_level],
@@ -3264,7 +3264,7 @@ void av1_twopass_postencode_update(PictureControlSet *pcs_ptr) {
   }
 #endif
 
-  if (pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
+  if (ppcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
     twopass->kf_group_bits -= bits_used;
     twopass->last_kfgroup_zeromotion_pct = twopass->kf_zeromotion_pct;
   }
@@ -3306,7 +3306,7 @@ void av1_twopass_postencode_update(PictureControlSet *pcs_ptr) {
     // bits back in quickly. One situation where this may happen is if a
     // frame is unexpectedly almost perfectly predicted by the ARF or GF
     // but not very well predcited by the previous frame.
-    if (!frame_is_kf_gf_arf(pcs_ptr) && !rc->is_src_frame_alt_ref) {
+    if (!frame_is_kf_gf_arf(ppcs_ptr) && !rc->is_src_frame_alt_ref) {
       int fast_extra_thresh = rc->base_frame_target / HIGH_UNDERSHOOT_RATIO;
       if (rc->projected_frame_size < fast_extra_thresh) {
         rc->vbr_bits_off_target_fast +=
