@@ -4358,10 +4358,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if JUNE11_ADOPTIONS
     {
 #if JUNE23_ADOPTIONS
+#if JULY27_M1
+        if (enc_mode <= ENC_M0)
+#else
 #if JULY23_M2
         if (enc_mode <= ENC_M1)
 #else
         if (enc_mode <= ENC_M2)
+#endif
 #endif
 #else
         if (enc_mode <= ENC_M3)

@@ -291,7 +291,11 @@ void* set_me_hme_params_oq(
 #endif
 #if NEW_M0_M1_ME_NICS
 #if PRESET_SHIFITNG
+#if JULY27_M1
+    else if (pcs_ptr->enc_mode <= ENC_M0) {
+#else
     else if (pcs_ptr->enc_mode <= ENC_M1) {
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M2) {
 #endif
