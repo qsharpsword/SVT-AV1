@@ -3702,7 +3702,7 @@ EB_API EbErrorType eb_svt_enc_set_parameter(
         enc_handle->scs_instance_array[instance_index]->scs_ptr);
 
     // Initialize the Prediction Structure Group
-#if M8_MRP && !UPGRADE_M6_M7_M8
+#if (M8_MRP && !UPGRADE_M6_M7_M8) || FAST_M8_V1
     EB_NO_THROW_NEW(
         enc_handle->scs_instance_array[instance_index]->encode_context_ptr->prediction_structure_group_ptr,
         prediction_structure_group_ctor,

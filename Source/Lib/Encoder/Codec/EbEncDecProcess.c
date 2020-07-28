@@ -4469,8 +4469,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (enc_mode <= ENC_M1)
 #endif
             context_ptr->bipred3x3_injection = 1;
+#if FAST_M8_V1
+        else if (enc_mode <= ENC_M7)
+            context_ptr->bipred3x3_injection = 2;
+        else
+            context_ptr->bipred3x3_injection = 0;
+#else
         else
             context_ptr->bipred3x3_injection = 2;
+#endif
 #else
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAY12_ADOPTIONS
@@ -6775,7 +6782,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PERFORM_SUB_PEL_MD
 #if UPGRADE_SUBPEL
     if (pd_pass == PD_PASS_0)
+#if FAST_M8_V1
+        context_ptr->md_subpel_me_level = enc_mode <= ENC_M7 ? 3 : 0;
+#else
         context_ptr->md_subpel_me_level = 3;
+#endif
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_subpel_me_level = 3;
     else
@@ -6787,7 +6798,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     md_subpel_me_controls(context_ptr, context_ptr->md_subpel_me_level);
 
     if (pd_pass == PD_PASS_0)
+#if FAST_M8_V1
+        context_ptr->md_subpel_pme_level = enc_mode <= ENC_M7 ? 3 : 0;
+#else
         context_ptr->md_subpel_pme_level = 3;
+#endif
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_subpel_pme_level = 3;
     else
@@ -9992,10 +10007,21 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if M5_I_PD
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
+#if FAST_M8_V1
+                                if (pcs_ptr->enc_mode <= ENC_M7) {
+                                    s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
+                                    e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+                                }
+                                else if (pcs_ptr->enc_mode <= ENC_M8) {
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+                                }
+#else
                                 if (pcs_ptr->enc_mode <= ENC_M8) {
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }
+#endif
 #else
 #if PRESET_SHIFITNG
                                 if (pcs_ptr->enc_mode <= ENC_M5) {
