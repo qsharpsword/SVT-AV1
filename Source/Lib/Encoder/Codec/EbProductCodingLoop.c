@@ -3943,7 +3943,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if 1
     for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
         if (context_ptr->bypass_md_stage_2[cidx]) {
-            if ((context_ptr->md_stage_3_count[cidx] - context_ptr->md_stage_1_count[cidx]) <= 2)
+            if ((context_ptr->md_stage_1_count[cidx] - context_ptr->md_stage_3_count[cidx]) <= 2)
                 context_ptr->bypass_md_stage_1[cidx] = EB_TRUE;
         }
     }
