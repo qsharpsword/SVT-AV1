@@ -11850,9 +11850,15 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
+#if ADAPT_MDS1_BYPASS
+        context_ptr->md_staging_skip_interpolation_search =
+            (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || context_ptr->md_staging_mode == MD_STAGING_MODE_2) &&
+            (context_ptr->bypass_md_stage_1[candidate_ptr->cand_class] == EB_FALSE || context_ptr->bypass_md_stage_2[candidate_ptr->cand_class] == EB_FALSE);
+#else
         context_ptr->md_staging_skip_interpolation_search =
             (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
              context_ptr->md_staging_mode == MD_STAGING_MODE_2);
+#endif
 #endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
