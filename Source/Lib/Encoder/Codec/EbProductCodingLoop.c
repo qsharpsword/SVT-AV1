@@ -3915,6 +3915,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
     }
 #endif
+
+#if ADAPT_MDS1_BYPASS
+    for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+        context_ptr->bypass_md_stage_1[cidx] = EB_TRUE;
+    }
+#endif
+
     // Step 3: update count for md_stage_1 and d_stage_2 if bypassed (no NIC
     // setting should be done beyond this point)
     context_ptr->md_stage_2_count[CAND_CLASS_0] = context_ptr->bypass_md_stage_1[CAND_CLASS_0]
