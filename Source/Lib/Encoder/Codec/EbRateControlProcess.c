@@ -4569,6 +4569,43 @@ static int kf_high_motion_minq_8[QINDEX_RANGE] = {
     171, 173, 174, 176, 178, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 200, 201, 204, 206,
     209, 212, 214, 216, 219, 222, 224, 227, 230};
 
+#if TWOPASS_RC
+static int arfgf_low_motion_minq_org_8[QINDEX_RANGE] = {
+    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+    0,   0,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,
+    7,   7,   7,   7,   8,   8,   8,   9,   9,   9,   9,   10,  10,  10,  10,  11,  11,  11,  12,
+    12,  12,  12,  13,  13,  13,  13,  14,  14,  14,  15,  15,  15,  15,  16,  16,  16,  16,  17,
+    17,  17,  17,  18,  18,  18,  18,  19,  19,  19,  20,  20,  20,  20,  21,  21,  21,  21,  22,
+    22,  22,  23,  23,  24,  24,  25,  25,  26,  26,  27,  27,  28,  28,  29,  29,  30,  30,  31,
+    31,  32,  32,  33,  33,  34,  34,  35,  36,  36,  37,  38,  38,  39,  40,  41,  41,  42,  43,
+    43,  44,  45,  45,  46,  47,  48,  49,  49,  50,  51,  52,  53,  54,  54,  55,  56,  57,  58,
+    59,  60,  61,  62,  63,  64,  65,  66,  67,  68,  69,  70,  71,  72,  73,  74,  75,  77,  78,
+    79,  80,  81,  83,  84,  85,  86,  87,  89,  90,  91,  92,  94,  95,  96,  97,  97,  98,  99,
+    99, 100, 101, 101, 102, 103, 104, 104, 105, 106, 107, 107, 108, 109, 110, 111, 111, 112, 113,
+    114,115, 116, 117, 117, 118, 119, 120, 121, 122, 122, 123, 124, 125, 126, 126, 127, 128, 129,
+    130,131, 132, 133, 134, 136, 137, 138, 139, 140, 141, 143, 144, 146, 147, 149, 150, 152, 153,
+    155,157, 159, 161, 163, 165, 167, 169, 171};
+
+static int arfgf_high_motion_minq_org_8[QINDEX_RANGE] = {
+    0,   0,   0,   0,   0,   0,   0,   0,   2,   2,   3,   3,   4,   4,   5,   5,   6,   7,   7,
+    8,   8,   9,   9,   10,  10,  11,  11,  12,  12,  13,  13,  14,  14,  15,  16,  16,  17,  17,
+    18,  18,  19,  19,  20,  20,  21,  21,  22,  22,  23,  23,  24,  24,  25,  25,  26,  26,  27,
+    27,  28,  28,  29,  29,  30,  31,  31,  32,  32,  33,  33,  34,  34,  35,  35,  36,  36,  37,
+    37,  38,  38,  39,  39,  40,  40,  41,  41,  42,  42,  43,  43,  44,  44,  45,  45,  46,  46,
+    46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,  60,  61,  62,  63,  64,
+    65,  66,  67,  68,  68,  69,  70,  72,  73,  74,  76,  77,  79,  80,  81,  83,  84,  85,  87,
+    88,  89,  91,  92,  93,  95,  96,  97,  98,  99,  100, 100, 101, 102, 103, 104, 105, 106, 107,
+    108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 123, 124, 125,
+    126, 127, 128, 129, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 139, 140, 141, 142,
+    143, 143, 144, 145, 146, 147, 148, 149, 149, 150, 151, 152, 153, 153, 154, 155, 156, 157, 157,
+    158, 159, 160, 161, 162, 162, 163, 164, 165, 166, 167, 168, 169, 169, 170, 171, 172, 173, 174,
+    175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 187, 188, 189, 190, 192, 193, 194, 196,
+    197, 199, 200, 202, 203, 205, 206, 208, 210};
+#define arfgf_low_motion_minq_org_10  arfgf_low_motion_minq_10
+#define arfgf_low_motion_minq_org_12  arfgf_low_motion_minq_12
+#define arfgf_high_motion_minq_org_10 arfgf_high_motion_minq_10
+#define arfgf_high_motion_minq_org_12 arfgf_high_motion_minq_12
+#endif
 static int arfgf_low_motion_minq_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,
@@ -4855,6 +4892,10 @@ static int rtc_minq_12[QINDEX_RANGE] = {
 
 static int gf_high = 2000;
 static int gf_low  = 400;
+#if TWOPASS_RC
+static int gf_high_org = 2400;
+static int gf_low_org  = 300;
+#endif
 #if TPL_LA && TPL_LA_QPS
 static int gf_high_tpl_la = 2400;
 static int gf_low_tpl_la  = 300;
@@ -4914,6 +4955,15 @@ static int get_kf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBit
     return get_active_quality(
         q, rc->kf_boost, kf_low, kf_high, kf_low_motion_minq_org, kf_high_motion_minq_org);
 }
+
+static int get_gf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
+    int *arfgf_low_motion_minq_org;
+    int *arfgf_high_motion_minq_org;
+    ASSIGN_MINQ_TABLE(bit_depth, arfgf_low_motion_minq_org);
+    ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq_org);
+    return get_active_quality(
+        q, rc->gfu_boost, gf_low_org, gf_high_org, arfgf_low_motion_minq_org, arfgf_high_motion_minq_org);
+}
 #endif
 
 static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
@@ -4935,6 +4985,13 @@ static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, Aom
 }
 #endif
 
+#if TWOPASS_RC
+static int get_gf_high_motion_quality_org(int q, AomBitDepth bit_depth) {
+    int *arfgf_high_motion_minq_org;
+    ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq_org);
+    return arfgf_high_motion_minq_org[q];
+}
+#endif
 static int get_gf_high_motion_quality(int q, AomBitDepth bit_depth) {
     int *arfgf_high_motion_minq;
     ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq);
@@ -6537,10 +6594,10 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
         q = rc->avg_frame_qindex[INTER_FRAME];
     }
     if (rc_mode == AOM_CQ && q < cq_level) q = cq_level;
-    active_best_quality = get_gf_active_quality(rc, q, bit_depth);
+    active_best_quality = get_gf_active_quality_org(rc, q, bit_depth);
     // Constrained quality use slightly lower active best.
     if (rc_mode == AOM_CQ) active_best_quality = active_best_quality * 15 / 16;
-    const int min_boost = get_gf_high_motion_quality(q, bit_depth);
+    const int min_boost = get_gf_high_motion_quality_org(q, bit_depth);
     const int boost = min_boost - active_best_quality;
     active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
     if (!is_intrl_arf_boost) return active_best_quality;
@@ -7046,7 +7103,7 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
            refresh_frame_flags->alt_ref_frame)))
 #else
     if (!rc->is_src_frame_alt_ref &&
-        (ppcs_ptr->temporal_layer_index == 0 ||
+        !(ppcs_ptr->temporal_layer_index == 0 ||
          ppcs_ptr->is_used_as_reference_flag))
 #endif
     {
@@ -7474,8 +7531,11 @@ void *rate_control_kernel(void *input_ptr) {
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
                         if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
                             if (pcs_ptr->picture_number == 0) {
-                                printf("kelvinhack debugging purpose ---> before QPS, forcing r0 to %f from %f\n", 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
+                            } else if (pcs_ptr->picture_number == 16) {
+                                printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                                pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
                             process_tpl_stats_frame_gfu_boost(pcs_ptr);
                         }
@@ -7543,9 +7603,15 @@ void *rate_control_kernel(void *input_ptr) {
                 pcs_ptr->picture_qp = (uint8_t)CLIP3(scs_ptr->static_config.min_qp_allowed,
                                                      scs_ptr->static_config.max_qp_allowed,
                                                      pcs_ptr->picture_qp);
-#if !TWOPASS_RC
-                frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
+#if TWOPASS_RC
+                if (scs_ptr->static_config.rate_control_mode == 1 &&
+                    scs_ptr->use_input_stat_file &&
+                    !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                    scs_ptr->static_config.look_ahead_distance != 0)
+                    ;//kelvinhack skip base_q_idx writeback for accuracy loss like 89 to 88
+                else
 #endif
+                frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
             }
 
             pcs_ptr->parent_pcs_ptr->picture_qp = pcs_ptr->picture_qp;
@@ -7740,8 +7806,11 @@ void *rate_control_kernel(void *input_ptr) {
                         !parentpicture_control_set_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         if (parentpicture_control_set_ptr->picture_number == 0) {
-                            printf("kelvinhack debugging purpose ---> before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", 19969*8, parentpicture_control_set_ptr->total_num_bits);
+                            printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 19969*8, parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = 19969*8;
+                        } else if (parentpicture_control_set_ptr->picture_number == 16) {
+                            printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 13135*8, parentpicture_control_set_ptr->total_num_bits);
+                            parentpicture_control_set_ptr->total_num_bits = 13135*8;
                         }
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                         av1_twopass_postencode_update(parentpicture_control_set_ptr);

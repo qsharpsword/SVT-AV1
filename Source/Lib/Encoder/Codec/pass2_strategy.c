@@ -2954,7 +2954,7 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
         cpi->partition_search_skippable_frame = is_skippable_frame(cpi);
       }
 #endif
-      printf("kelvin return for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target);
+      printf("kelvin return for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d, r0=%f\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target, pcs_ptr->parent_pcs_ptr->r0);
 
       return;
     }
