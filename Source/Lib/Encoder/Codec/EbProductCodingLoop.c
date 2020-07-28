@@ -3915,8 +3915,32 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
     }
 #endif
-
 #if ADAPT_MDS1_BYPASS
+    uint8_t use_nic_1_last_stage;
+    if (pcs_ptr->enc_mode <= ENC_M6) {
+        use_nic_1_last_stage = 0;
+    }
+    else {
+        use_nic_1_last_stage = 1;
+    }
+
+    if (use_nic_1_last_stage) {
+        for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+            if (context_ptr->bypass_md_stage_2[cidx]) {
+                context_ptr->md_stage_2_count[cidx] = 1;
+                context_ptr->md_stage_2_count[cidx] = 1;
+                context_ptr->md_stage_2_count[cidx] = 1;
+                context_ptr->md_stage_2_count[cidx] = 1;
+            }
+            else {
+                context_ptr->md_stage_3_count[cidx] = 1;
+                context_ptr->md_stage_3_count[cidx] = 1;
+                context_ptr->md_stage_3_count[cidx] = 1;
+                context_ptr->md_stage_3_count[cidx] = 1;
+            }
+        }
+    }
+
     for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
         context_ptr->bypass_md_stage_1[cidx] = EB_TRUE;
     }
@@ -3972,6 +3996,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     context_ptr->md_stage_3_count[CAND_CLASS_3] = context_ptr->bypass_md_stage_2[CAND_CLASS_3]
                                                       ? context_ptr->md_stage_2_count[CAND_CLASS_3]
                                                       : context_ptr->md_stage_3_count[CAND_CLASS_3];
+#if !ADAPT_MDS1_BYPASS
 #if M6_M7_NIC
     uint8_t use_nic_1_last_stage;
 #if JUNE26_ADOPTIONS
@@ -3991,6 +4016,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         context_ptr->md_stage_3_count[CAND_CLASS_2] = 1;
         context_ptr->md_stage_3_count[CAND_CLASS_3] = 1;
     }
+#endif
 #endif
 #if !CLASS_MERGING
     context_ptr->md_stage_3_count[CAND_CLASS_4] = context_ptr->bypass_md_stage_2[CAND_CLASS_4]
