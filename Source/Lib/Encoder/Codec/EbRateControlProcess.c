@@ -7376,7 +7376,7 @@ void *rate_control_kernel(void *input_ptr) {
                             set_rc_buffer_sizes(pcs_ptr);
                             av1_rc_init(pcs_ptr);
                         }
-                        set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
+                     //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                         av1_get_second_pass_params(pcs_ptr);
                         //anaghdin to check the location
                         av1_set_target_rate(pcs_ptr,

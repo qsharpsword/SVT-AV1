@@ -1293,12 +1293,13 @@ static void calculate_gf_length(PictureControlSet *pcs_ptr, int max_gop_length,
       }
       // Test for the case where there is a brief flash but the prediction
       // quality back to an earlier frame is then restored.
+      //anaghdin_GF to disable for now
       flash_detected = detect_flash(twopass, 0);
       // TODO(bohanli): remove redundant accumulations here, or unify
       // this and the ones in define_gf_group
       accumulate_next_frame_stats(&next_frame, frame_info, flash_detected,
                                   rc->frames_since_key, i, &gf_stats);
-
+      //anaghdin_GF to cut based on PD decisions
       cut_here = detect_gf_cut(pcs_ptr, i, cur_start, flash_detected,
                                active_max_gf_interval, active_min_gf_interval,
                                &gf_stats);
@@ -1586,15 +1587,15 @@ static void set_multi_layer_params(const TWO_PASS *twopass,
         set_multi_layer_params(twopass, gf_group, rc, frame_info, start, m,
             cur_frame_idx, frame_ind, layer_depth + 1);
 
-        // Overlay for internal ARF.
-        gf_group->update_type[*frame_ind] = INTNL_OVERLAY_UPDATE;
-        gf_group->arf_src_offset[*frame_ind] = 0;
-        ++(*cur_frame_idx);
-        gf_group->cur_frame_idx[*frame_ind] = *cur_frame_idx;
-        gf_group->frame_disp_idx[*frame_ind] = m;
-        gf_group->arf_boost[*frame_ind] = 0;
-        gf_group->layer_depth[*frame_ind] = layer_depth;
-        ++(*frame_ind);
+        //// Overlay for internal ARF.
+        //gf_group->update_type[*frame_ind] = INTNL_OVERLAY_UPDATE;
+        //gf_group->arf_src_offset[*frame_ind] = 0;
+        //++(*cur_frame_idx);
+        //gf_group->cur_frame_idx[*frame_ind] = *cur_frame_idx;
+        //gf_group->frame_disp_idx[*frame_ind] = m;
+        //gf_group->arf_boost[*frame_ind] = 0;
+        //gf_group->layer_depth[*frame_ind] = layer_depth;
+        //++(*frame_ind);
 
         // Frames displayed after this internal ARF.
         set_multi_layer_params(twopass, gf_group, rc, frame_info, m, end,
@@ -1640,10 +1641,13 @@ static int construct_multi_layer_gf_structure(
     set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
         &cur_frame_index, &frame_index, use_altref + 1);
 
-    // The end frame will be Overlay frame for an ARF GOP; otherwise set it to
-    // be GF, for consistency, which will be updated in the next GOP.
-    gf_group->update_type[frame_index] = use_altref ? OVERLAY_UPDATE : GF_UPDATE;
-    gf_group->arf_src_offset[frame_index] = 0;
+    //// The end frame will be Overlay frame for an ARF GOP; otherwise set it to
+    //// be GF, for consistency, which will be updated in the next GOP.
+    //gf_group->update_type[frame_index] = use_altref ? OVERLAY_UPDATE : GF_UPDATE;
+    //gf_group->arf_src_offset[frame_index] = 0;
+    //anaghdin: the end frame will not be an overlay
+    if (frame_index)
+        frame_index--;
     return frame_index;
 }
 
@@ -1710,7 +1714,7 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
   // Reset the GF group data structures unless this is a key
   // frame in which case it will already have been done.
   if (!is_intra_only) {
-    av1_zero(gf_group);
+    av1_zero(*gf_group);
   }
 
   aom_clear_system_state();
@@ -1891,6 +1895,7 @@ static void define_gf_group(PictureControlSet *pcs_ptr, FIRSTPASS_STATS *this_fr
   if (use_alt_ref) {
     rc->source_alt_ref_pending = 1;
     gf_group->max_layer_depth_allowed = gf_cfg->gf_max_pyr_height;
+    // anaghdin_GF get from actual minigop size in PD
     set_baseline_gf_interval(pcs_ptr, i, active_max_gf_interval, use_alt_ref,
                              is_final_pass);
 
@@ -2954,7 +2959,7 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
         cpi->partition_search_skippable_frame = is_skippable_frame(cpi);
       }
 #endif
-      printf("kelvin return for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d, r0=%f\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target, pcs_ptr->parent_pcs_ptr->r0);
+      printf("\nkelvin return for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d, r0=%f\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target, pcs_ptr->parent_pcs_ptr->r0);
 
       return;
     }
@@ -3096,7 +3101,7 @@ void av1_get_second_pass_params(PictureControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(pcs_ptr);
-  printf("kelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
+  printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
 // from aom ratectrl.c
@@ -3314,7 +3319,7 @@ void av1_init_single_pass_lap(AV1_COMP *cpi) {
 #endif
 
 //static INLINE int frame_is_kf_gf_arf(const AV1_COMP *cpi)
-INLINE int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr) {
+int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr) {
   //const GF_GROUP *const gf_group = &cpi->gf_group;
   SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
