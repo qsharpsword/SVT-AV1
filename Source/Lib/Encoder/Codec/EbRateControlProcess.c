@@ -6255,13 +6255,12 @@ int av1_rc_get_default_min_gf_interval(int width, int height,
   // 4K30: 6
   // 4K60: 12
 }
-
-static AOM_INLINE void set_rc_buffer_sizes(PictureControlSet *pcs_ptr) {
+void set_rc_buffer_sizes(SequenceControlSet *scs_ptr) {
   //const int64_t bandwidth = oxcf->target_bandwidth;
   //const int64_t starting = oxcf->rc_cfg.starting_buffer_level_ms;
   //const int64_t optimal = oxcf->rc_cfg.optimal_buffer_level_ms;
   //const int64_t maximum = oxcf->rc_cfg.maximum_buffer_size_ms;
-  SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
+
   EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                         = &encode_context_ptr->rc;
   RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
@@ -6291,9 +6290,7 @@ int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
 #define INT_MAX 0x7fffffff
 #define BPER_MB_NORMBITS 9
 #define FRAME_OVERHEAD_BITS 200
-void av1_rc_init(PictureControlSet *pcs_ptr) {
-  //const RateControlCfg *const rc_cfg = &oxcf->rc_cfg;
-  SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
+void av1_rc_init(SequenceControlSet *scs_ptr) {
   EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                         = &encode_context_ptr->rc;
   const RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
@@ -7373,11 +7370,11 @@ void *rate_control_kernel(void *input_ptr) {
                         scs_ptr->static_config.look_ahead_distance != 0
                         ) {
                         if (pcs_ptr->picture_number == 0) {
-                            set_rc_buffer_sizes(pcs_ptr);
-                            av1_rc_init(pcs_ptr);
+                            set_rc_buffer_sizes(scs_ptr);
+                            av1_rc_init(scs_ptr);
                         }
                      //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
-                        av1_get_second_pass_params(pcs_ptr);
+                        av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                         //anaghdin to check the location
                         av1_set_target_rate(pcs_ptr,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,

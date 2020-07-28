@@ -29,6 +29,10 @@
 #if NOISE_BASED_TF_FRAMES
 #include "EbMalloc.h"
 #endif
+#if TWOPASS_MOVE_TO_PD
+#include "pass2_strategy.h"
+#include "EbRateControlProcess.h"
+#endif
 /************************************************
  * Defines
  ************************************************/
@@ -8171,6 +8175,23 @@ void* picture_decision_kernel(void *input_ptr)
                                     store_tpl_pictures(pcs_ptr, context_ptr, mg_size);
 
                                 mctf_frame(scs_ptr, pcs_ptr, context_ptr, out_stride_diff64);
+                            }
+                        }
+#endif
+
+#if TWOPASS_MOVE_TO_PD
+                        for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i) {
+                            pcs_ptr = context_ptr->mg_pictures_array[pic_i];
+                            if (scs_ptr->use_input_stat_file &&
+                                //!pcs_ptr->sc_content_detected &&
+                                scs_ptr->static_config.look_ahead_distance != 0
+                                ) {
+                                if (pcs_ptr->picture_number == 0) {
+                                    set_rc_buffer_sizes(scs_ptr);
+                                    av1_rc_init(scs_ptr);
+                                }
+                                //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
+                                av1_get_second_pass_params(pcs_ptr);
                             }
                         }
 #endif

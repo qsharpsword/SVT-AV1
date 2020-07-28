@@ -10,6 +10,7 @@
 #include "EbSystemResourceManager.h"
 #include "EbSvtAv1Enc.h"
 #include "EbPictureControlSet.h"
+
 #include "EbObject.h"
 
 #define CCOEFF_INIT_FACT 2
@@ -296,6 +297,11 @@ typedef struct RateControlLayerContext {
 double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
 int av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
 int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
+#if TWOPASS_MOVE_TO_PD
+struct SequenceControlSet;
+void set_rc_buffer_sizes(struct SequenceControlSet *scs_ptr);
+void av1_rc_init(struct SequenceControlSet *scs_ptr);
+#endif
 #endif
 
 EbErrorType rate_control_context_ctor(EbThreadContext *  thread_context_ptr,
