@@ -6090,7 +6090,7 @@ void mctf_frame(
                     context_ptr->tf_level = 2;
                 else
                     context_ptr->tf_level = 0;
-            }           
+            }
 #if FAST_M8_V1
             else if (pcs_ptr->enc_mode <= ENC_M7) {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
