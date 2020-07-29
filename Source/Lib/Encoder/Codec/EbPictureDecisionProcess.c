@@ -2587,6 +2587,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->tx_size_search_mode = 1;
 #endif
+#if !ADD_SQ64_LEVELS
 #if APR22_ADOPTIONS
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
@@ -2635,6 +2636,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->txs_in_inter_classes = 1;
 #endif
+#endif
 #if !INTER_COMP_REDESIGN
     // Set Wedge mode      Settings
     // 0                 FULL: Full search
@@ -2672,6 +2674,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1                                     FULL
     // 2                                     FAST 1 : Do not inject for non basic inter
     // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+#if !ADD_SQ64_LEVELS
 #if  CLEANUP_INTER_INTRA
     //picture level switch,  has to follow the sequence level.
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
@@ -2717,13 +2720,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->enable_inter_intra =
         scs_ptr->static_config.inter_intra_compound;
 #endif
+#endif
     // Set compound mode      Settings
     // 0                      OFF: No compond mode search : AVG only
     // 1                      ON: Full
     // 2                      ON: Fast : similar based disable
     // 3                      ON: Fast : MRP pruning/ similar based disable
 
-
+#if !ADD_SQ64_LEVELS
     if (scs_ptr->static_config.compound_level == DEFAULT) {
         if (scs_ptr->compound_mode)
 #if MAR17_ADOPTIONS
@@ -2815,7 +2819,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->compound_mode =
         scs_ptr->static_config.compound_level;
-
+#endif
     // Set frame end cdf update mode      Settings
     // 0                                  OFF
     // 1                                  ON

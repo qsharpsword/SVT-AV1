@@ -636,6 +636,16 @@ extern "C" {
 #define TX_EARLY_EXIT     1 // Variance/cost_depth_1-to-cost_depth_0 based early txs exit
 #define FAST_M8_V1        1 // > 2x faster than M7
 #define ADD_M9            1 // Create a spot for M9; M9 = M8
+
+// towards NSQ reduction
+#define ADD_SQ64_LEVELS 1 // create a function for the levels of NSQ OFF/SB_64x64
+#if ADD_SQ64_LEVELS
+#define SQ64_M1 1
+#define SQ64_M2 1
+#define SQ64_M3 1
+#define SQ64_M4 1
+#define SQ64_M6 1
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

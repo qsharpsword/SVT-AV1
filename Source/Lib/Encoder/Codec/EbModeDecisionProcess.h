@@ -961,6 +961,11 @@ typedef struct ModeDecisionContext {
     int16_t sprs_lev0_start_y;
     int16_t sprs_lev0_end_y;
 #endif
+#if ADD_SQ64_LEVELS
+    uint8_t txs_in_inter_classes;
+    uint8_t nic_scaling_level;
+    uint8_t inter_compound_mode;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

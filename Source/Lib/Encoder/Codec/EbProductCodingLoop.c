@@ -1786,6 +1786,29 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
 #endif
 #endif
         break;
+#if SQ64_M6
+    case 5:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 7;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 2;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[GLOBAL_GROUP]        = 7;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 1;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 1;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 1;
+        ref_pruning_ctrls->closest_refs[GLOBAL_GROUP]        = 1;
+        break;
+#else
     case 5:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
@@ -1820,6 +1843,7 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[GLOBAL_GROUP]        = 0;
 #endif
         break;
+#endif
     case 6:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
@@ -1929,7 +1953,10 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
 
-    uint8_t nics_scling_level ;
+#if ADD_SQ64_LEVELS
+    uint8_t nics_scling_level = context_ptr->nic_scaling_level;
+#else
+    uint8_t nics_scling_level;
 #if UNIFY_SC_NSC
 #if JUNE23_ADOPTIONS
 #if REMOVE_MR_MACRO
@@ -2077,6 +2104,7 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 4;
     else
         nics_scling_level = 5;
+#endif
 #endif
 #endif
 #endif
@@ -11327,7 +11355,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 #endif
     }
 #if RESTRICT_INTER_TXS_DEPTH
+#if ADD_SQ64_LEVELS
+    if (is_inter && (context_ptr->txs_in_inter_classes == 2))
+#else
     if (is_inter && (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes == 2))
+#endif
         end_tx_depth = MIN(1, end_tx_depth);
 #endif
 #if !FIX_CFL_OFF
@@ -11892,7 +11924,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
             context_ptr->md_staging_tx_size_mode = 1;
         else
 #endif
+#if ADD_SQ64_LEVELS
+        if (context_ptr->txs_in_inter_classes)
+#else
         if (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes)
+#endif
             context_ptr->md_staging_tx_size_mode = 1;
         else
             context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_3) ? 1 : 0;
@@ -12450,8 +12486,15 @@ EbErrorType signal_derivation_block(
 #endif
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+#if SQ64_M6
+        else if (pcs->parent_pcs_ptr->enc_mode <= ENC_M5)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+#else
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+#endif
 #else
        else if (enc_mode <= ENC_M0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
@@ -12508,7 +12551,11 @@ EbErrorType signal_derivation_block(
 
 
     // set compound_types_to_try
+#if ADD_SQ64_LEVELS
+    uint8_t compound_mode = context_ptr->inter_compound_mode;
+#else
     uint8_t compound_mode = pcs->parent_pcs_ptr->compound_mode;
+#endif
     if (context_ptr->pd_pass == PD_PASS_0)
         set_inter_comp_controls(context_ptr, 0);
     else if (context_ptr->pd_pass == PD_PASS_1)
