@@ -298,10 +298,10 @@ TEST_P(TemporalFilterTestPlanewise, DISABLED_Speed) {
     }
 }
 
-INSTANTIATE_TEST_CASE_P(
-    AVX2, TemporalFilterTestPlanewise,
-    ::testing::Combine(::testing::Values(svt_av1_apply_temporal_filter_planewise_c),
-                       ::testing::Values(svt_av1_apply_temporal_filter_planewise_avx2)));
+//INSTANTIATE_TEST_CASE_P(
+//    AVX2, TemporalFilterTestPlanewise,
+//    ::testing::Combine(::testing::Values(svt_av1_apply_temporal_filter_planewise_c),
+//                       ::testing::Values(svt_av1_apply_temporal_filter_planewise_avx2)));
 
 
 class TemporalFilterTestPlanewiseHbd
@@ -557,8 +557,8 @@ TEST_P(TemporalFilterTestPlanewiseHbd, DISABLED_Speed) {
     }
 }
 
-INSTANTIATE_TEST_CASE_P(
-    AVX2, TemporalFilterTestPlanewiseHbd,
-    ::testing::Combine(
-        ::testing::Values(svt_av1_apply_temporal_filter_planewise_hbd_c),
-        ::testing::Values(svt_av1_apply_temporal_filter_planewise_hbd_avx2)));
+//INSTANTIATE_TEST_CASE_P(
+//    AVX2, TemporalFilterTestPlanewiseHbd,
+//    ::testing::Combine(
+//        ::testing::Values(svt_av1_apply_temporal_filter_planewise_hbd_c),
+//        ::testing::Values(svt_av1_apply_temporal_filter_planewise_hbd_avx2)));

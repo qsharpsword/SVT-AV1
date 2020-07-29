@@ -54,10 +54,10 @@ extern "C" {
 // Add support for other prediction structure
 #define MR_MODE 0
 #define ENABLE_DIST_BASED_ME 0
-#define ENABLE_PR_1133 1
+#define ENABLE_PR_1133 0
 #define ENABLE_ENHANCED_TF 0
 #define SHUT_ME_DISTORTION 0
-#define ENABLE_QPSM_1PASS 0 // Disable 1 pass QPS and QPM
+#define ENABLE_QPSM_1PASS 1 // Disable 1 pass QPS and QPM
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 
