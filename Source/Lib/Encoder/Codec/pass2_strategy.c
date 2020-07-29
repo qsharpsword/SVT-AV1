@@ -2901,7 +2901,7 @@ static void setup_target_rate(SequenceControlSet *scs_ptr) {
                             cpi->common.height);
   }
 #endif
-
+  // TWOPASS_MOVE_TO_PD store in PCS
   rc->base_frame_target = target_rate;
 }
 

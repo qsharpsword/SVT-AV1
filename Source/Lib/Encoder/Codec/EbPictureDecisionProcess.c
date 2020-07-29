@@ -8149,6 +8149,14 @@ void* picture_decision_kernel(void *input_ptr)
                             }
                         }
 
+#if TWOPASS_MOVE_TO_PD
+                        if (scs_ptr->use_input_stat_file &&
+                            scs_ptr->static_config.look_ahead_distance != 0)
+                            if (pcs_ptr->picture_number == 0) {
+                                set_rc_buffer_sizes(scs_ptr);
+                                av1_rc_init(scs_ptr);
+                            }
+#endif
 #if NEW_DELAY
                         //Process previous delayed Intra if we have one
                         if (context_ptr->prev_delayed_intra) {
@@ -8156,7 +8164,14 @@ void* picture_decision_kernel(void *input_ptr)
                             context_ptr->prev_delayed_intra = NULL;
                             //if (scs_ptr->static_config.enable_tpl_la)
                             store_tpl_pictures(pcs_ptr, context_ptr, mg_size);
-
+#if TWOPASS_MOVE_TO_PD
+                            if (scs_ptr->use_input_stat_file &&
+                                scs_ptr->static_config.look_ahead_distance != 0) {
+                                av1_get_second_pass_params(pcs_ptr);
+                                store_rc_info(pcs_ptr);
+                                update_rc_counts(pcs_ptr);
+                            }
+#endif
                             mctf_frame(scs_ptr, pcs_ptr, context_ptr, out_stride_diff64);
 
                             send_picture_out(scs_ptr, pcs_ptr, context_ptr);
@@ -8179,24 +8194,6 @@ void* picture_decision_kernel(void *input_ptr)
                         }
 #endif
 
-#if TWOPASS_MOVE_TO_PD
-                        for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i) {
-                            pcs_ptr = context_ptr->mg_pictures_array[pic_i];
-                            if (scs_ptr->use_input_stat_file &&
-                                //!pcs_ptr->sc_content_detected &&
-                                scs_ptr->static_config.look_ahead_distance != 0
-                                ) {
-                                if (pcs_ptr->picture_number == 0) {
-                                    set_rc_buffer_sizes(scs_ptr);
-                                    av1_rc_init(scs_ptr);
-                                }
-                                //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
-                                av1_get_second_pass_params(pcs_ptr);
-                            }
-                        }
-#endif
-
-
                         for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i){
 
                             pcs_ptr = context_ptr->mg_pictures_array[pic_i];
@@ -8204,6 +8201,14 @@ void* picture_decision_kernel(void *input_ptr)
 #if NEW_DELAY
                             //Delay some kind of I frames to next pre-ass event
                             if (is_delayed_intra(pcs_ptr) == EB_FALSE) {
+#if TWOPASS_MOVE_TO_PD
+                                if (scs_ptr->use_input_stat_file &&
+                                    scs_ptr->static_config.look_ahead_distance != 0) {
+                                    av1_get_second_pass_params(pcs_ptr);
+                                    store_rc_info(pcs_ptr);
+                                    update_rc_counts(pcs_ptr);
+                                }
+#endif
                                 send_picture_out(scs_ptr, pcs_ptr, context_ptr);
                             }
 #else

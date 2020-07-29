@@ -299,8 +299,11 @@ int av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
 int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
 #if TWOPASS_MOVE_TO_PD
 struct SequenceControlSet;
+struct PictureParentControlSet;
 void set_rc_buffer_sizes(struct SequenceControlSet *scs_ptr);
 void av1_rc_init(struct SequenceControlSet *scs_ptr);
+void update_rc_counts(struct PictureParentControlSet *ppcs_ptr);
+void store_rc_info(struct PictureParentControlSet *pcs_ptr);
 #endif
 #endif
 

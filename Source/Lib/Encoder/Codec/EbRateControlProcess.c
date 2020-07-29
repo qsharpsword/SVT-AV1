@@ -7182,8 +7182,26 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
   cm->width, cm->height));
       */
 }
+#if TWOPASS_MOVE_TO_PD
+void store_rc_info(PictureParentControlSet *pcs_ptr) {
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *rc = &encode_context_ptr->rc;
+    GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
 
-static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
+    pcs_ptr->update_type = gf_group->update_type[gf_group->index];
+    pcs_ptr->arf_src_offset = gf_group->arf_src_offset[gf_group->index];
+    pcs_ptr->cur_frame_idx = gf_group->cur_frame_idx[gf_group->index];
+    pcs_ptr->frame_disp_idx = gf_group->frame_disp_idx[gf_group->index];
+    pcs_ptr->layer_depth = gf_group->layer_depth[gf_group->index];
+    pcs_ptr->arf_boost = gf_group->arf_boost[gf_group->index];
+    pcs_ptr->max_layer_depth = gf_group->max_layer_depth;
+    pcs_ptr->max_layer_depth_allowed = gf_group->max_layer_depth_allowed;
+    pcs_ptr->bit_allocation = gf_group->bit_allocation[gf_group->index];
+    pcs_ptr->size = gf_group->size;
+}
+#endif
+void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -7362,11 +7380,11 @@ void *rate_control_kernel(void *input_ptr) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
                 // High level RC
                 if (scs_ptr->static_config.rate_control_mode == 1)
-#if TWOPASS_RC
                     if (scs_ptr->use_input_stat_file &&
                         !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0
                         ) {
+#if !TWOPASS_RC
                         if (pcs_ptr->picture_number == 0) {
                             set_rc_buffer_sizes(scs_ptr);
                             av1_rc_init(scs_ptr);
@@ -7374,11 +7392,11 @@ void *rate_control_kernel(void *input_ptr) {
                      //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                         av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                         //anaghdin to check the location
+#endif
                         av1_set_target_rate(pcs_ptr,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
                     } else
-#endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,
                                                     scs_ptr,
                                                     scs_ptr->encode_context_ptr,
@@ -7809,7 +7827,9 @@ void *rate_control_kernel(void *input_ptr) {
                         }
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                         av1_twopass_postencode_update(parentpicture_control_set_ptr);
+#if !TWOPASS_MOVE_TO_PD
                         update_rc_counts(parentpicture_control_set_ptr);
+#endif
                     } else
 #endif
                     frame_level_rc_feedback_picture_vbr(
