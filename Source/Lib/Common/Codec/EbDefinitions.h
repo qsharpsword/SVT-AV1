@@ -640,11 +640,12 @@ extern "C" {
 // Faster M9
 #define ADD_M9 1
 #if ADD_M9
+#define NO_TF    1 // tf off
 #define OPT_TF_0 0 // no tf @ l1
 #define OPT_TF_1 0 // no tf for chroma
 #define OPT_TF_2 0 // no hp @ tf
 #define OPT_TF_3 0 // small search area
-#define OPT_TF_4 1 // 32x32 only
+#define OPT_TF_4 0 // 32x32 only
 #endif
 
 #endif
