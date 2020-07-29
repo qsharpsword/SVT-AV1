@@ -3915,8 +3915,8 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
     }
 #endif
-
-#if ADAPT_MDS1_BYPASS
+     
+#if FAST_M8_V1 // Move nic=1 before bypass generation (lossless towards the adaptive bypass)
     uint8_t use_nic_1_last_stage;
     if (pcs_ptr->enc_mode <= ENC_M6) {
         use_nic_1_last_stage = 0;
@@ -3941,14 +3941,6 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
         }
     }
-#if 1
-    for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
-        if (context_ptr->bypass_md_stage_2[cidx]) {
-            if (context_ptr->md_stage_1_count[cidx] == context_ptr->md_stage_3_count[cidx])
-                context_ptr->bypass_md_stage_1[cidx] = EB_TRUE;
-        }
-    }
-#endif
 #endif
 
     // Step 3: update count for md_stage_1 and d_stage_2 if bypassed (no NIC
@@ -4001,7 +3993,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     context_ptr->md_stage_3_count[CAND_CLASS_3] = context_ptr->bypass_md_stage_2[CAND_CLASS_3]
                                                       ? context_ptr->md_stage_2_count[CAND_CLASS_3]
                                                       : context_ptr->md_stage_3_count[CAND_CLASS_3];
-#if !ADAPT_MDS1_BYPASS
+#if !FAST_M8_V1 // Move nic=1 before bypass generation (lossless towards the adaptive bypass)
 #if M6_M7_NIC
     uint8_t use_nic_1_last_stage;
 #if JUNE26_ADOPTIONS
@@ -11881,15 +11873,9 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
-#if ADAPT_MDS1_BYPASS
-        context_ptr->md_staging_skip_interpolation_search =
-            (context_ptr->md_staging_mode == MD_STAGING_MODE_1 || context_ptr->md_staging_mode == MD_STAGING_MODE_2) &&
-            (context_ptr->bypass_md_stage_1[candidate_ptr->cand_class] == EB_FALSE || context_ptr->bypass_md_stage_2[candidate_ptr->cand_class] == EB_FALSE);
-#else
         context_ptr->md_staging_skip_interpolation_search =
             (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
              context_ptr->md_staging_mode == MD_STAGING_MODE_2);
-#endif
 #endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_FALSE;

@@ -635,24 +635,8 @@ extern "C" {
 #define UPGRADE_SUBPEL    1 // Upgrade subpel of me and of pme to use libaom subpel search
 #define TX_EARLY_EXIT     1 // Variance/cost_depth_1-to-cost_depth_0 based early txs exit
 
-// Faster M8
-#define FAST_M8_V1 1
-// Faster M9
-#define ADD_M9 1
-#if ADD_M9
-#if 0
-#define NO_TF    0 // tf off
-#define OPT_TF_0 1 // no tf @ l1
-#define OPT_TF_1 0 // no tf for chroma
-#define OPT_TF_2 1 // no hp @ tf
-#define OPT_TF_3 1 // small search area
-#define OPT_TF_4 0 // 32x32 only
-#endif
-
-#define ADAPT_MDS1_BYPASS 1
-
-#endif
-
+#define FAST_M8_V1        1 // > 2x faster than M7
+#define ADD_M9            1 // Create a spot for M9; M9 = M8
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////

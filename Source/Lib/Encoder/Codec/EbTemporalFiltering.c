@@ -1977,7 +1977,9 @@ static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
             mv_y = best_mv_y;
             // Perform 1/8 Pel MV Refinement
 #endif
-#if !OPT_TF_2
+#if FAST_M8_V1 // tf_hp
+            if (context_ptr->high_precision)
+#endif
             for (signed short i = -1; i <= 1; i++) {
                 for (signed short j = -1; j <= 1; j++) {
 
@@ -2049,7 +2051,7 @@ static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
                     }
                 }
             }
-#endif
+
             context_ptr->tf_16x16_mv_x[idx_32x32 * 4 + idx_16x16] = best_mv_x;
             context_ptr->tf_16x16_mv_y[idx_32x32 * 4 + idx_16x16] = best_mv_y;
         }
@@ -2359,7 +2361,9 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
         mv_y = best_mv_y;
         // Perform 1/8 Pel MV Refinement
 #endif
-#if !OPT_TF_2
+#if FAST_M8_V1 // tf_hp
+        if (context_ptr->high_precision)
+#endif
         for (signed short i = -1; i <= 1; i++) {
             for (signed short j = -1; j <= 1; j++) {
 
@@ -2430,7 +2434,7 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
                 }
             }
         }
-#endif
+
         context_ptr->tf_32x32_mv_x[idx_32x32] = best_mv_x;
         context_ptr->tf_32x32_mv_y[idx_32x32] = best_mv_y;
     }
@@ -2931,15 +2935,6 @@ static EbErrorType produce_temporally_filtered_pic(
                                             ss_y,
                                             encoder_bit_depth);
 
-
-
-#if OPT_TF_4
-                    for (uint32_t idx_32x32 = 0; idx_32x32 < 4; idx_32x32++) {
-                              context_ptr->tf_32x32_block_split_flag[idx_32x32] = 0;
-                        }
-
-#else
-
                     // Perform TF sub-pel search for 16x16 blocks
                     tf_16x16_sub_pel_search(picture_control_set_ptr_central,
                                             context_ptr,
@@ -2961,7 +2956,7 @@ static EbErrorType produce_temporally_filtered_pic(
 
                     // Derive tf_32x32_block_split_flag
                     derive_tf_32x32_block_split_flag(context_ptr);
-#endif
+
                     // Perform MC using the information acquired using the ME step
                     tf_inter_prediction(picture_control_set_ptr_central,
                                         context_ptr,

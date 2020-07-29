@@ -6091,8 +6091,8 @@ void mctf_frame(
                 else
                     context_ptr->tf_level = 0;
             }           
-#if OPT_TF_0
-            else if (pcs_ptr->enc_mode <= ENC_M8) {
+#if FAST_M8_V1
+            else if (pcs_ptr->enc_mode <= ENC_M7) {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;
                 else
@@ -6105,18 +6105,12 @@ void mctf_frame(
                     context_ptr->tf_level = 0;
             }
 #else
-#if NO_TF
-            else {
-                context_ptr->tf_level = 0;
-            }
-#else
             else {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;
                 else
                     context_ptr->tf_level = 0;
             }
-#endif
 #endif
             }
         else {
