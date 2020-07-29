@@ -2276,12 +2276,12 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
             candidate_ptr->is_interintra_used      = 0;
             candidate_ptr->is_compound             = 0;
             candidate_ptr->is_new_mv               = 1;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
             candidate_ptr->is_zero_mv = 0;
 #endif
             candidate_ptr->drl_index    = 0;
             candidate_ptr->ref_mv_index = 0;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
             candidate_ptr->pred_mv_weight = 0;
 #endif
             candidate_ptr->ref_frame_type               = svt_get_ref_frame_type(list_idx, ref_idx);

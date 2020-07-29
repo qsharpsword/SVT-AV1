@@ -11254,8 +11254,9 @@ EbErrorType motion_estimate_sb(
                 pcs_ptr->rc_me_distortion[sb_index] +=
                     pcs_ptr->me_results[sb_index]->me_candidate[5 + i][0].distortion;
 
-#endif
             }
+#endif
+            
         }
     }
 

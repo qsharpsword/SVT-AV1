@@ -112,7 +112,7 @@ typedef struct ModeDecisionCandidate {
     // Inter Mode
     PredictionMode inter_mode;
     EbBool         is_compound;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
     uint32_t pred_mv_weight;
 #endif
     uint8_t ref_frame_type;
@@ -120,7 +120,7 @@ typedef struct ModeDecisionCandidate {
     int8_t  ref_frame_index_l0;
     int8_t  ref_frame_index_l1;
     EbBool  is_new_mv;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
     EbBool is_zero_mv;
 #endif
     TxType                 transform_type[MAX_TXB_COUNT];
