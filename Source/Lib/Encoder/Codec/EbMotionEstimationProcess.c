@@ -1330,8 +1330,13 @@ void* tf_set_me_hme_params_oq(
 #if REFACTOR_ME_HME
     // Set the minimum ME search area
 #if APR22_ADOPTIONS
+#if OPT_TF_3
+    me_context_ptr->search_area_width = me_context_ptr->search_area_height = 8;
+    me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 16;
+#else
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = input_resolution <= INPUT_SIZE_480p_RANGE ? 60 : 16;
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = input_resolution <= INPUT_SIZE_480p_RANGE ? 120 : 32;
+#endif
 #else
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 16;
 
