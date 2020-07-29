@@ -640,6 +640,7 @@ extern "C" {
 // Faster M9
 #define ADD_M9 1
 #if ADD_M9
+#if 0
 #define NO_TF    0 // tf off
 #define OPT_TF_0 1 // no tf @ l1
 #define OPT_TF_1 0 // no tf for chroma
@@ -647,6 +648,11 @@ extern "C" {
 #define OPT_TF_3 1 // small search area
 #define OPT_TF_4 0 // 32x32 only
 #endif
+
+#define ADAPT_MDS1_BYPASS 1
+
+#endif
+
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
