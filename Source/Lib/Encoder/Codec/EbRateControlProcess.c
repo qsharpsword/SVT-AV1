@@ -7379,12 +7379,12 @@ void *rate_control_kernel(void *input_ptr) {
             if (scs_ptr->static_config.rate_control_mode) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
                 // High level RC
+#if TWOPASS_RC
                 if (scs_ptr->static_config.rate_control_mode == 1)
                     if (scs_ptr->use_input_stat_file &&
                         !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0
                         ) {
-#if !TWOPASS_RC
                         if (pcs_ptr->picture_number == 0) {
                             set_rc_buffer_sizes(scs_ptr);
                             av1_rc_init(scs_ptr);
@@ -7392,11 +7392,11 @@ void *rate_control_kernel(void *input_ptr) {
                      //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                         av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                         //anaghdin to check the location
-#endif
                         av1_set_target_rate(pcs_ptr,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
                     } else
+#endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,
                                                     scs_ptr,
                                                     scs_ptr->encode_context_ptr,
