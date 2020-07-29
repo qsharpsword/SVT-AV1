@@ -11,10 +11,10 @@
 #include "EbDefinitions.h"
 
 #include "EbLog.h"
+#if !SHUT_ME_DISTORTION
 /********************************************
  * Constants
  ********************************************/
-#if !ENABLE_PR_1133
 int pa_to_ep_block_index[85] = {
     0    ,
     25   ,

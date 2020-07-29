@@ -475,7 +475,7 @@ EbErrorType mode_decision_configuration_context_ctor(EbThreadContext *  thread_c
     EB_MALLOC_ARRAY(context_ptr->mdc_blk_ptr->av1xd, 1);
     return EB_ErrorNone;
 }
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
 
 /******************************************************	
 * Predict the SB partitionning
@@ -651,7 +651,7 @@ void configure_adp(PictureControlSet *pcs_ptr, ModeDecisionConfigurationContext 
     UNUSED(pcs_ptr);
     context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE - 1]      = SQ_BLOCKS_SEARCH_COST;
     context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1] = SQ_NON4_BLOCKS_SEARCH_COST;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
     context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1]      = SB_OPEN_LOOP_COST;
     context_ptr->cost_depth_mode[SB_FAST_OPEN_LOOP_DEPTH_MODE - 1] = SB_FAST_OPEN_LOOP_COST;
     context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1] = SB_PRED_OPEN_LOOP_COST;
@@ -677,12 +677,17 @@ void configure_adp(PictureControlSet *pcs_ptr, ModeDecisionConfigurationContext 
 void derive_search_method(PictureControlSet *               pcs_ptr,
                           ModeDecisionConfigurationContext *context_ptr) {
     uint32_t sb_index;
-
+#if SHUT_ME_DISTORTION
     for (sb_index = 0; sb_index < pcs_ptr->sb_total_count_pix; sb_index++) {
         if (context_ptr->sb_cost_array[sb_index] ==
-#if ENABLE_PR_1133
             context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1])
+            pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_NON4_BLOCKS_DEPTH_MODE;
+        else
+            pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_BLOCKS_DEPTH_MODE;
+    }
 #else
+    for (sb_index = 0; sb_index < pcs_ptr->sb_total_count_pix; sb_index++) {
+        if (context_ptr->sb_cost_array[sb_index] ==
             context_ptr->cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE - 1])
             pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_PRED_OPEN_LOOP_DEPTH_MODE;
         else if (context_ptr->sb_cost_array[sb_index] ==
@@ -693,11 +698,11 @@ void derive_search_method(PictureControlSet *               pcs_ptr,
             pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_OPEN_LOOP_DEPTH_MODE;
         else if (context_ptr->sb_cost_array[sb_index] ==
                  context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1])
-#endif
             pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_NON4_BLOCKS_DEPTH_MODE;
         else
             pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] = SB_SQ_BLOCKS_DEPTH_MODE;
     }
+#endif
 }
 
 /******************************************************
@@ -828,7 +833,7 @@ void derive_optimal_budget_per_sb(SequenceControlSet *scs_ptr, PictureControlSet
         adjustement_iteration++;
     }
 }
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
 EbErrorType derive_default_segments(ModeDecisionConfigurationContext *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
@@ -839,11 +844,12 @@ EbErrorType derive_default_segments(ModeDecisionConfigurationContext *context_pt
     context_ptr->score_th[3]        = (int8_t)((4 * 100) / context_ptr->number_of_segments);
     context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
     context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE - 1];
+    return return_error;
+}
 #else
 EbErrorType derive_default_segments(SequenceControlSet *scs_ptr,
                                     ModeDecisionConfigurationContext *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
-
     if (context_ptr->budget > (uint16_t)(scs_ptr->sb_tot_cnt * U_140)) {
         context_ptr->number_of_segments = 2;
         context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
@@ -851,9 +857,11 @@ EbErrorType derive_default_segments(SequenceControlSet *scs_ptr,
         context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
         context_ptr->score_th[3] = (int8_t)((4 * 100) / context_ptr->number_of_segments);
         context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_OPEN_LOOP_DEPTH_MODE - 1];
-        context_ptr->interval_cost[1] = context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE - 1];
+        context_ptr->interval_cost[1] =
+            context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
     } else if (context_ptr->budget > (uint16_t)(scs_ptr->sb_tot_cnt * U_115)) {
         context_ptr->number_of_segments = 3;
+
         context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
         context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
         context_ptr->score_th[2] = (int8_t)((3 * 100) / context_ptr->number_of_segments);
@@ -880,9 +888,9 @@ EbErrorType derive_default_segments(SequenceControlSet *scs_ptr,
         context_ptr->interval_cost[3] =
             context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
     }
-#endif
     return return_error;
 }
+#endif
 
 /******************************************************
 * Compute the score of each SB
@@ -892,7 +900,7 @@ EbErrorType derive_default_segments(SequenceControlSet *scs_ptr,
 void derive_sb_score(PictureControlSet *pcs_ptr, ModeDecisionConfigurationContext *context_ptr) {
     uint32_t sb_index;
     uint32_t sb_score = 0;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
     uint32_t distortion;
 #endif
     uint64_t sb_tot_score     = 0;
@@ -900,12 +908,12 @@ void derive_sb_score(PictureControlSet *pcs_ptr, ModeDecisionConfigurationContex
     context_ptr->sb_max_score = 0u;
 
     for (sb_index = 0; sb_index < pcs_ptr->sb_total_count_pix; sb_index++) {
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
         SbParams *sb_params = &pcs_ptr->parent_pcs_ptr->sb_params_array[sb_index];
 #endif
         if (pcs_ptr->slice_type == I_SLICE)
             assert(0);
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
         else
             sb_score = pcs_ptr->parent_pcs_ptr->rc_me_distortion[sb_index];
 #else
@@ -1020,7 +1028,7 @@ void derive_sb_md_mode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     set_target_budget_oq(pcs_ptr, context_ptr);
 
     // Set the percentage based thresholds
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
     derive_default_segments(context_ptr);
 #else
     derive_default_segments(scs_ptr, context_ptr);
@@ -1584,7 +1592,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 
         // QP Index
         context_ptr->qp_index = (uint8_t)frm_hdr->quantization_params.base_q_idx;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
         // Lambda Assignement
         uint32_t lambda_sse;
         uint32_t lambdasad_;
@@ -1636,7 +1644,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
                 } else if (pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] ==
                            SB_SQ_NON4_BLOCKS_DEPTH_MODE) {
                     sb_forward_sq_non4_blocks_to_md(scs_ptr, pcs_ptr, sb_index);
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
                 } else {
                     perform_early_sb_partitionning_sb(context_ptr, scs_ptr, pcs_ptr, sb_index);
 #endif
@@ -1654,7 +1662,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             forward_sq_blocks_to_md(scs_ptr, pcs_ptr);
         } else if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SQ_NON4_DEPTH_MODE) {
             forward_sq_non4_blocks_to_md(scs_ptr, pcs_ptr);
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
         } else if (pcs_ptr->parent_pcs_ptr->pic_depth_mode >= PIC_OPEN_LOOP_DEPTH_MODE) {
             // Predict the SB partitionning
             perform_early_sb_partitionning( // HT done

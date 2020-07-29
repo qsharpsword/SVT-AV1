@@ -40,7 +40,7 @@ typedef struct ModeDecisionConfigurationContext {
     MdRateEstimationContext *md_rate_estimation_ptr;
     EbBool                   is_md_rate_estimation_ptr_owner;
     uint8_t                  qp;
-#if !ENABLE_PR_1133
+#if !SHUT_ME_DISTORTION
     uint64_t           lambda;
     MdcpLocalBlkStruct local_blk_array[CU_MAX_COUNT];
 
@@ -56,7 +56,7 @@ typedef struct ModeDecisionConfigurationContext {
 #endif
     // Adaptive Depth Partitioning
     uint32_t *sb_score_array;
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
     uint8_t cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE];
 #else
     uint8_t  cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE];

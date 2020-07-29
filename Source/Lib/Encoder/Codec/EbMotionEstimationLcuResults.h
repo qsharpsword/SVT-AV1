@@ -28,7 +28,7 @@ extern "C" {
 // i.e. no 4x4, 8x4, or 4x8 partitions
 #define SQUARE_PU_COUNT 85
 typedef struct MeCandidate {
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
     uint8_t direction : 2;
     uint8_t ref_idx_l0 : 2; // allows for up to 4 references
     uint8_t ref_idx_l1 : 2;

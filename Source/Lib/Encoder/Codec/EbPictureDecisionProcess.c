@@ -838,7 +838,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
 #endif
         else
-#if ENABLE_PR_1133
+#if SHUT_ME_DISTORTION
             pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
 #else
             if (pcs_ptr->slice_type == I_SLICE)
