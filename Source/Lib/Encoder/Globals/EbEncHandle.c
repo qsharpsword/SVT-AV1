@@ -2304,7 +2304,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
 #endif
 #else
+#if ADD_M9
+        if (scs_ptr->static_config.enc_mode <= ENC_M9)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M8)
+#endif
 #endif
             scs_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
         else
@@ -2338,7 +2342,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if ADD_M9
+            scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M9) ? 1 : 0;
+#else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#endif
 #else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
 #endif

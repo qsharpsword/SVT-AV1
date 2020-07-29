@@ -1397,7 +1397,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set disallow_all_nsq_blocks_below_8x8: 8x4, 4x8
 #if UNIFY_SC_NSC
 #if NEW_M8
+#if ADD_M9
+    if (pcs_ptr->enc_mode <= ENC_M9)
+#else
     if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
 #if SOFT_CYCLES_M6M7
     if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1506,7 +1510,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if JUNE17_ADOPTIONS
 #if SOFT_CYCLES_REDUCTION
 #if NEW_M8
+#if ADD_M9
+    if (pcs_ptr->enc_mode <= ENC_M9)
+#else
     if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
 #if SOFT_CYCLES_M6M7
     if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1729,7 +1737,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->sc_content_detected;
 #if MAR3_M6_ADOPTIONS
 #if MAR4_M8_ADOPTIONS
+#if ADD_M9
+        if (pcs_ptr->enc_mode <= ENC_M9)
+#else
         if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M6)
 #endif
@@ -1745,7 +1757,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M8_IBC
 #if UPGRADE_M6_M7_M8
 #if M5_I_IBC
+#if ADD_M9
+        if (pcs_ptr->enc_mode <= ENC_M9)
+#else
         if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
@@ -1804,7 +1820,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             (SHUT_LAYER_BASED_FEATURES)
 #else
 #if JUNE23_ADOPTIONS
+#if ADD_M9
+                    ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M9))
+#else
                     ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M8))
+#endif
 #else
 #if NEW_M8
                     ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
@@ -2548,7 +2568,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if NEW_TXS_SETTINGS
 #if NEW_M8
+#if ADD_M9
+    else if (pcs_ptr->enc_mode <= ENC_M9)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M7)
@@ -6066,13 +6090,28 @@ void mctf_frame(
                     context_ptr->tf_level = 2;
                 else
                     context_ptr->tf_level = 0;
+            }           
+#if OPT_TF_0
+            else if (pcs_ptr->enc_mode <= ENC_M8) {
+                if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
+                    context_ptr->tf_level = 3;
+                else
+                    context_ptr->tf_level = 0;
             }
+            else {
+                if (pcs_ptr->temporal_layer_index == 0)
+                    context_ptr->tf_level = 3;
+                else
+                    context_ptr->tf_level = 0;
+            }
+#else
             else {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;
                 else
                     context_ptr->tf_level = 0;
             }
+#endif
             }
         else {
             if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))

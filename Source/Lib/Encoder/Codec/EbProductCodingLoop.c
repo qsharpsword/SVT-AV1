@@ -13267,7 +13267,11 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
         class_pruning_scaling_level = 0;
     else
 #endif
+#if ADD_M9
+    if (pcs_ptr->enc_mode <= ENC_M9)
+#else
     if (pcs_ptr->enc_mode <= ENC_M8)
+#endif
 #else
 #if JUNE23_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
