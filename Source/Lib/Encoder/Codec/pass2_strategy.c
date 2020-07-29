@@ -3187,7 +3187,8 @@ void av1_rc_update_framerate(SequenceControlSet *scs_ptr, int width, int height)
 // from aom encoder.c
 void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
   //cpi->framerate = framerate < 0.1 ? 30 : framerate;
-  scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : 30.000004285727396;//kelvinhack framerate;
+  //scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : framerate;//kelvinhack framerate;
+  scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : 30.000030000030002;//kelvinhack framerate;
   av1_rc_update_framerate(scs_ptr, scs_ptr->seq_header.max_frame_width, scs_ptr->seq_header.max_frame_height);
 }
 

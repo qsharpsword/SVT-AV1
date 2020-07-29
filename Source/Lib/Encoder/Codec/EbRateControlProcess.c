@@ -7008,11 +7008,9 @@ static void update_buffer_level(PictureParentControlSet *ppcs_ptr, int encoded_f
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
 
   // Non-viewable frames are a special case and are treated as pure overhead.
-#if 0
-  if (!cm->show_frame)
+  if (!ppcs_ptr->frm_hdr.show_frame)
     rc->bits_off_target -= encoded_frame_size;
   else
-#endif
     rc->bits_off_target += rc->avg_frame_bandwidth - encoded_frame_size;
 
   // Clip the buffer level to the maximum specified buffer size.
@@ -7054,7 +7052,7 @@ static void update_golden_frame_stats(PictureParentControlSet *ppcs_ptr) {
     // we are overlaying a mid group arf so should not reset the flag.
     if (!rc->source_alt_ref_pending && (gf_group->index == 0))
       rc->source_alt_ref_active = 0;
-  } else if (1/*cpi->common.show_frame*/) {
+  } else if (ppcs_ptr->frm_hdr.show_frame) {
     rc->frames_since_golden++;
   }
 }
@@ -7162,7 +7160,7 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
 
   // Actual bits spent
   rc->total_actual_bits += rc->projected_frame_size;
-  rc->total_target_bits += 1/*cm->show_frame*/ ? rc->avg_frame_bandwidth : 0;
+  rc->total_target_bits += ppcs_ptr->frm_hdr.show_frame ? rc->avg_frame_bandwidth : 0;
 
   rc->total_target_vs_actual = rc->total_actual_bits - rc->total_target_bits;
 
@@ -7177,7 +7175,7 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
     update_golden_frame_stats(ppcs_ptr);
 
   if (current_frame->frame_type == KEY_FRAME) rc->frames_since_key = 0;
-  // if (current_frame->frame_number == 1 && cm->show_frame)
+  // if (current_frame->frame_number == 1 && ppcs_ptr->frm_hdr.show_frame)
   /*
   rc->this_frame_target =
       (int)(rc->this_frame_target / resize_rate_factor(&cpi->oxcf.frm_dim_cfg,
@@ -7191,10 +7189,10 @@ static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
   GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
   //update_keyframe_counters(cpi);
-  if (1/*cpi->common.show_frame*/) {
+  if (ppcs_ptr->frm_hdr.show_frame) {
       //anaghdin: check this condition temp solution
-    if (1/*!cpi->common.show_existing_frame || rc->is_src_frame_alt_ref ||
-        ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
+    if (!ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
+        ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
       // If this is a show_existing_frame with a source other than altref,
       // or if it is not a displayed forward keyframe, the keyframe update
       // counters were incremented when it was originally encoded.
@@ -7209,8 +7207,8 @@ static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // is a work-around to handle the condition when a frame is drop.
   // We should fix the cpi->common.show_frame flag
   // instead of checking the other condition to update the counter properly.
-  if (1/*cpi->common.show_frame ||*/
-      /*is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)*/) {
+  if (ppcs_ptr->frm_hdr.show_frame/* ||
+      is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)*/) {
     // Decrement count down till next gf
     if (rc->frames_till_gf_update_due > 0)
       rc->frames_till_gf_update_due--;
@@ -7223,8 +7221,8 @@ static void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // a displayed forward keyframe, the index was incremented when it was
   // originally encoded.
       //anaghdin: check this condition temp solution
-  if (1/*!cpi->common.show_existing_frame || rc->is_src_frame_alt_ref ||
-      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
+  if (ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
+      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
     ++gf_group->index;
   }
 
