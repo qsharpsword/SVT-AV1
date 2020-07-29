@@ -951,6 +951,9 @@ typedef struct PictureParentControlSet {
     int bit_allocation;
     int size;
 #endif
+#if TWOPASS_IMPOSE_PD_DECISIONS
+    unsigned char gf_group_index;
+#endif
 } PictureParentControlSet;
 
 typedef struct PictureControlSetInitData {

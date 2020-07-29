@@ -610,6 +610,8 @@ extern "C" {
 #define TWOPASS_RC 1 // port 2pass RC code
 #define TWOPASS_STAT_BUF 1 //
 #define TWOPASS_MOVE_TO_PD 0
+#define TWOPASS_IMPOSE_PD_DECISIONS 1
+#define FORCE_DECODE_ORDER 1
 #define FIRST_PASS_SETUP 1
 #define TWOPASS_CLEANUP 1
 #define MAX_LAG_BUFFERS 35

@@ -286,6 +286,9 @@ void *picture_manager_kernel(void *input_ptr) {
     PictureManagerReorderEntry *queue_entry_ptr;
     int32_t                     queue_entry_index;
 #endif
+#if FORCE_DECODE_ORDER
+    uint64_t decode_order = 0;
+#endif
     // Debug
     uint32_t loop_count = 0;
 
@@ -813,7 +816,10 @@ void *picture_manager_kernel(void *input_ptr) {
                         (SequenceControlSet *)entry_pcs_ptr->scs_wrapper_ptr->object_ptr;
 
                     availability_flag = EB_TRUE;
-
+#if FORCE_DECODE_ORDER
+                    if (entry_pcs_ptr->decode_order != decode_order && scs_ptr->use_input_stat_file)
+                        availability_flag = EB_FALSE;
+#endif
                     // Check RefList0 Availability
                     uint8_t ref_idx;
                     for (ref_idx = 0; ref_idx < entry_pcs_ptr->ref_list0_count; ++ref_idx) {
@@ -990,7 +996,10 @@ void *picture_manager_kernel(void *input_ptr) {
                         eb_object_inc_live_count(child_pcs_wrapper_ptr, 1);
 
                         child_pcs_ptr = (PictureControlSet *)child_pcs_wrapper_ptr->object_ptr;
-
+#if FORCE_DECODE_ORDER
+                        // Update the last decode order
+                        decode_order++;
+#endif
                         //1.Link The Child PCS to its Parent
                         child_pcs_ptr->picture_parent_control_set_wrapper_ptr =
                             input_entry_ptr->input_object_ptr;

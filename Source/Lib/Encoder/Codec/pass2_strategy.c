@@ -1221,7 +1221,48 @@ void set_last_prev_low_err(int *cur_start_ptr, int *cur_last_ptr, int *cut_pos,
   }  // prev_lows
   return;
 }
+#if TWOPASS_IMPOSE_PD_DECISIONS
+// This function imposes the gf group length of future frames in batch based on the intra refresh
+//anaghdin MAX_NUM_GF_INTERVALS is limited. Also only supports for 5L
+static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_gop_length,
+    int max_intervals) {
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
+    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *const rc = &encode_context_ptr->rc;
+    TWO_PASS *const twopass = &scs_ptr->twopass;
+    int i = 0;
+    max_intervals = scs_ptr->lap_enabled ? 1 : max_intervals;
+    int cut_pos[MAX_NUM_GF_INTERVALS + 1] = { 0 };
+    int count_cuts = 1;
+    int cur_start = 0, cur_last;
+    int cut_here;
+    int prev_lows = 0;
+    while (count_cuts < max_intervals + 1) {
+        ++i;
+        // reaches next key frame, break here
+        if (i >= rc->frames_to_key) {
+            cut_pos[count_cuts] = i - 1;
+            count_cuts++;
+            break;
+        }
 
+        //anaghdin_GF to cut based on PD decisions
+        cut_here = (i % 16 == 0 || (rc->frames_to_key - cut_pos[count_cuts - 1]) < 16 && i % 8 == 0)? 1: 0;
+
+        if (cut_here) {
+            cur_last = i;  // the current last frame in the gf group
+            cut_pos[count_cuts] = cur_last;
+            count_cuts++;
+        }
+    }
+    // save intervals
+    rc->intervals_till_gf_calculate_due = count_cuts - 1;
+    for (int n = 1; n < count_cuts; n++) {
+        rc->gf_intervals[n - 1] = cut_pos[n] + 1 - cut_pos[n - 1];
+    }
+    rc->cur_gf_index = 0;
+}
+#endif
 // This function decides the gf group length of future frames in batch
 // rc->gf_intervals is modified to store the group lengths
 //static void calculate_gf_length(AV1_COMP *cpi, int max_gop_length,
@@ -1646,8 +1687,8 @@ static int construct_multi_layer_gf_structure(
     //gf_group->update_type[frame_index] = use_altref ? OVERLAY_UPDATE : GF_UPDATE;
     //gf_group->arf_src_offset[frame_index] = 0;
     //anaghdin: the end frame will not be an overlay
-    if (frame_index)
-        frame_index--;
+    //if (frame_index)
+    //    frame_index--;
     return frame_index;
 }
 
@@ -2935,7 +2976,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
-#if 1
+#if 0
   if (rc->frames_till_gf_update_due > 0 && !frame_is_intra_only(pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
     assert(gf_group->index < gf_group->size);
     const int update_type = gf_group->update_type[gf_group->index];
@@ -3048,7 +3089,11 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
                      encode_context_ptr->gf_cfg.lag_in_frames - 7/*oxcf->arnr_max_frames*/ / 2)
             : MAX_GF_LENGTH_LAP;
     if (rc->intervals_till_gf_calculate_due == 0) {
+#if TWOPASS_IMPOSE_PD_DECISIONS
+        impose_gf_length(pcs_ptr, max_gop_length, MAX_NUM_GF_INTERVALS);
+#else
       calculate_gf_length(pcs_ptr, max_gop_length, MAX_NUM_GF_INTERVALS);
+#endif
     }
 
     if (max_gop_length > 16 && scs_ptr->static_config.enable_tpl_la &&
@@ -3075,7 +3120,11 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     define_gf_group(pcs_ptr, &this_frame, frame_params, max_gop_length, 1);
     rc->frames_till_gf_update_due = rc->baseline_gf_interval;
     assert(gf_group->index == 0);
-
+#if TWOPASS_IMPOSE_PD_DECISIONS
+    // anaghdin: check the condition
+    if (pcs_ptr->frm_hdr.frame_type != KEY_FRAME)
+        gf_group->index++;
+#endif
 #if ARF_STATS_OUTPUT
     {
       FILE *fpfile;
@@ -3369,7 +3418,11 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
 
   // Update the active best quality pyramid.
   if (!rc->is_src_frame_alt_ref) {
-    const int pyramid_level = gf_group->layer_depth[gf_group->index];
+#if TWOPASS_IMPOSE_PD_DECISIONS
+      const int pyramid_level = gf_group->layer_depth[ppcs_ptr->gf_group_index];
+#else
+      const int pyramid_level = gf_group->layer_depth[gf_group->index];
+#endif
     int i;
     for (i = pyramid_level; i <= MAX_ARF_LAYERS; ++i) {
       rc->active_best_quality[i] = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;//cpi->common.quant_params.base_qindex;

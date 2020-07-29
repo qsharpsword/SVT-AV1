@@ -6904,7 +6904,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
 #else
     clamp(q, active_best_quality, active_worst_quality);
 #endif
-    printf("rc_pick_q_and_bounds return q=%d, active_best_quality=%d active_worst_quality=%d, isintra=%d, poc=%d\n", q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), pcs_ptr->picture_number);
+   // printf("rc_pick_q_and_bounds return q=%d, active_best_quality=%d active_worst_quality=%d, isintra=%d, poc=%d\n", q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), pcs_ptr->picture_number);
 
     return q;
 }
@@ -7008,7 +7008,7 @@ static void update_buffer_level(PictureParentControlSet *ppcs_ptr, int encoded_f
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
 
   // Non-viewable frames are a special case and are treated as pure overhead.
-  if (!ppcs_ptr->frm_hdr.show_frame)
+  if (!ppcs_ptr->frm_hdr.showable_frame)
     rc->bits_off_target -= encoded_frame_size;
   else
     rc->bits_off_target += rc->avg_frame_bandwidth - encoded_frame_size;
@@ -7075,7 +7075,11 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
   const int height = ppcs_ptr->av1_cm->frm_size.frame_height;
 
   const int is_intrnl_arf =
+#if TWOPASS_IMPOSE_PD_DECISIONS
+    gf_group->update_type[ppcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
+#else
       gf_group->update_type[gf_group->index] == INTNL_ARF_UPDATE;
+#endif
 
   const int qindex = frm_hdr->quantization_params.base_q_idx;//cm->quant_params.base_qindex;
 
@@ -7160,7 +7164,7 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
 
   // Actual bits spent
   rc->total_actual_bits += rc->projected_frame_size;
-  rc->total_target_bits += ppcs_ptr->frm_hdr.show_frame ? rc->avg_frame_bandwidth : 0;
+  rc->total_target_bits += ppcs_ptr->frm_hdr.showable_frame ? rc->avg_frame_bandwidth : 0;
 
   rc->total_target_vs_actual = rc->total_actual_bits - rc->total_target_bits;
 
@@ -7207,7 +7211,7 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
   GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
   //update_keyframe_counters(cpi);
-  if (ppcs_ptr->frm_hdr.show_frame) {
+  if (ppcs_ptr->frm_hdr.showable_frame) {
       //anaghdin: check this condition temp solution
     if (!ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
         ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
@@ -7225,8 +7229,14 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // is a work-around to handle the condition when a frame is drop.
   // We should fix the cpi->common.show_frame flag
   // instead of checking the other condition to update the counter properly.
-  if (ppcs_ptr->frm_hdr.show_frame/* ||
+
+#if TWOPASS_IMPOSE_PD_DECISIONS
+  // anaghdin: check the condition
+    if (ppcs_ptr->frm_hdr.showable_frame && ppcs_ptr->frm_hdr.frame_type != KEY_FRAME){
+#else
+      if (ppcs_ptr->frm_hdr.show_frame/* ||
       is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)*/) {
+#endif
     // Decrement count down till next gf
     if (rc->frames_till_gf_update_due > 0)
       rc->frames_till_gf_update_due--;
@@ -7239,8 +7249,12 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // a displayed forward keyframe, the index was incremented when it was
   // originally encoded.
       //anaghdin: check this condition temp solution
-  if (ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
-      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
+#if TWOPASS_IMPOSE_PD_DECISIONS
+      ppcs_ptr->gf_group_index = gf_group->index;
+#endif
+
+  if (1/*ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
+      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
     ++gf_group->index;
   }
 
@@ -7544,10 +7558,10 @@ void *rate_control_kernel(void *input_ptr) {
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
                         if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
                             if (pcs_ptr->picture_number == 0) {
-                                printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                             //   printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
                             } else if (pcs_ptr->picture_number == 16) {
-                                printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                             //   printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
                             process_tpl_stats_frame_gfu_boost(pcs_ptr);
@@ -7736,6 +7750,12 @@ void *rate_control_kernel(void *input_ptr) {
 #endif
                 }
             }
+
+#if !TWOPASS_MOVE_TO_PD & TWOPASS_IMPOSE_PD_DECISIONS
+            if (scs_ptr->use_input_stat_file &&
+                scs_ptr->static_config.look_ahead_distance != 0)
+            update_rc_counts(pcs_ptr->parent_pcs_ptr);
+#endif
             // Get Empty Rate Control Results Buffer
             eb_get_empty_object(context_ptr->rate_control_output_results_fifo_ptr,
                                 &rate_control_results_wrapper_ptr);
@@ -7819,15 +7839,15 @@ void *rate_control_kernel(void *input_ptr) {
                         !parentpicture_control_set_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         if (parentpicture_control_set_ptr->picture_number == 0) {
-                            printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 19969*8, parentpicture_control_set_ptr->total_num_bits);
+                           // printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 19969*8, parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = 19969*8;
                         } else if (parentpicture_control_set_ptr->picture_number == 16) {
-                            printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 13135*8, parentpicture_control_set_ptr->total_num_bits);
+                           // printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 13135*8, parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = 13135*8;
                         }
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                         av1_twopass_postencode_update(parentpicture_control_set_ptr);
-#if !TWOPASS_MOVE_TO_PD
+#if !TWOPASS_MOVE_TO_PD & !TWOPASS_IMPOSE_PD_DECISIONS
                         update_rc_counts(parentpicture_control_set_ptr);
 #endif
                     } else
