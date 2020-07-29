@@ -641,8 +641,8 @@ extern "C" {
 #define ADD_M9 1
 #if ADD_M9
 #define OPT_TF_0 0 // no tf @ l1
-#define OPT_TF_1 1 // no tf for chroma
-#define OPT_TF_2 0 // no tf @ l1
+#define OPT_TF_1 0 // no tf for chroma
+#define OPT_TF_2 1 // no hp @ tf
 #define OPT_TF_3 0 // no tf @ l1
 #endif
 
