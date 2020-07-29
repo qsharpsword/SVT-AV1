@@ -2931,6 +2931,15 @@ static EbErrorType produce_temporally_filtered_pic(
                                             ss_y,
                                             encoder_bit_depth);
 
+
+
+#if OPT_TF_4
+                    for (uint32_t idx_32x32 = 0; idx_32x32 < 4; idx_32x32++) {
+                              context_ptr->tf_32x32_block_split_flag[idx_32x32] = 0;
+                        }
+
+#else
+
                     // Perform TF sub-pel search for 16x16 blocks
                     tf_16x16_sub_pel_search(picture_control_set_ptr_central,
                                             context_ptr,
@@ -2952,6 +2961,7 @@ static EbErrorType produce_temporally_filtered_pic(
 
                     // Derive tf_32x32_block_split_flag
                     derive_tf_32x32_block_split_flag(context_ptr);
+#endif
                     // Perform MC using the information acquired using the ME step
                     tf_inter_prediction(picture_control_set_ptr_central,
                                         context_ptr,
