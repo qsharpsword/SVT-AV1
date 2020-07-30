@@ -11097,7 +11097,8 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     const int raw_motion_error = raw_motion_err_list[0];
 
     // TODO(pengchong): Replace the hard-coded threshold
-    if (raw_motion_error > LOW_MOTION_ERROR_THRESH)
+    // anaghdin to check
+    if (1)//(raw_motion_error > LOW_MOTION_ERROR_THRESH)
     {
         //// Test last reference frame using the previous best mv as the
         //// starting point (best reference) for the search.
