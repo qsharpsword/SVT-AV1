@@ -12452,7 +12452,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
     {
     case 0://OFF
         inter_comp_ctrls->enabled = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
@@ -12467,7 +12471,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #else
         inter_comp_ctrls->wedge_variance_th = 100;
 #endif
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk=2;
+#endif
         break;
     case 1://FULL
         inter_comp_ctrls->enabled = 1;
@@ -12490,12 +12498,20 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
 #endif
 #endif
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk=1;
+#endif
         break;
 #if NEW_MRP_SETTINGS
     case 2://FAST - similar based disable
         inter_comp_ctrls->enabled = 1;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
@@ -12506,7 +12522,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk = 2;
+#endif
         break;
     case 3://FAST - MRP pruning/ similar based disable
         inter_comp_ctrls->enabled = 1;
@@ -12521,7 +12541,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk = 2;
+#endif
         break;
 #else
     case 2://FAST

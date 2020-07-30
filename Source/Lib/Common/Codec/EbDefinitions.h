@@ -651,7 +651,8 @@ extern "C" {
 #define MD_MX_OFFSET  1
 #define DO_NOT_ACT_ON_SIMILARITY 1
 #endif
-
+#define SHUT_SIMILARITY_FEATURES 1 // turn off features related to similar blocks
+#define MERGE_SQW_FEATURES 1 // Merge nsq_hv_level and sq_weight; if sq_weight on, so is nsq_hv_level
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
