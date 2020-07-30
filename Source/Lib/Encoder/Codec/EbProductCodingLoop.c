@@ -12530,7 +12530,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         break;
     case 3://FAST - MRP pruning/ similar based disable
         inter_comp_ctrls->enabled = 1;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);

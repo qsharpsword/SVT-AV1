@@ -5221,6 +5221,9 @@ EbErrorType signal_derivation_update(
         else if (pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if SHUT_EDGE_BASED_SKIP_ANGLE_INTRA
+            context_ptr->edge_based_skip_angle_intra = 0;
+#else
 #if !UNIFY_SC_NSC
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -5299,6 +5302,7 @@ EbErrorType signal_derivation_update(
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
+#endif
         } else
             context_ptr->edge_based_skip_angle_intra =
             sequence_control_set_ptr->static_config.edge_skp_angle_intra;
@@ -6763,7 +6767,11 @@ EbErrorType signal_derivation_update(
     // intra_similar_mode
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
+#if SHUT_SIMILARITY_FEATURES
+    context_ptr->intra_similar_mode = 0;
+#else
     context_ptr->intra_similar_mode = 1;
+#endif
 
 #if MD_REFERENCE_MASKING
 #if !SOFT_CYCLES_REDUCTION
@@ -9588,6 +9596,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if SHUT_EDGE_BASED_SKIP_ANGLE_INTRA
+            context_ptr->edge_based_skip_angle_intra = 0;
+#else
 #if !UNIFY_SC_NSC
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -9666,6 +9677,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
+#endif
         } else
             context_ptr->edge_based_skip_angle_intra =
             sequence_control_set_ptr->static_config.edge_skp_angle_intra;
