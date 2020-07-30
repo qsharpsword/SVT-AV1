@@ -648,12 +648,27 @@ extern "C" {
 #endif
 #define SWITCH_MODE_BASED_ON_SQCOEF 1
 #if SWITCH_MODE_BASED_ON_SQCOEF
-#define MD_MX_OFFSET  1
+#define MD_MX_OFFSET  2
 #define DO_NOT_ACT_ON_SIMILARITY 1
 #endif
 #define SHUT_SIMILARITY_FEATURES 1 // turn off features related to similar blocks
 #define MERGE_SQW_FEATURES 1 // Merge nsq_hv_level and sq_weight; if sq_weight on, so is nsq_hv_level
 #define SHUT_EDGE_BASED_SKIP_ANGLE_INTRA 1 // Turn off disable_edge_based_skip_angle_intra_feature
+
+#define DISALLOW_COEFF_BASED_NSQ_CAND 1
+//
+#define SWITCH_MODE_BASED_ON_STATISTICS 1
+#if SWITCH_MODE_BASED_ON_STATISTICS
+#define AMDCR_MX_OFFSET  2
+#endif
+
+#define ENABLE_AMDCR_FOR_M0 1
+#define SWITCH_MODE_INF 1
+// REF
+#define DISALLOW_SQ_WEIGHT 0
+#define DISALLOW_AMDCR_SKIP_NSQ_ACTION 0
+#define DISALLOW_SWITCH_MODE_BASED_ON_STATISTICS 1
+#define DISALLOW_SWITCH_MODE_BASED_ON_SQCOEF 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

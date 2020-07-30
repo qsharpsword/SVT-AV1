@@ -14005,7 +14005,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
     }
 #endif
-#if !SWITCH_MODE_BASED_ON_SQCOEF
+#if !SWITCH_MODE_INF
     signal_derivation_block(
         pcs_ptr,
         context_ptr);
@@ -15804,23 +15804,44 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
+#if SWITCH_MODE_INF
+        signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
+        signal_derivation_block(pcs_ptr,context_ptr);
+#endif
+
+#if SWITCH_MODE_BASED_ON_STATISTICS
+#if !DISALLOW_SWITCH_MODE_BASED_ON_STATISTICS
+        if (1/*context_ptr->blk_geom->shape != PART_N*/) {
+            SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+            AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+            if (adaptive_md_cycles_red_ctrls->enabled) {
+                int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth_refinement;
+                pred_depth_refinement = MIN(pred_depth_refinement, 2);
+                pred_depth_refinement = MAX(pred_depth_refinement, -2);
+                pred_depth_refinement += 2;
+                if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->switch_mode_th) {
+                    EbEncMode md_enc_mode = pcs_ptr->enc_mode + AMDCR_MX_OFFSET;
+                    signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
+                }
+            }
+        }
+#endif
+#endif
 #if SWITCH_MODE_BASED_ON_SQCOEF
-            signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
-            signal_derivation_block(
-                pcs_ptr,
-                context_ptr);
+#if !DISALLOW_SWITCH_MODE_BASED_ON_SQCOEF
             uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
-            EbBool coeff_based_nsq_cand_reduction = EB_FALSE;
+            EbBool switch_md_mode_based_on_sq_coeff = EB_FALSE;
             if (pcs_ptr->slice_type != I_SLICE) {
-                //if (context_ptr->coeff_based_nsq_cand_reduction) {
+                //if (context_ptr->switch_md_mode_based_on_sq_coeff) {
                     if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag)
-                        coeff_based_nsq_cand_reduction = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
+                        switch_md_mode_based_on_sq_coeff = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
                 //}
             }
-            if (coeff_based_nsq_cand_reduction) {
+            if (switch_md_mode_based_on_sq_coeff) {
                 EbEncMode md_enc_mode = MIN(ENC_M8,pcs_ptr->enc_mode + MD_MX_OFFSET);
                 signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
             }
+#endif
 #endif
 #if DEPTH_PART_CLEAN_UP
 #if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER

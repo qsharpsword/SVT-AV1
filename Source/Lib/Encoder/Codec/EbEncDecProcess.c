@@ -2755,6 +2755,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 0;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 1:
@@ -2764,6 +2767,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1;
+#endif
         break;
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
@@ -2777,6 +2783,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 50;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 3:
@@ -2789,6 +2798,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 150;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 4:
@@ -2801,6 +2813,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 200;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 5:
@@ -2813,6 +2828,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
+#endif
         break;
 #if TUNE_ADAPTIVE_MD_CR_TH
 #if IMPROVED_MD_ADAPTIVE_CYCLES
@@ -2826,6 +2844,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 7:
@@ -2838,6 +2859,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 8:
@@ -2850,6 +2874,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1500;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 9:
@@ -2862,6 +2889,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 2000;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
      case 10:
@@ -2874,6 +2904,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 0;
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 5000;
+#endif
         break;
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     case 11:
@@ -2883,6 +2916,9 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->nics_th = 1500;
         adaptive_md_cycles_red_ctrls->mrp_th = 1500;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 2000;
+#endif
         break;
 #endif
 #else
@@ -3050,7 +3086,7 @@ void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_c
     }
 }
 #endif
-#if ADD_SQ64_LEVELS
+#if ADD_SQ64_LEVELS || SWITCH_MODE_INF
 EbErrorType signal_derivation_update(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
@@ -6466,6 +6502,7 @@ EbErrorType signal_derivation_update(
 
 #endif
     // Set coeff_based_nsq_cand_reduction
+#if !DISALLOW_COEFF_BASED_NSQ_CAND
     if (pd_pass == PD_PASS_0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else if (pd_pass == PD_PASS_1)
@@ -6501,7 +6538,7 @@ EbErrorType signal_derivation_update(
 #endif
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
-
+#endif
 #if OBMC_CLI
     // Set pic_obmc_level @ MD
     if (pd_pass == PD_PASS_0)
@@ -10381,9 +10418,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     if (pd_pass == PD_PASS_2) {
+#if ENABLE_AMDCR_FOR_M0
+        if (enc_mode <= ENC_M3)
+#else
         if (enc_mode <= ENC_M0)
             adaptive_md_cycles_level = 0;
         else if (enc_mode <= ENC_M3)
+#endif
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 3;
         else if (enc_mode <= ENC_M4)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 3 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 5 : 5;
@@ -10629,6 +10670,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 
+#if DISALLOW_SQ_WEIGHT
+    context_ptr->sq_weight = (uint32_t)~0;
+#endif
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -10824,6 +10868,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->comp_similar_mode = 2;
 
 #endif
+#if !DISALLOW_COEFF_BASED_NSQ_CAND
     // Set coeff_based_nsq_cand_reduction
     if (pd_pass == PD_PASS_0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
@@ -10860,7 +10905,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
-
+#endif
 #if OBMC_CLI
     // Set pic_obmc_level @ MD
     if (pd_pass == PD_PASS_0)
@@ -13176,7 +13221,7 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                 tot_d1_blocks = MIN(17, tot_d1_blocks);
 #endif
             d1_blocks_accumlated = 0;
-#if SOFT_CYCLES_REDUCTION
+#if SOFT_CYCLES_REDUCTION && !DISALLOW_AMDCR_SKIP_NSQ_ACTION
             for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++) {
                 if (results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block) {
                     AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;

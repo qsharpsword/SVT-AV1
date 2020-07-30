@@ -7321,12 +7321,14 @@ EbErrorType generate_md_stage_0_cand(
     context_ptr->injected_mv_count_bipred = 0;
     uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
     EbBool coeff_based_nsq_cand_reduction = EB_FALSE;
+#if !DISALLOW_COEFF_BASED_NSQ_CAND
     if (slice_type != I_SLICE) {
         if (context_ptr->coeff_based_nsq_cand_reduction) {
             if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag)
                 coeff_based_nsq_cand_reduction = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
         }
 }
+#endif
     //----------------------
     // Intra
     if (context_ptr->blk_geom->sq_size < 128) {

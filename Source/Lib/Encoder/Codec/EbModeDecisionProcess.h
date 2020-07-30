@@ -225,6 +225,9 @@ typedef struct  AMdCycleRControls {
     uint16_t nics_th;  // Threshold to adjust nics <the higher th the higher speed>
     uint16_t mrp_th;  // Threshold to adjust mrp <the higher th the higher speed>
     uint16_t compound_th;  // Threshold to adjust compound <the higher th the higher speed>
+#if SWITCH_MODE_BASED_ON_STATISTICS
+    uint16_t switch_mode_th;
+#endif
 }AMdCycleRControls;
 #endif
 #if DEPTH_CYCLES_REDUCTION
@@ -759,7 +762,9 @@ typedef struct ModeDecisionContext {
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
     uint8_t      full_cost_shut_fast_rate_flag;
+#if !DISALLOW_COEFF_BASED_NSQ_CAND
     EbBool       coeff_based_nsq_cand_reduction;
+#endif
     uint8_t      tx_search_level;
 #if !TXT_CONTROL
     uint64_t     tx_weight;
