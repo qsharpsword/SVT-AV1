@@ -666,9 +666,15 @@ extern "C" {
 #define SWITCH_MODE_INF 1
 // REF
 #define DISALLOW_SQ_WEIGHT 0
-#define DISALLOW_AMDCR_SKIP_NSQ_ACTION 0
+#define DISALLOW_AMDCR_SKIP_NSQ_ACTION 1
 #define DISALLOW_SWITCH_MODE_BASED_ON_STATISTICS 1
 #define DISALLOW_SWITCH_MODE_BASED_ON_SQCOEF 1
+
+#define SWITCH_MODE_BASED_ON_SQ_WEIGHT  1
+#if SWITCH_MODE_BASED_ON_SQ_WEIGHT
+#define SQW_MX_OFFSET  2
+#endif
+#define SQW_TH 90
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

@@ -15989,6 +15989,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             uint8_t sq_weight_based_nsq_skip = update_skip_nsq_shapes(scs_ptr, pcs_ptr, context_ptr);
 #else
             uint8_t sq_weight_based_nsq_skip = update_skip_nsq_shapes(context_ptr);
+#if SWITCH_MODE_BASED_ON_SQ_WEIGHT
+            if (sq_weight_based_nsq_skip) {
+                EbEncMode md_enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + SQW_MX_OFFSET);
+                signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
+                sq_weight_based_nsq_skip = 0;
+            }
+#endif
 #endif
 #if !CLEAN_UP_SB_DATA_6
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;

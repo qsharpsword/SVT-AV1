@@ -10472,7 +10472,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
         else
+
 #if UNIFY_SC_NSC
+#if SQW_TH
+            context_ptr->sq_weight = SQW_TH;
+#else
             if (enc_mode <= ENC_M0)
                 context_ptr->sq_weight = 105;
             else if (enc_mode <= ENC_M1)
@@ -10495,6 +10499,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             else
                 context_ptr->sq_weight = 80;
+#endif
 #else
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
