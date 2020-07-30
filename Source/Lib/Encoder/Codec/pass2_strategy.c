@@ -3150,7 +3150,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(scs_ptr);
-  printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
+  //printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
 // from aom ratectrl.c
@@ -3470,6 +3470,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
     const int minq_adj_limit =
         (rc_cfg->mode == AOM_CQ ? MINQ_ADJ_LIMIT_CQ : MINQ_ADJ_LIMIT);
 
+//printf("kelvin postencode_update ---> rate_error_estimate=%d, rolling_target/actual_bits=%d %d\n", rc->rate_error_estimate, rc->rolling_target_bits, rc->rolling_actual_bits);
     // Undershoot.
     if (rc->rate_error_estimate > rc_cfg->under_shoot_pct) {
       --twopass->extend_maxq;

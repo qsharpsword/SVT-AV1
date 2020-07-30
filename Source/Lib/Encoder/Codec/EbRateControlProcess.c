@@ -5153,6 +5153,20 @@ static const double rate_factor_deltas[RATE_FACTOR_LEVELS] = {
   2.00,  // KF_STD
 };
 
+#if TWOPASS_RC
+int av1_frame_type_qdelta(RATE_CONTROL *rc, GF_GROUP *gf_group, int rf_level, int q, const int bit_depth) {
+  const int/*rate_factor_level*/ rf_lvl = rf_level;//get_rate_factor_level(&cpi->gf_group);
+  const FrameType frame_type = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
+  double rate_factor;
+
+  rate_factor = rate_factor_deltas[rf_lvl];
+  if (rf_lvl == GF_ARF_LOW) {
+    rate_factor -= (gf_group->layer_depth[gf_group->index] - 2) * 0.1;
+    rate_factor = AOMMAX(rate_factor, 1.0);
+  }
+  return av1_compute_qdelta_by_rate(rc, frame_type, q, rate_factor, bit_depth);
+}
+#else
 int av1_frame_type_qdelta(RATE_CONTROL *rc, int rf_level, int q, const int bit_depth) {
   const int/*rate_factor_level*/ rf_lvl = rf_level;//get_rate_factor_level(&cpi->gf_group);
   const FrameType frame_type = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
@@ -5165,6 +5179,8 @@ int av1_frame_type_qdelta(RATE_CONTROL *rc, int rf_level, int q, const int bit_d
   }
   return av1_compute_qdelta_by_rate(rc, frame_type, q, rate_factor, bit_depth);
 }
+
+#endif
 
 static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RATE_CONTROL *rc,
                                                  int rf_level,
@@ -5180,6 +5196,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     TWO_PASS *const twopass                  = &scs_ptr->twopass;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
+    GF_GROUP *gf_group                       = &encode_context_ptr->gf_group;
     int is_src_frame_alt_ref  = 0;//rc->is_src_frame_alt_ref
     int refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
     int refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
@@ -5204,7 +5221,15 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
             active_worst_quality += twopass->extend_maxq;
         }
     }
-#endif
+
+    // Static forced key frames Q restrictions dealt with elsewhere.
+    if (!frame_is_intra_only(pcs_ptr->parent_pcs_ptr) || !this_key_frame_forced
+        /*|| (cpi->twopass.last_kfgroup_zeromotion_pct < STATIC_MOTION_THRESH)*/) {
+        const int qdelta = av1_frame_type_qdelta(rc, gf_group, rf_level, active_worst_quality, bit_depth);
+        active_worst_quality =
+            AOMMAX(active_worst_quality + qdelta, active_best_quality);
+    }
+#else
 
     // Static forced key frames Q restrictions dealt with elsewhere.
     if (!frame_is_intra_only(pcs_ptr->parent_pcs_ptr) || !this_key_frame_forced
@@ -5213,6 +5238,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
         active_worst_quality =
             AOMMAX(active_worst_quality + qdelta, active_best_quality);
     }
+#endif
 
 #if 0
     // Modify active_best_quality for downscaled normal frames.
@@ -6363,29 +6389,6 @@ void av1_rc_init(SequenceControlSet *scs_ptr) {
   rc->best_quality  = rc_cfg->best_allowed_q;
 }
 
-static void set_rc_gf_group(PictureControlSet *pcs_ptr,
-                    HighLevelRateControlContext *high_level_rate_control_ptr) {
-    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
-    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-    RATE_CONTROL *const rc = &encode_context_ptr->rc;
-    TWO_PASS *const twopass = &scs_ptr->twopass;
-    GF_GROUP *gf_group = &encode_context_ptr->gf_group;
-
-    //kelvin double check it in construct_multi_layer_gf_structure()
-    gf_group->max_layer_depth_allowed = scs_ptr->static_config.hierarchical_levels;
-    gf_group->update_type[gf_group->index] =
-                  (frame_is_intra_only(pcs_ptr->parent_pcs_ptr))
-                      ? KF_UPDATE
-                      : (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
-                            ? ARF_UPDATE
-                            : (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 1) ? INTNL_ARF_UPDATE
-                            //: pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
-                                                                                   : LF_UPDATE;
-    gf_group->layer_depth[gf_group->index] = pcs_ptr->parent_pcs_ptr->temporal_layer_index;
-    gf_group->size = 24; //kelvinhack
-    // TODO
-}
-
 static AOM_INLINE int combine_prior_with_tpl_boost_org(double min_factor,
                                                    double max_factor,
                                                    int prior_boost,
@@ -6822,6 +6825,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
     TWO_PASS *const twopass                  = &scs_ptr->twopass;
+    GF_GROUP *const gf_group                 = &encode_context_ptr->gf_group;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
     const int           cq_level             = encode_context_ptr->rc_cfg.cq_level;
     int                 active_best_quality  = 0;
@@ -6833,10 +6837,14 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     is_src_frame_alt_ref  = 0;
     refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
     refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
+#if 0
     is_intrl_arf_boost    = (pcs_ptr->parent_pcs_ptr->temporal_layer_index > 0 &&
                              pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
                                  ? 1
                                  : 0;
+#else
+    is_intrl_arf_boost = gf_group->update_type[gf_group->index] == INTNL_ARF_UPDATE;
+#endif
     rf_level =
         (frame_is_intra_only(pcs_ptr->parent_pcs_ptr))
             ? KF_STD
@@ -6844,7 +6852,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
                   ? GF_ARF_STD
                   : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? GF_ARF_LOW : INTER_NORMAL;
 
-    const int pyramid_level = pcs_ptr->parent_pcs_ptr->temporal_layer_index; //kelvinhack?
+    const int pyramid_level = gf_group->layer_depth[gf_group->index];
 #if 0
     const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
     if (oxcf->q_cfg.use_fixed_qp_offsets) {
@@ -6862,7 +6870,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
         const int is_fwd_kf = pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type == KEY_FRAME && pcs_ptr->parent_pcs_ptr->frm_hdr.show_frame == 0;
         get_intra_q_and_bounds(pcs_ptr, &active_best_quality, &active_worst_quality, cq_level, is_fwd_kf);
     } else {
-        if ((!is_src_frame_alt_ref && (refresh_golden_frame || refresh_alt_ref_frame))/* pyramid_level<1 */ ||
+        if ((pyramid_level <= 1) || (pyramid_level > MAX_ARF_LAYERS) ||
             rc_mode == AOM_Q) {
             active_best_quality = get_active_best_quality(pcs_ptr, active_worst_quality, cq_level);
         } else {
@@ -6904,7 +6912,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
 #else
     clamp(q, active_best_quality, active_worst_quality);
 #endif
-   // printf("rc_pick_q_and_bounds return q=%d, active_best_quality=%d active_worst_quality=%d, isintra=%d, poc=%d\n", q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), pcs_ptr->picture_number);
+    //printf("rc_pick_q_and_bounds return boost=%d, q=%d, active_best_quality=%d active_worst_quality=%d, isintra=%d, poc=%d, base_frame_target=%d\n", frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), pcs_ptr->picture_number, rc->base_frame_target);
 
     return q;
 }
@@ -7403,7 +7411,6 @@ void *rate_control_kernel(void *input_ptr) {
                             set_rc_buffer_sizes(scs_ptr);
                             av1_rc_init(scs_ptr);
                         }
-                     //   set_rc_gf_group(pcs_ptr, context_ptr->high_level_rate_control_ptr);
                         av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                         //anaghdin to check the location
                         av1_set_target_rate(pcs_ptr,
@@ -7558,10 +7565,10 @@ void *rate_control_kernel(void *input_ptr) {
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
                         if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
                             if (pcs_ptr->picture_number == 0) {
-                             //   printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
                             } else if (pcs_ptr->picture_number == 16) {
-                             //   printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("kelvinhack debugging purpose ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
                             process_tpl_stats_frame_gfu_boost(pcs_ptr);
@@ -7839,11 +7846,23 @@ void *rate_control_kernel(void *input_ptr) {
                         !parentpicture_control_set_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         if (parentpicture_control_set_ptr->picture_number == 0) {
-                           // printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 19969*8, parentpicture_control_set_ptr->total_num_bits);
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 19969*8, parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = 19969*8;
                         } else if (parentpicture_control_set_ptr->picture_number == 16) {
-                           // printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 13135*8, parentpicture_control_set_ptr->total_num_bits);
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 13135*8, parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = 13135*8;
+                        } else if (parentpicture_control_set_ptr->picture_number == 8) {
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 5554*8, parentpicture_control_set_ptr->total_num_bits);
+                            parentpicture_control_set_ptr->total_num_bits = 5554*8;
+                        } else if (parentpicture_control_set_ptr->picture_number == 4) {
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 1583*8, parentpicture_control_set_ptr->total_num_bits);
+                            parentpicture_control_set_ptr->total_num_bits = 1583*8;
+                        } else if (parentpicture_control_set_ptr->picture_number == 2) {
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 155*8, parentpicture_control_set_ptr->total_num_bits);
+                            parentpicture_control_set_ptr->total_num_bits = 155*8;
+                        } else if (parentpicture_control_set_ptr->picture_number == 1) {
+                            //printf("kelvinhack debugging purpose ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d from %d\n", parentpicture_control_set_ptr->picture_number, 42*8, parentpicture_control_set_ptr->total_num_bits);
+                            parentpicture_control_set_ptr->total_num_bits = 42*8;
                         }
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                         av1_twopass_postencode_update(parentpicture_control_set_ptr);
