@@ -1794,7 +1794,8 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 
   // If this is a key frame or the overlay from a previous arf then
   // the error score / cost of this frame has already been accounted for.
-  if (arf_active_or_kf) {
+  // anaghdin: there is not overlay for now
+  if (is_intra_only /*arf_active_or_kf*/) {
     gf_stats.gf_group_err -= first_frame_stats.frame_err;
 #if GROUP_ADAPTIVE_MAXQ
     gf_stats.gf_group_raw_error -= this_frame->coded_error;
@@ -1807,8 +1808,11 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   const int active_min_gf_interval = rc->min_gf_interval;
   const int active_max_gf_interval =
       AOMMIN(rc->max_gf_interval, max_gop_length);
-
-  i = 0;
+  //anaghdin: check added
+  if (is_intra_only)
+      i = 0;
+  else
+      i = 1;
   // get the determined gf group length from rc->gf_intervals
   while (i < rc->gf_intervals[rc->cur_gf_index]) {
     ++i;
@@ -2965,6 +2969,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     current_frame->frame_number = pcs_ptr->picture_number;
 
     EncodeFrameParams temp_frame_params, *frame_params = &temp_frame_params;
+#if 0
     const int update_type = (frame_is_intra_only(pcs_ptr)) //gf_group->update_type[gf_group->index];
         ? KF_UPDATE
         : (pcs_ptr->temporal_layer_index == 0)
@@ -2973,7 +2978,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
         : LF_UPDATE;
 
   gf_group->update_type[gf_group->index] = update_type;
-
+#endif
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
 #if 0
@@ -3150,6 +3155,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(scs_ptr);
+  //printf("setupTarget POC:%lld\n", pcs_ptr->picture_number);//anaghdin_print
   //printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
@@ -3402,7 +3408,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
   // or group of frames.
   rc->vbr_bits_off_target += rc->base_frame_target - rc->projected_frame_size;
   twopass->bits_left = AOMMAX(twopass->bits_left - bits_used, 0);
-
+ // printf("RC_FEEDBACK POC:%lld\n", ppcs_ptr->picture_number); //anaghdin_print
   // Target vs actual bits for this arf group.
   twopass->rolling_arf_group_target_bits += rc->this_frame_target;
   twopass->rolling_arf_group_actual_bits += rc->projected_frame_size;

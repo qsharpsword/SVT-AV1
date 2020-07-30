@@ -781,6 +781,13 @@ void *picture_manager_kernel(void *input_ptr) {
                 (reference_queue_index != encode_context_ptr->reference_picture_queue_tail_index) &&
                 (reference_entry_ptr->picture_number != input_picture_demux_ptr->picture_number));
 
+#if FORCE_DECODE_ORDER
+            // Update the last decode order
+            if(input_picture_demux_ptr->decode_order == decode_order)
+                decode_order++;
+           // printf("PM_FEEDBACK POC:%lld\tdecodeOrder:%lld\n", input_picture_demux_ptr->picture_number, decode_order); //anaghdin_print
+#endif
+
             //keep the release of SCS here because we still need the encodeContext structure here
             // Release the Reference's SequenceControlSet
             eb_release_object(input_picture_demux_ptr->scs_wrapper_ptr);
@@ -996,10 +1003,6 @@ void *picture_manager_kernel(void *input_ptr) {
                         eb_object_inc_live_count(child_pcs_wrapper_ptr, 1);
 
                         child_pcs_ptr = (PictureControlSet *)child_pcs_wrapper_ptr->object_ptr;
-#if FORCE_DECODE_ORDER
-                        // Update the last decode order
-                        decode_order++;
-#endif
                         //1.Link The Child PCS to its Parent
                         child_pcs_ptr->picture_parent_control_set_wrapper_ptr =
                             input_entry_ptr->input_object_ptr;
