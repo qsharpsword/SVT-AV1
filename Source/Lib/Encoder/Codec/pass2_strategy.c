@@ -3284,7 +3284,7 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
       encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
       encode_context_ptr->kf_cfg.auto_key      = 0;
-      encode_context_ptr->kf_cfg.key_freq_max  = 60;
+      encode_context_ptr->kf_cfg.key_freq_max  = scs_ptr->intra_period_length+1;//anaghdin do we need the +1?
   }
 
   stats = twopass->stats_buf_ctx->total_stats;

@@ -175,6 +175,9 @@ int32_t main(int32_t argc, char *argv[]) {
 #if 1 //COMBINED_2PASSES_CLI
                 if (pass == ENCODE_FIRST_PASS) {
                     configs[inst_cnt]->enc_mode = MAX_ENC_PRESET;
+                    configs[inst_cnt]->look_ahead_distance = 1;
+                    configs[inst_cnt]->enable_tpl_la = 0;
+                    configs[inst_cnt]->rate_control_mode = 0;
                 }
 #endif
 
