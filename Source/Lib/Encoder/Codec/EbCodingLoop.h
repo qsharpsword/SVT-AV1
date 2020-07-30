@@ -709,6 +709,79 @@ static const uint32_t intra_adaptive_md_cycles_reduction_th[DEPTH_DELTA_NUM][NUM
 {3 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0},
 };
 #endif
+#if AMDCR_MODE_SWITCH || SWITCH_MODE_BASED_ON_SQCOEF
+void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint16_t nsq_cycles_red_mode);
+void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode);
+void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode);
+void set_txt_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txt_cycles_red_mode);
+void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_cycles_red_mode);
+void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode);
+void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode);
+void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level);
+void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level);
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode);
+void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_search_level);
+void soft_cycles_reduction_mrp(ModeDecisionContext *context_ptr, uint8_t *mrp_level);
+void soft_cycles_reduction_compound(ModeDecisionContext *context_ptr, uint8_t *compound_level);
+void soft_cycles_reduction_nics(ModeDecisionContext *context_ptr, uint32_t *nics_div);
+void soft_cycles_reduction_sq_weight(ModeDecisionContext *context_ptr, uint32_t *sq_weight);
+void set_inter_inter_distortion_based_reference_pruning_controls(
+    ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode);
+void set_inter_comp_controls_no_similarity(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode);
+EbErrorType signal_derivation_enc_dec_kernel_oq(
+    SequenceControlSet *sequence_control_set_ptr,
+    PictureControlSet *pcs_ptr,
+    ModeDecisionContext *context_ptr);
+EbErrorType signal_derivation_update(
+    SequenceControlSet *sequence_control_set_ptr,
+    PictureControlSet *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    EbEncMode enc_mode);
+
+static const uint8_t m0_nsq_cycles_reduction_th[19] = {
+ 0, // NONE
+ 17, //[85%;100%]
+ 15,//[75%;85%]
+ 14,//[65%;75%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;65%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 6,//[20%;25%]
+ 5,//[17%;20%]
+ 5,//[14%;17%]
+ 4,//[10%;14%]
+ 3,//[6%;10%]
+ 2,//[3%;6%]
+ 1 //[0%;3%]
+};
+static const uint8_t m1_nsq_cycles_reduction_th[19] = {
+ 0, // NONE
+ 17, //[85%;100%]
+ 15,//[75%;85%]
+ 14,//[65%;75%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;65%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 6,//[20%;25%]
+ 5,//[17%;20%]
+ 5,//[14%;17%]
+ 4,//[10%;14%]
+ 3,//[6%;10%]
+ 2,//[3%;6%]
+ 1 //[0%;3%]
+};
+
+#endif
 #ifdef __cplusplus
 }
 #endif

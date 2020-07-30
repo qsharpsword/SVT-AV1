@@ -2506,7 +2506,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 #endif
 #endif
 #endif
-
+#if !SWITCH_MODE_BASED_ON_SQCOEF
 #if MULTI_BAND_ACTIONS
 #if NON_UNIFORM_NSQ_BANDING
 uint8_t m0_nsq_cycles_reduction_th[19] = {
@@ -2598,6 +2598,7 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
  3,//[5%;10%]
 2 //[0%;5%]
 };
+#endif
 #endif
 #endif
 #if NSQ_CYCLES_REDUCTION
@@ -3053,18 +3054,32 @@ void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_c
 EbErrorType signal_derivation_update(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    ModeDecisionContext *context_ptr,
+    EbEncMode enc_mode ) {
+#else
     ModeDecisionContext *context_ptr) {
+#endif
     EbErrorType return_error = EB_ErrorNone;
+#if !SWITCH_MODE_BASED_ON_SQCOEF
 #if REMOVE_MR_MACRO
     EbEncMode enc_mode = pcs_ptr->enc_mode;
 #else
     uint8_t enc_mode = pcs_ptr->enc_mode;
 #endif
+#endif
     uint8_t pd_pass = context_ptr->pd_pass;
-
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->mrp_level;
+    if (enc_mode <= ENC_M6)
+         context_ptr->mrp_level = 2;
+     else
+         context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag  ? 6 : 9;
+#else
 #if ON_OFF_FEATURE_MRP
     // mrp level
     context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->mrp_level ;
+#endif
 #endif
 
 #if USE_M8_IN_PD1
@@ -3938,6 +3953,7 @@ EbErrorType signal_derivation_update(
 #endif
 #endif
 #endif
+#if !SWITCH_MODE_BASED_ON_SQCOEF
 #if M8_4x4
 #if APR24_M3_ADOPTIONS
      // Set disallow_4x4
@@ -4048,6 +4064,8 @@ EbErrorType signal_derivation_update(
          context_ptr->disallow_4x4 = EB_FALSE;
      }
 #endif
+#endif
+#if !SWITCH_MODE_BASED_ON_SQCOEF
 #if SB_CLASSIFIER
 #if OPT_BLOCK_INDICES_GEN_2
 
@@ -4101,6 +4119,7 @@ EbErrorType signal_derivation_update(
 #endif
 #elif REDUCE_COMPLEX_CLIP_CYCLES
      context_ptr->md_disallow_nsq = context_ptr->pic_class == 2 ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #endif
 #if !OPT_BLOCK_INDICES_GEN_2
 #if SB_CLASSIFIER
@@ -5996,6 +6015,7 @@ EbErrorType signal_derivation_update(
         }
     }
 #endif
+#if !SWITCH_MODE_BASED_ON_SQCOEF
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     if (pd_pass == PD_PASS_2) {
         if (enc_mode <= ENC_M0)
@@ -6012,6 +6032,8 @@ EbErrorType signal_derivation_update(
 #endif
     adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
 #endif
+#endif
+#if !SWITCH_MODE_BASED_ON_SQCOEF
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
     // shapes should be skipped. Namely:
@@ -6315,6 +6337,7 @@ EbErrorType signal_derivation_update(
 #if SHUT_FEATURE_INTERACTIONS
     context_ptr->nsq_hv_level = 0;
 #endif
+#endif
     // Set pred ME full search area
 #if UNIFY_SC_NSC
     if (pd_pass == PD_PASS_0) {
@@ -6579,12 +6602,25 @@ EbErrorType signal_derivation_update(
         context_ptr->md_enable_smooth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth;
 
     // Set md_tx_size_search_mode @ MD
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    uint8_t tx_size_search_mode;
+    if (enc_mode <= ENC_M4)
+        tx_size_search_mode = 1;
+    else if (enc_mode <= ENC_M9)
+        tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
+    else
+        tx_size_search_mode = 0;
+#endif
     if (pd_pass == PD_PASS_0)
         context_ptr->md_tx_size_search_mode = 0;
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_tx_size_search_mode = 0;
     else
+#if SWITCH_MODE_BASED_ON_SQCOEF
+        context_ptr->md_tx_size_search_mode = tx_size_search_mode;
+#else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
+#endif
 
 #if ADD_SQ64_LEVELS
     // Assign whether to use TXS in inter classes (if TXS is ON)
@@ -6655,6 +6691,25 @@ EbErrorType signal_derivation_update(
     // md_filter_intra_level specifies whether filter intra would be active
     // for a given prediction candidate in mode decision.
 
+    uint8_t pic_filter_intra_level;
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    if (sequence_control_set_ptr->static_config.filter_intra_level == DEFAULT) {
+
+        if (sequence_control_set_ptr->seq_header.filter_intra_level) {
+
+            if (enc_mode <= ENC_M6)
+
+                pic_filter_intra_level = 1;
+            else
+                pic_filter_intra_level = 0;
+        }
+        else
+            pic_filter_intra_level = 0;
+    }
+    else
+        pic_filter_intra_level = sequence_control_set_ptr->static_config.filter_intra_level;
+#endif
+
     // md_filter_intra_level | Settings
     // 0                      | OFF
     // 1                      | ON
@@ -6664,7 +6719,11 @@ EbErrorType signal_derivation_update(
         context_ptr->md_filter_intra_level = 0;
     else
         context_ptr->md_filter_intra_level =
+#if SWITCH_MODE_BASED_ON_SQCOEF
+        pic_filter_intra_level;
+#else
         pcs_ptr->pic_filter_intra_level;
+#endif
 #else
     if (pd_pass == PD_PASS_0)
         context_ptr->md_filter_intra_mode = 0;
@@ -7200,6 +7259,198 @@ EbErrorType signal_derivation_update(
     else
         context_ptr->skip_intra = 0;
 #endif
+
+    ////////////////////
+#if SWITCH_MODE_BASED_ON_SQCOEF
+#if INTER_COMP_REDESIGN
+#if SOFT_CYCLES_REDUCTION
+    // Set inter_inter_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if MAY23_M0_ADOPTIONS
+#if PRUNING_PER_INTER_TYPE
+#if !REDUCE_MR_COMP_CANDS
+        else if (MR_MODE)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+#if SHUT_FEATURE_INTERACTIONS
+        else if (EB_TRUE)
+#else
+#if !JUNE15_ADOPTIONS
+#if NEW_MRP_SETTINGS
+        else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+        else if (enc_mode <= ENC_M0)
+#else
+#if UNIFY_SC_NSC
+        else if (enc_mode <= ENC_M0)
+#else
+        else if (MR_MODE || (pcs->parent_pcs_ptr->enc_mode <= ENC_M0 && !pcs->parent_pcs_ptr->sc_content_detected))
+#endif
+#endif
+#endif
+            context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+#if SQ64_M6
+        else if (enc_mode <= ENC_M5)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+#else
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+#endif
+#else
+       else if (enc_mode <= ENC_M0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#else
+#if MAY19_ADOPTIONS
+        else if (MR_MODE)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+#if MAR25_ADOPTIONS
+#if MAY16_7PM_ADOPTIONS
+        else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
+#if MAY12_ADOPTIONS
+        else if (enc_mode <= ENC_M0)
+#else
+#if PRESETS_SHIFT
+#if M1_COMBO_1 || NEW_M1_CAND
+        else if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
+        else if (enc_mode <= ENC_M2 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
+#else
+        else if (enc_mode <= ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
+#endif
+#endif
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if !MAY19_ADOPTIONS
+#if M1_COMBO_1 || NEW_M1_CAND
+        else if (enc_mode <= ENC_M1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#endif
+        else
+#if M2_COMBO_2
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+#else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#else
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
+#endif
+#endif
+    }
+    else {
+        context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+    }
+    soft_cycles_reduction_mrp(context_ptr, & context_ptr->inter_inter_distortion_based_reference_pruning);
+    set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
+    /////////////////////
+    // set compound_types_to_try
+#if ADD_SQ64_LEVELS
+    uint8_t compound_mode = context_ptr->inter_compound_mode;
+#else
+    uint8_t compound_mode = pcs->parent_pcs_ptr->compound_mode;
+#endif
+#if DO_NOT_ACT_ON_SIMILARITY
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls_no_similarity(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls_no_similarity(context_ptr,0);
+    else {
+        soft_cycles_reduction_compound(context_ptr, &compound_mode);
+
+        set_inter_comp_controls_no_similarity(context_ptr, compound_mode);
+    }
+#else
+
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls(context_ptr,0);
+    else {
+        soft_cycles_reduction_compound(context_ptr, &compound_mode);
+
+        set_inter_comp_controls(context_ptr, compound_mode);
+    }
+#endif
+#else
+        // set compound_types_to_try
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls(context_ptr,0);
+    else
+        set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
+#endif
+    context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
+#if !MAY12_ADOPTIONS
+#if APR22_ADOPTIONS
+#if M2_COMBO_1 || M1_COMBO_3 || NEW_M1_CAND
+    if (pcs->enc_mode <= ENC_M0)
+#else
+    if (pcs->enc_mode <= ENC_M2)
+#endif
+        context_ptr->inter_comp_ctrls.wedge_variance_th = 0;
+#endif
+#endif
+
+#else
+    // set compound_types_to_try
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->compound_types_to_try = MD_COMP_AVG;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->compound_types_to_try = MD_COMP_AVG;
+    else {
+        if (pcs->parent_pcs_ptr->compound_mode)
+            context_ptr->compound_types_to_try = pcs->parent_pcs_ptr->compound_mode == 1 ? MD_COMP_DIFF0 : MD_COMP_WEDGE;
+        else
+            context_ptr->compound_types_to_try = MD_COMP_AVG;
+    }
+
+#endif
+    BlkStruct *similar_cu = &context_ptr->md_blk_arr_nsq[context_ptr->similar_blk_mds];
+    if (context_ptr->compound_types_to_try > MD_COMP_AVG && context_ptr->similar_blk_avail) {
+        int32_t is_src_compound = similar_cu->pred_mode >= NEAREST_NEARESTMV;
+#if INTER_COMP_REDESIGN
+        if (context_ptr->inter_comp_ctrls.similar_previous_blk == 1) {
+#else
+        if (context_ptr->comp_similar_mode == 1) {
+#endif
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : context_ptr->compound_types_to_try;
+        }
+#if INTER_COMP_REDESIGN
+        else if (context_ptr->inter_comp_ctrls.similar_previous_blk == 2) {
+#else
+        else if (context_ptr->comp_similar_mode == 2) {
+#endif
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : similar_cu->interinter_comp.type;
+        }
+    }
+#if INTER_COMP_REDESIGN
+    // Do not add MD_COMP_WEDGE  beyond this point
+    if (get_wedge_params_bits(context_ptr->blk_geom->bsize) == 0)
+        context_ptr->compound_types_to_try = MIN(context_ptr->compound_types_to_try,MD_COMP_DIFF0);
+#endif
+    context_ptr->inject_inter_candidates = 1;
+    if (context_ptr->pd_pass > PD_PASS_1 && context_ptr->similar_blk_avail) {
+        int32_t is_src_intra = similar_cu->pred_mode <= PAETH_PRED;
+        if (context_ptr->intra_similar_mode)
+            context_ptr->inject_inter_candidates = is_src_intra ? 0 : context_ptr->inject_inter_candidates;
+    }
+#endif
+    /////////////////////
     return return_error;
 }
 #endif

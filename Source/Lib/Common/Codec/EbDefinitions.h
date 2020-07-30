@@ -646,6 +646,12 @@ extern "C" {
 #define SQ64_M4 1
 #define SQ64_M6 1
 #endif
+#define SWITCH_MODE_BASED_ON_SQCOEF 1
+#if SWITCH_MODE_BASED_ON_SQCOEF
+#define MD_MX_OFFSET  1
+#define DO_NOT_ACT_ON_SIMILARITY 1
+#endif
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

@@ -12342,6 +12342,108 @@ void check_similar_block(const BlockGeom * blk_geom,
 }
 
 #if INTER_COMP_REDESIGN
+#if DO_NOT_ACT_ON_SIMILARITY
+void set_inter_comp_controls_no_similarity(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode) {
+
+    InterCompoundControls*inter_comp_ctrls = &mdctxt->inter_comp_ctrls;
+
+    switch (inter_comp_mode)
+    {
+    case 0://OFF
+        inter_comp_ctrls->enabled = 0;
+        //inter_comp_ctrls->similar_predictions = 1;
+        //inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,1,4,1);
+#else
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
+        inter_comp_ctrls->mrp_pruning_w_distance = 1;
+#endif
+        inter_comp_ctrls->wedge_search_mode = 1;
+#if MAY12_ADOPTIONS
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
+        inter_comp_ctrls->wedge_variance_th = 100;
+#endif
+        //inter_comp_ctrls->similar_previous_blk=2;
+        break;
+    case 1://FULL
+        inter_comp_ctrls->enabled = 1;
+        //inter_comp_ctrls->similar_predictions = 0;
+        //inter_comp_ctrls->similar_predictions_th = 2;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,4,4,1);
+#else
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 0;
+        inter_comp_ctrls->mrp_pruning_w_distance = 4;
+#endif
+        inter_comp_ctrls->wedge_search_mode = 1;
+#if MAY12_ADOPTIONS
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
+#if APR22_ADOPTIONS
+        inter_comp_ctrls->wedge_variance_th = 100;
+#else
+        inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
+#endif
+#endif
+        //inter_comp_ctrls->similar_previous_blk=1;
+        break;
+#if NEW_MRP_SETTINGS
+    case 2://FAST - similar based disable
+        inter_comp_ctrls->enabled = 1;
+        //inter_comp_ctrls->similar_predictions = 1;
+        //inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,4,4,1);
+#else
+        inter_comp_ctrls->mrp_pruning_w_distortion = 0;
+        inter_comp_ctrls->mrp_pruning_w_distance = 4;
+#endif
+        inter_comp_ctrls->wedge_search_mode = 1;
+        inter_comp_ctrls->wedge_variance_th = 0;
+        //inter_comp_ctrls->similar_previous_blk = 2;
+        break;
+    case 3://FAST - MRP pruning/ similar based disable
+        inter_comp_ctrls->enabled = 1;
+        //inter_comp_ctrls->similar_predictions = 1;
+        //inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,1,4,1);
+#else
+        inter_comp_ctrls->mrp_pruning_w_distortion = 1;
+        inter_comp_ctrls->mrp_pruning_w_distance = 1;
+#endif
+        inter_comp_ctrls->wedge_search_mode = 1;
+        inter_comp_ctrls->wedge_variance_th = 0;
+        //inter_comp_ctrls->similar_previous_blk = 2;
+        break;
+#else
+    case 2://FAST
+        inter_comp_ctrls->enabled = 1;
+        inter_comp_ctrls->similar_predictions = 1;
+        inter_comp_ctrls->similar_predictions_th = 0;
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
+        inter_comp_ctrls->mrp_pruning_w_distance = 1;
+        inter_comp_ctrls->wedge_search_mode = 1;
+#if MAY12_ADOPTIONS
+        inter_comp_ctrls->wedge_variance_th = 0;
+#else
+        inter_comp_ctrls->wedge_variance_th = 100;
+#endif
+        inter_comp_ctrls->similar_previous_blk=2;
+        break;
+#endif
+    default:
+        assert(0);
+        break;
+    }// AVG / DIT /DIFF/ WEDGE
+}
+#endif
 void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode) {
 
     InterCompoundControls*inter_comp_ctrls = &mdctxt->inter_comp_ctrls;
@@ -12490,7 +12592,7 @@ EbErrorType signal_derivation_block(
         else if (pcs->parent_pcs_ptr->enc_mode <= ENC_M5)
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
         else
-            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
 #else
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
@@ -13875,10 +13977,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
     }
 #endif
-
+#if !SWITCH_MODE_BASED_ON_SQCOEF
     signal_derivation_block(
         pcs_ptr,
         context_ptr);
+#endif
 
     for (uint8_t ref_idx = 0; ref_idx < MAX_REF_TYPE_CAND; ref_idx++)
         context_ptr->ref_best_cost_sq_table[ref_idx] = MAX_CU_COST;
@@ -15673,6 +15776,24 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
+#if SWITCH_MODE_BASED_ON_SQCOEF
+            signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
+            signal_derivation_block(
+                pcs_ptr,
+                context_ptr);
+            uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
+            EbBool coeff_based_nsq_cand_reduction = EB_FALSE;
+            if (pcs_ptr->slice_type != I_SLICE) {
+                //if (context_ptr->coeff_based_nsq_cand_reduction) {
+                    if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag)
+                        coeff_based_nsq_cand_reduction = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
+                //}
+            }
+            if (coeff_based_nsq_cand_reduction) {
+                EbEncMode md_enc_mode = MIN(ENC_M8,pcs_ptr->enc_mode + MD_MX_OFFSET);
+                signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
+            }
+#endif
 #if DEPTH_PART_CLEAN_UP
 #if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
         if (!context_ptr->md_disallow_nsq)
