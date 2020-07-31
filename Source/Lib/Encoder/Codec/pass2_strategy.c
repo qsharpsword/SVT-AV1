@@ -1756,6 +1756,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   // frame in which case it will already have been done.
   if (!is_intra_only) {
     av1_zero(*gf_group);
+    pcs_ptr->gf_group_index = 0;
   }
 
   aom_clear_system_state();
@@ -2597,9 +2598,10 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
   rc->use_arf_in_this_kf_group = is_altref_enabled(
       gf_cfg->lag_in_frames, gf_cfg->enable_auto_arf);
 
-#if 0
+#if 1
   // Reset the GF group data structures.
   av1_zero(*gf_group);
+  pcs_ptr->gf_group_index = 0;
 #endif
 
   // Clear the alt ref active flag and last group multi arf flags as they
@@ -3016,7 +3018,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
   //}
 
   // Keyframe and section processing.
-    if (rc->frames_to_key <= 0 || frame_is_intra_only(pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
+    if (rc->frames_to_key <= 0 || (frame_is_intra_only(pcs_ptr) && pcs_ptr->idr_flag)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
     assert(rc->frames_to_key >= -1);
     FIRSTPASS_STATS this_frame_copy;
     this_frame_copy = this_frame;
@@ -3062,6 +3064,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 
   // Define a new GF/ARF group. (Should always enter here for key frames).
   if (rc->frames_till_gf_update_due == 0) {
+      //anaghdin current_frame->frame_number to be reset for key frame
     assert(current_frame->frame_number == 0 ||
         pcs_ptr->gf_group_index == gf_group->size);
     const FIRSTPASS_STATS *const start_position = twopass->stats_in;
@@ -3136,7 +3139,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     }
 #endif
   }
-  assert(pcs_ptr->gf_group_indexx < gf_group->size);
+  assert(pcs_ptr->gf_group_index < gf_group->size);
 
 #if 0
   // Do the firstpass stats indicate that this frame is skippable for the

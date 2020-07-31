@@ -7230,7 +7230,7 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   //update_keyframe_counters(cpi);
   if (ppcs_ptr->frm_hdr.showable_frame) {
       //anaghdin: check this condition temp solution
-    if (!ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
+    if (1/* !ppcs_ptr->frm_hdr.show_existing_frame*/ || rc->is_src_frame_alt_ref ||
         ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
       // If this is a show_existing_frame with a source other than altref,
       // or if it is not a displayed forward keyframe, the keyframe update
