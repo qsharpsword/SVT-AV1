@@ -2931,14 +2931,13 @@ static void process_first_pass_stats(PictureParentControlSet *pcs_ptr,
     twopass->fr_content_type = FC_NORMAL;
 }
 
-//static void setup_target_rate(AV1_COMP *cpi)
-static void setup_target_rate(SequenceControlSet *scs_ptr) {
-  //RATE_CONTROL *const rc = &cpi->rc;
+static void setup_target_rate(PictureParentControlSet *pcs_ptr) {
+    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *const rc = &encode_context_ptr->rc;
   GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
 
-  int target_rate = gf_group->bit_allocation[gf_group->index];
+  int target_rate = gf_group->bit_allocation[pcs_ptr->gf_group_index];
 
 #if 0
   if (has_no_stats_stage(cpi)) {
@@ -2969,15 +2968,15 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     current_frame->frame_number = pcs_ptr->picture_number;
 
     EncodeFrameParams temp_frame_params, *frame_params = &temp_frame_params;
-
+    pcs_ptr->gf_group_index = gf_group->index;
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
 #if 0
   if (rc->frames_till_gf_update_due > 0 && !frame_is_intra_only(pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
-    assert(gf_group->index < gf_group->size);
-    const int update_type = gf_group->update_type[gf_group->index];
+    assert(pcs_ptr->gf_group_index < gf_group->size);
+    const int update_type = gf_group->update_type[pcs_ptr->gf_group_index];
 
-    setup_target_rate(scs_ptr);
+    setup_target_rate(pcs_ptr);
 
     // If this is an arf frame then we dont want to read the stats file or
     // advance the input pointer as we already have what we need.
@@ -3031,7 +3030,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
                                                  encode_context_ptr->gf_cfg.enable_auto_arf);
     const int sframe_dist = encode_context_ptr->kf_cfg.sframe_dist;
     const int sframe_mode = encode_context_ptr->kf_cfg.sframe_mode;
-    const int update_type = gf_group->update_type[gf_group->index];
+    const int update_type = gf_group->update_type[pcs_ptr->gf_group_index];
     if (sframe_dist != 0) {
       if (altref_enabled) {
         if (sframe_mode == 1) {
@@ -3064,7 +3063,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
   // Define a new GF/ARF group. (Should always enter here for key frames).
   if (rc->frames_till_gf_update_due == 0) {
     assert(current_frame->frame_number == 0 ||
-           gf_group->index == gf_group->size);
+        pcs_ptr->gf_group_index == gf_group->size);
     const FIRSTPASS_STATS *const start_position = twopass->stats_in;
 
     if (scs_ptr->lap_enabled && rc->enable_scenecut_detection) {
@@ -3115,11 +3114,13 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     }
     define_gf_group(pcs_ptr, &this_frame, frame_params, max_gop_length, 1);
     rc->frames_till_gf_update_due = rc->baseline_gf_interval;
-    assert(gf_group->index == 0);
+    assert(pcs_ptr->gf_group_index == 0);
 #if TWOPASS_IMPOSE_PD_DECISIONS
-    // anaghdin: check the condition
-    if (pcs_ptr->frm_hdr.frame_type != KEY_FRAME)
+    // anaghdin: check the condition. This is added for the first frame in minigop when it is not KEY_FRAME
+    if (pcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
         gf_group->index++;
+        pcs_ptr->gf_group_index = gf_group->index;
+    }
 #endif
 #if ARF_STATS_OUTPUT
     {
@@ -3135,7 +3136,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     }
 #endif
   }
-  assert(gf_group->index < gf_group->size);
+  assert(pcs_ptr->gf_group_indexx < gf_group->size);
 
 #if 0
   // Do the firstpass stats indicate that this frame is skippable for the
@@ -3145,9 +3146,9 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
   }
 #endif
 
-  setup_target_rate(scs_ptr);
+  setup_target_rate(pcs_ptr);
   //printf("setupTarget POC:%lld\n", pcs_ptr->picture_number);//anaghdin_print
-  //printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", gf_group->index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
+  //printf("\nkelvin ---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", pcs_ptr->gf_group_index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
 // from aom ratectrl.c
@@ -3373,7 +3374,7 @@ int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr) {
   SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
-  const /*frame_update_type*/int update_type = gf_group->update_type[gf_group->index];
+  const /*frame_update_type*/int update_type = gf_group->update_type[ppcs_ptr->gf_group_index];
 
   return frame_is_intra_only(ppcs_ptr) || update_type == ARF_UPDATE ||
          update_type == GF_UPDATE;

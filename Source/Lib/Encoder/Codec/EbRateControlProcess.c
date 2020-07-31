@@ -5177,20 +5177,20 @@ static const rate_factor_level rate_factor_levels[FRAME_UPDATE_TYPES] = {
   GF_ARF_LOW,    // INTNL_ARF_UPDATE
 };
 
-static rate_factor_level get_rate_factor_level(const GF_GROUP *const gf_group) {
-  const FRAME_UPDATE_TYPE update_type = gf_group->update_type[gf_group->index];
+static rate_factor_level get_rate_factor_level(const GF_GROUP *const gf_group, unsigned char gf_group_index) {
+  const FRAME_UPDATE_TYPE update_type = gf_group->update_type[gf_group_index];
   assert(update_type < FRAME_UPDATE_TYPES);
   return rate_factor_levels[update_type];
 }
 
-int av1_frame_type_qdelta_org(RATE_CONTROL *rc, GF_GROUP *gf_group, int q, const int bit_depth) {
-  const rate_factor_level rf_lvl = get_rate_factor_level(gf_group);
+int av1_frame_type_qdelta_org(RATE_CONTROL *rc, GF_GROUP *gf_group, unsigned char gf_group_index, int q, const int bit_depth) {
+  const rate_factor_level rf_lvl = get_rate_factor_level(gf_group, gf_group_index);
   const FrameType frame_type = (rf_lvl == KF_STD) ? KEY_FRAME : INTER_FRAME;
   double rate_factor;
 
   rate_factor = rate_factor_deltas[rf_lvl];
   if (rf_lvl == GF_ARF_LOW) {
-    rate_factor -= (gf_group->layer_depth[gf_group->index] - 2) * 0.1;
+    rate_factor -= (gf_group->layer_depth[gf_group_index] - 2) * 0.1;
     rate_factor = AOMMAX(rate_factor, 1.0);
   }
   return av1_compute_qdelta_by_rate(rc, frame_type, q, rate_factor, bit_depth);
@@ -5212,7 +5212,7 @@ static void adjust_active_best_and_worst_quality_org(PictureControlSet *pcs_ptr,
     int is_src_frame_alt_ref  = 0;//rc->is_src_frame_alt_ref
     int refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
     int refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
-    int is_intrl_arf_boost = gf_group->update_type[gf_group->index] == INTNL_ARF_UPDATE;
+    int is_intrl_arf_boost = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
     this_key_frame_forced = rc->this_key_frame_forced;
     // Extension to max or min Q if undershoot or overshoot is outside
     // the permitted range.
@@ -5234,7 +5234,7 @@ static void adjust_active_best_and_worst_quality_org(PictureControlSet *pcs_ptr,
     // Static forced key frames Q restrictions dealt with elsewhere.
     if (!frame_is_intra_only(pcs_ptr->parent_pcs_ptr) || !this_key_frame_forced
         /*|| (cpi->twopass.last_kfgroup_zeromotion_pct < STATIC_MOTION_THRESH)*/) {
-        const int qdelta = av1_frame_type_qdelta_org(rc, gf_group, active_worst_quality, bit_depth);
+        const int qdelta = av1_frame_type_qdelta_org(rc, gf_group, pcs_ptr->parent_pcs_ptr->gf_group_index, active_worst_quality, bit_depth);
         active_worst_quality =
             AOMMAX(active_worst_quality + qdelta, active_best_quality);
     }
@@ -6593,7 +6593,7 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
     int is_src_frame_alt_ref  = 0;
     int refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
     int refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
-    const int is_intrl_arf_boost = gf_group->update_type[gf_group->index] == INTNL_ARF_UPDATE;
+    const int is_intrl_arf_boost = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
     int *inter_minq;
     ASSIGN_MINQ_TABLE(bit_depth, inter_minq);
     int active_best_quality = 0;
@@ -6639,7 +6639,7 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
 
     if (rc_mode == AOM_Q || rc_mode == AOM_CQ) active_best_quality = rc->arf_q;
 #if 0
-    int this_height = gf_group->layer_depth[gf_group->index];//gf_group_pyramid_level(gf_group, gf_index);
+    int this_height = gf_group->layer_depth[pcs_ptr->parent_pcs_ptr->gf_group_index];//gf_group_pyramid_level(gf_group, gf_index);
     while (this_height > 1) {
         active_best_quality = (active_best_quality + active_worst_quality + 1) / 2;
         --this_height;
@@ -6660,7 +6660,7 @@ static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr, int 
   if (ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
     rcf = rc->rate_correction_factors[KF_STD];
   } else if (1/*is_stat_consumption_stage(cpi)*/) {
-    const rate_factor_level rf_lvl = get_rate_factor_level(&encode_context_ptr->gf_group);
+    const rate_factor_level rf_lvl = get_rate_factor_level(&encode_context_ptr->gf_group, ppcs_ptr->gf_group_index);
     rcf = rc->rate_correction_factors[rf_lvl];
   } else {
 #if 0
@@ -6694,7 +6694,7 @@ static void set_rate_correction_factor(PictureParentControlSet *ppcs_ptr, double
   if (ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
     rc->rate_correction_factors[KF_STD] = factor;
   } else if (1/*is_stat_consumption_stage(cpi)*/) {
-    const rate_factor_level rf_lvl = get_rate_factor_level(&encode_context_ptr->gf_group);
+    const rate_factor_level rf_lvl = get_rate_factor_level(&encode_context_ptr->gf_group, ppcs_ptr->gf_group_index);
     rc->rate_correction_factors[rf_lvl] = factor;
   } else {
 #if 0
@@ -6859,12 +6859,12 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     is_src_frame_alt_ref  = 0;
     refresh_golden_frame  = frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? 1 : 0;
     refresh_alt_ref_frame = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? 1 : 0;
-    is_intrl_arf_boost    = gf_group->update_type[gf_group->index] == INTNL_ARF_UPDATE;
+    is_intrl_arf_boost    = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
 
 #if 0
     const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
     if (oxcf->q_cfg.use_fixed_qp_offsets) {
-        return get_q_using_fixed_offsets(oxcf, rc, gf_group, gf_group->index,
+        return get_q_using_fixed_offsets(oxcf, rc, gf_group, pcs_ptr->parent_pcs_ptr->gf_group_index,
                                          cq_level, bit_depth);
     }
 #endif
@@ -6878,7 +6878,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
         const int is_fwd_kf = pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type == KEY_FRAME && pcs_ptr->parent_pcs_ptr->frm_hdr.show_frame == 0;
         get_intra_q_and_bounds(pcs_ptr, &active_best_quality, &active_worst_quality, cq_level, is_fwd_kf);
     } else {
-        const int pyramid_level = gf_group->layer_depth[gf_group->index];
+        const int pyramid_level = gf_group->layer_depth[pcs_ptr->parent_pcs_ptr->gf_group_index];
         if ((pyramid_level <= 1) || (pyramid_level > MAX_ARF_LAYERS) ||
             rc_mode == AOM_Q) {
             active_best_quality = get_active_best_quality(pcs_ptr, active_worst_quality, cq_level);
@@ -7067,7 +7067,7 @@ static void update_golden_frame_stats(PictureParentControlSet *ppcs_ptr) {
     // If we are not using alt ref in the up and coming group clear the arf
     // active flag. In multi arf group case, if the index is not 0 then
     // we are overlaying a mid group arf so should not reset the flag.
-    if (!rc->source_alt_ref_pending && (gf_group->index == 0))
+    if (!rc->source_alt_ref_pending && (ppcs_ptr->gf_group_index == 0))
       rc->source_alt_ref_active = 0;
   } else if (ppcs_ptr->frm_hdr.show_frame) {
     rc->frames_since_golden++;
@@ -7266,10 +7266,6 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   // a displayed forward keyframe, the index was incremented when it was
   // originally encoded.
       //anaghdin: check this condition temp solution
-#if TWOPASS_IMPOSE_PD_DECISIONS
-      ppcs_ptr->gf_group_index = gf_group->index;
-#endif
-
   if (1/*ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
       ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
     ++gf_group->index;
