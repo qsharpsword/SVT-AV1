@@ -2969,16 +2969,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     current_frame->frame_number = pcs_ptr->picture_number;
 
     EncodeFrameParams temp_frame_params, *frame_params = &temp_frame_params;
-#if 0
-    const int update_type = (frame_is_intra_only(pcs_ptr)) //gf_group->update_type[gf_group->index];
-        ? KF_UPDATE
-        : (pcs_ptr->temporal_layer_index == 0)
-        ? ARF_UPDATE
-        : pcs_ptr->is_used_as_reference_flag ? INTNL_ARF_UPDATE
-        : LF_UPDATE;
 
-  gf_group->update_type[gf_group->index] = update_type;
-#endif
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
 #if 0
@@ -3242,8 +3233,10 @@ void av1_rc_update_framerate(SequenceControlSet *scs_ptr, int width, int height)
 // from aom encoder.c
 void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
   //cpi->framerate = framerate < 0.1 ? 30 : framerate;
-  //scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : framerate;//kelvinhack framerate;
+  scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : framerate;
+#if TWOPASS_RC_HACK_AS_AOM
   scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : 30.000030000030002;//kelvinhack framerate;
+#endif
   av1_rc_update_framerate(scs_ptr, scs_ptr->seq_header.max_frame_width, scs_ptr->seq_header.max_frame_height);
 }
 

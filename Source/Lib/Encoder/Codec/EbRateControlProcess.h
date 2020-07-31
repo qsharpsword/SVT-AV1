@@ -80,7 +80,7 @@ enum {
     FRAME_UPDATE_TYPES
 } UENUM1BYTE(FRAME_UPDATE_TYPE);//anaghdin: do we need both?
 
-enum {
+typedef enum rate_factor_level {
     INTER_NORMAL       = 0,
     INTER_LOW          = 1,
     INTER_HIGH         = 2,
