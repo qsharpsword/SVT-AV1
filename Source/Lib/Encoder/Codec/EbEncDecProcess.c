@@ -10513,7 +10513,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M1)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 1;
         else if (enc_mode <= ENC_M2)
+#if JULY31_PRESETS_ADOPTIONS
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 2;
+#else
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 1 : 2;
+#endif
         else if (enc_mode <= ENC_M3)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 3;
         else

@@ -1234,7 +1234,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set disallow_nsq
 #if DISALLOW_NSQ_DEPTH
 #if FAST_M8_V1
+#if JULY31_PRESETS_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5)
+#else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
         pcs_ptr->disallow_nsq = EB_FALSE;
     else
         pcs_ptr->disallow_nsq = EB_TRUE;
