@@ -6620,26 +6620,14 @@ EbErrorType signal_derivation_update(
         context_ptr->md_pic_obmc_level = 0;
 #if SQ64_M6
     else if (enc_mode <= ENC_M5)
-#if JULY31_PRESETS_ADOPTIONS
-        context_ptr->md_pic_obmc_level = 2;
-#else
         context_ptr->md_pic_obmc_level =
         pcs_ptr->parent_pcs_ptr->pic_obmc_level;
-#endif
     else if (enc_mode <= ENC_M6)
-#if JULY31_PRESETS_ADOPTIONS
-        context_ptr->md_pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 0;
-#else
         context_ptr->md_pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ?
         pcs_ptr->parent_pcs_ptr->pic_obmc_level : 0;
-#endif
     else
-#if JULY31_PRESETS_ADOPTIONS
-        context_ptr->md_pic_obmc_level = 0;
-#else
         context_ptr->md_pic_obmc_level =
         pcs_ptr->parent_pcs_ptr->pic_obmc_level;
-#endif
 #else
     else
         context_ptr->md_pic_obmc_level =
