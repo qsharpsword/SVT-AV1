@@ -220,13 +220,18 @@ typedef struct  NsqCycleRControls {
 #if SOFT_CYCLES_REDUCTION
 typedef struct  AMdCycleRControls {
     uint8_t enabled; // On/Off feature control
+#if !SWITCH_MODE_BASED_ON_STATISTICS
     uint16_t sq_weight_th;  // Threshold adjust the sq_weight <the higher th the higher speed>
+#endif
     uint16_t skip_nsq_th;  // Threshold to bypass nsq <the higher th the higher speed>
+#if! SWITCH_MODE_BASED_ON_STATISTICS
     uint16_t nics_th;  // Threshold to adjust nics <the higher th the higher speed>
     uint16_t mrp_th;  // Threshold to adjust mrp <the higher th the higher speed>
     uint16_t compound_th;  // Threshold to adjust compound <the higher th the higher speed>
+#endif
 #if SWITCH_MODE_BASED_ON_STATISTICS
     uint16_t switch_mode_th;
+    uint8_t mode_offset;
 #endif
 }AMdCycleRControls;
 #endif
@@ -394,6 +399,13 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t eight_pel_search_pos_cnt;           // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt best MV)
 #endif
 }MdSubPelSearchCtrls;
+#endif
+#if SWITCH_MODE_BASED_ON_SQCOEF
+typedef struct CoeffBSwMdCtrls {
+    uint8_t enabled;                // 0:  OFF; 1:  ON
+    uint8_t mode_offset;            // Offset to the mode to switch to
+    uint8_t skip_block;             // Skip nsq
+}CoeffBSwMdCtrls;
 #endif
 #if SEARCH_TOP_N
 typedef struct MdMotionSearchResults {
@@ -970,6 +982,10 @@ typedef struct ModeDecisionContext {
     uint8_t txs_in_inter_classes;
     uint8_t nic_scaling_level;
     uint8_t inter_compound_mode;
+#endif
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    uint8_t switch_md_mode_based_on_sq_coeff;
+    CoeffBSwMdCtrls cb_sw_md_ctrls;
 #endif
 } ModeDecisionContext;
 

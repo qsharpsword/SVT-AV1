@@ -721,10 +721,12 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
 void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level);
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode);
 void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_search_level);
+#if !SWITCH_MODE_BASED_ON_STATISTICS
 void soft_cycles_reduction_mrp(ModeDecisionContext *context_ptr, uint8_t *mrp_level);
 void soft_cycles_reduction_compound(ModeDecisionContext *context_ptr, uint8_t *compound_level);
 void soft_cycles_reduction_nics(ModeDecisionContext *context_ptr, uint32_t *nics_div);
 void soft_cycles_reduction_sq_weight(ModeDecisionContext *context_ptr, uint32_t *sq_weight);
+#endif
 void set_inter_inter_distortion_based_reference_pruning_controls(
     ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode);
 void set_inter_comp_controls_no_similarity(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode);

@@ -2016,6 +2016,31 @@ void md_subpel_me_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_me_lev
     }
 }
 
+#if SWITCH_MODE_BASED_ON_SQCOEF
+void coeff_based_switch_md_controls(ModeDecisionContext *mdctxt, uint8_t switch_md_mode_based_on_sq_coeff_level) {
+    CoeffBSwMdCtrls *coeffb_sw_md_ctrls = &mdctxt->cb_sw_md_ctrls;
+
+    switch (switch_md_mode_based_on_sq_coeff_level) {
+    case 0: coeffb_sw_md_ctrls->enabled = 0; break;
+    case 1:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 3;
+        coeffb_sw_md_ctrls->skip_block = 0;
+        break;
+    case 2:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 4;
+        coeffb_sw_md_ctrls->skip_block = 0;
+        break;
+    case 3:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 4;
+        coeffb_sw_md_ctrls->skip_block = 1;
+        break;
+    default: assert(0); break;
+    }
+}
+#endif
 
 void md_subpel_pme_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_pme_level) {
     MdSubPelSearchCtrls *md_subpel_pme_ctrls = &mdctxt->md_subpel_pme_ctrls;
@@ -2744,6 +2769,53 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
 #endif
 
 #if SOFT_CYCLES_REDUCTION
+#if SWITCH_MODE_BASED_ON_STATISTICS
+void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &mdctxt->admd_cycles_red_ctrls;
+    switch (adaptive_md_cycles_red_mode)
+    {
+    case 0:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 0;
+        adaptive_md_cycles_red_ctrls->mode_offset = 0;
+        break;
+    case 1:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 2:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 3:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 500;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 4:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 300;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 5:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 750;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1500;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#else
 void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode) {
     AMdCycleRControls*adaptive_md_cycles_red_ctrls = &mdctxt->admd_cycles_red_ctrls;
     switch (adaptive_md_cycles_red_mode)
@@ -2960,6 +3032,7 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         break;
     }
 }
+#endif
 #endif
 #if DEPTH_CYCLES_REDUCTION
 void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode) {
@@ -7399,7 +7472,9 @@ EbErrorType signal_derivation_update(
     else {
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
     }
+#if !SWITCH_MODE_BASED_ON_STATISTICS
     soft_cycles_reduction_mrp(context_ptr, & context_ptr->inter_inter_distortion_based_reference_pruning);
+#endif
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
     /////////////////////
     // set compound_types_to_try
@@ -7414,7 +7489,9 @@ EbErrorType signal_derivation_update(
     else if (context_ptr->pd_pass == PD_PASS_1)
         set_inter_comp_controls_no_similarity(context_ptr,0);
     else {
+#if !SWITCH_MODE_BASED_ON_STATISTICS
         soft_cycles_reduction_compound(context_ptr, &compound_mode);
+#endif
 
         set_inter_comp_controls_no_similarity(context_ptr, compound_mode);
     }
@@ -10418,6 +10495,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     if (pd_pass == PD_PASS_2) {
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        if (enc_mode <= ENC_M0)
+            adaptive_md_cycles_level = 0;
+        else if (enc_mode <= ENC_M1)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 1;
+        else if (enc_mode <= ENC_M2)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 1 : 2;
+        else if (enc_mode <= ENC_M3)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 3;
+        else
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 4 : 5;
+#else
 #if ENABLE_AMDCR_FOR_M0
         if (enc_mode <= ENC_M3)
 #else
@@ -10432,8 +10521,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 5 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 7 : 8;
         else
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 7 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 11 : 11;
+#endif
     }
 #endif
+
     adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
 #endif
     // Weighting (expressed as a percentage) applied to
@@ -11596,6 +11687,20 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->skip_intra = 1;
     else
         context_ptr->skip_intra = 0;
+#endif
+#if SWITCH_MODE_BASED_ON_SQCOEF
+    if (pcs_ptr->slice_type == I_SLICE)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 0;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 0;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 1;
+    else if (enc_mode <= ENC_M4)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 2;
+    else
+        context_ptr->switch_md_mode_based_on_sq_coeff = 3;
+
+    coeff_based_switch_md_controls(context_ptr,context_ptr->switch_md_mode_based_on_sq_coeff);
 #endif
     return return_error;
 }
