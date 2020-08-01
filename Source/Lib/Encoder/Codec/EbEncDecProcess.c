@@ -2781,31 +2781,31 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->mode_offset = 0;
         break;
     case 1:
-        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 2:
-        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 3:
-        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 500;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 4:
-        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 300;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 5:
-        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 750;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 1500;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;

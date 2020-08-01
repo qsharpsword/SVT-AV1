@@ -15825,7 +15825,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 pred_depth_refinement = MAX(pred_depth_refinement, -2);
                 pred_depth_refinement += 2;
                 if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->switch_mode_th) {
-                    EbEncMode md_enc_mode = pcs_ptr->enc_mode + adaptive_md_cycles_red_ctrls->mode_offset;
+                    EbEncMode md_enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + adaptive_md_cycles_red_ctrls->mode_offset);
                     signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
                 }
             }
@@ -15834,19 +15834,21 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #endif
 #if SWITCH_MODE_BASED_ON_SQCOEF
 #if !DISALLOW_SWITCH_MODE_BASED_ON_SQCOEF
-        uint8_t    coeff_skip_action = 0;
+            uint8_t coeff_skip_action = 0;
             uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
             EbBool switch_md_mode_based_on_sq_coeff = EB_FALSE;
             if (pcs_ptr->slice_type != I_SLICE) {
                 CoeffBSwMdCtrls *coeffb_sw_md_ctrls = &context_ptr->cb_sw_md_ctrls;
                 if (coeffb_sw_md_ctrls->enabled) {
-                    if (coeffb_sw_md_ctrls->skip_block) {
-                        coeff_skip_action = 1;
-                    }
-                    else {
-                        if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag)
-                            switch_md_mode_based_on_sq_coeff = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
-                        if (switch_md_mode_based_on_sq_coeff) {
+
+                    if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag)
+                        switch_md_mode_based_on_sq_coeff = context_ptr->blk_geom->shape == PART_N || context_ptr->parent_sq_has_coeff[sq_index] != 0 ? EB_FALSE : EB_TRUE;
+
+                    if (switch_md_mode_based_on_sq_coeff) {
+                        if (coeffb_sw_md_ctrls->skip_block) {
+                            coeff_skip_action = 1;
+                        }
+                        else {
                             EbEncMode md_enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + coeffb_sw_md_ctrls->mode_offset);
                             signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
                         }
