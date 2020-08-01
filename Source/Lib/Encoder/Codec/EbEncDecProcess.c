@@ -6060,7 +6060,7 @@ EbErrorType signal_derivation_update(
     set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
 #endif
 #if SOFT_CYCLES_REDUCTION
-    uint8_t adaptive_md_cycles_level = 0;
+    //uint8_t adaptive_md_cycles_level = 0; // commented out to address build warning
 #if !JUNE26_ADOPTIONS
     if (pd_pass == PD_PASS_2) {
 
@@ -6620,14 +6620,26 @@ EbErrorType signal_derivation_update(
         context_ptr->md_pic_obmc_level = 0;
 #if SQ64_M6
     else if (enc_mode <= ENC_M5)
+#if JULY31_PRESETS_ADOPTIONS
+        context_ptr->md_pic_obmc_level = 2;
+#else
         context_ptr->md_pic_obmc_level =
         pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+#endif
     else if (enc_mode <= ENC_M6)
+#if JULY31_PRESETS_ADOPTIONS
+        context_ptr->md_pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 0;
+#else
         context_ptr->md_pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ?
         pcs_ptr->parent_pcs_ptr->pic_obmc_level : 0;
+#endif
     else
+#if JULY31_PRESETS_ADOPTIONS
+        context_ptr->md_pic_obmc_level = 0;
+#else
         context_ptr->md_pic_obmc_level =
         pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+#endif
 #else
     else
         context_ptr->md_pic_obmc_level =
@@ -10571,6 +10583,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M0)
                 context_ptr->sq_weight = 105;
             else if (enc_mode <= ENC_M1)
+#if JULY31_PRESETS_ADOPTIONS
+                context_ptr->sq_weight = 95;
+            else
+                context_ptr->sq_weight = 90;
+#else
                 context_ptr->sq_weight = 100;
 #if JUNE23_ADOPTIONS
 #if JUNE25_ADOPTIONS
@@ -10590,6 +10607,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             else
                 context_ptr->sq_weight = 80;
+#endif
 #endif
 #else
 #if MAR12_ADOPTIONS
@@ -14706,7 +14724,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
 #if FAST_M8_V1
+#if JULY31_PRESETS_ADOPTIONS
+                                if (pcs_ptr->enc_mode <= ENC_M8) {
+#else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }

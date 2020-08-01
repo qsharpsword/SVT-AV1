@@ -7319,7 +7319,7 @@ EbErrorType generate_md_stage_0_cand(
     context_ptr->injected_mv_count_l0 = 0;
     context_ptr->injected_mv_count_l1 = 0;
     context_ptr->injected_mv_count_bipred = 0;
-    uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2;
+    //uint8_t sq_index = LOG2F(context_ptr->blk_geom->sq_size) - 2; // commented out to address build warning
     EbBool coeff_based_nsq_cand_reduction = EB_FALSE;
 #if !DISALLOW_COEFF_BASED_NSQ_CAND
     if (slice_type != I_SLICE) {

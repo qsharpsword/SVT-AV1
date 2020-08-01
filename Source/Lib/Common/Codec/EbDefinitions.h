@@ -670,6 +670,8 @@ extern "C" {
 #define SQW_MX_OFFSET  2
 #endif
 #define SQW_TH 0
+
+#define JULY31_PRESETS_ADOPTIONS 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
