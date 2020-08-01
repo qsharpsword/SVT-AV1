@@ -2783,18 +2783,18 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
     case 1:
         adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
-        adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 2:
         adaptive_md_cycles_red_ctrls->enabled = 1;
-        adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
-        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 3:
         adaptive_md_cycles_red_ctrls->enabled = 1;
-        adaptive_md_cycles_red_ctrls->skip_nsq_th = 500;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
@@ -2805,6 +2805,12 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->mode_offset = 2;
         break;
     case 5:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 500;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 6:
         adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->skip_nsq_th = 750;
         adaptive_md_cycles_red_ctrls->switch_mode_th = 1500;
@@ -10497,19 +10503,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (pd_pass == PD_PASS_2) {
 #if SWITCH_MODE_BASED_ON_STATISTICS
         if (enc_mode <= ENC_M0)
-            adaptive_md_cycles_level = 0;
-        else if (enc_mode <= ENC_M1)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 1;
-        else if (enc_mode <= ENC_M2)
-#if JULY31_PRESETS_ADOPTIONS
+        else if (enc_mode <= ENC_M1)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 2;
-#else
-            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 1 : 2;
-#endif
-        else if (enc_mode <= ENC_M3)
+        else if (enc_mode <= ENC_M2)
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 3;
+        else if (enc_mode <= ENC_M3)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 5;
         else
-            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 4 : 5;
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 4 : 6;
 #else
 #if ENABLE_AMDCR_FOR_M0
         if (enc_mode <= ENC_M3)
@@ -11700,8 +11702,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if SWITCH_MODE_BASED_ON_SQCOEF
     if (pcs_ptr->slice_type == I_SLICE)
-        context_ptr->switch_md_mode_based_on_sq_coeff = 0;
-    else if (enc_mode <= ENC_M0)
         context_ptr->switch_md_mode_based_on_sq_coeff = 0;
     else if (enc_mode <= ENC_M1)
         context_ptr->switch_md_mode_based_on_sq_coeff = 1;
