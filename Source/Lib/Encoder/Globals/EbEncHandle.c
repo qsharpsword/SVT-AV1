@@ -2389,7 +2389,21 @@ void copy_api_from_app(
     scs_ptr->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
 
     //hack for enc_modes to allow user see modes 0..6
-#if REMAP_MODES
+#if REMAP_MODES_2
+    int8_t enc_mode_cfg = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+    if (enc_mode_cfg <= ENC_M3)
+        scs_ptr->static_config.enc_mode = enc_mode_cfg;
+    else if (enc_mode_cfg == ENC_M4)
+        scs_ptr->static_config.enc_mode = ENC_M5;
+    else if (enc_mode_cfg == ENC_M5)
+        scs_ptr->static_config.enc_mode = ENC_M6;
+    else if (enc_mode_cfg == ENC_M6)
+        scs_ptr->static_config.enc_mode = ENC_M8;
+    else
+        scs_ptr->static_config.enc_mode = ENC_M8;
+
+    //printf("Going to Run M%i \n", scs_ptr->static_config.enc_mode);
+#elif REMAP_MODES
     uint8_t enc_mode_cfg = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
     if (enc_mode_cfg == ENC_M0)
         scs_ptr->static_config.enc_mode = ENC_M0;
@@ -3616,7 +3630,20 @@ static void print_lib_params(
         else
             SVT_LOG("Level %.1f\t", (float)(config->level / 10));
     }
+#if REMAP_MODES_2
+    int8_t enc_mode = config->enc_mode;
+    if (enc_mode > ENC_M3) {
+        if (enc_mode == ENC_M5)
+            enc_mode = ENC_M4;
+        else if (enc_mode == ENC_M6)
+            enc_mode = ENC_M5;
+        else if (enc_mode == ENC_M8)
+            enc_mode = ENC_M6;
+    }
+    SVT_LOG("\nSVT [config]: EncoderMode \t\t\t\t\t\t\t: %d ", enc_mode);
+#else
     SVT_LOG("\nSVT [config]: EncoderMode \t\t\t\t\t\t\t: %d ", config->enc_mode);
+#endif
     SVT_LOG("\nSVT [config]: EncoderBitDepth / EncoderColorFormat / CompressedTenBitFormat\t: %d / %d / %d", config->encoder_bit_depth, config->encoder_color_format, config->compressed_ten_bit_format);
     SVT_LOG("\nSVT [config]: SourceWidth / SourceHeight\t\t\t\t\t: %d / %d ", config->source_width, config->source_height);
     if (config->frame_rate_denominator != 0 && config->frame_rate_numerator != 0)

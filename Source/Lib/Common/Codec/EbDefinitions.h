@@ -672,6 +672,7 @@ extern "C" {
 #define SQW_TH 0
 
 #define JULY31_PRESETS_ADOPTIONS 1
+#define REMAP_MODES_2            1 //enc_mode remap
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
