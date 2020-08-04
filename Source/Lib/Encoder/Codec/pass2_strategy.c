@@ -3473,7 +3473,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
     const int minq_adj_limit =
         (rc_cfg->mode == AOM_CQ ? MINQ_ADJ_LIMIT_CQ : MINQ_ADJ_LIMIT);
 
-//printf("kelvin postencode_update ---> rate_error_estimate=%d, rolling_target/actual_bits=%d %d\n", rc->rate_error_estimate, rc->rolling_target_bits, rc->rolling_actual_bits);
+//printf("kelvin postencode_update ---> poc%d rate_error_estimate=%d, rolling_target/actual_bits=%d %d, buffer_level=%d\n", ppcs_ptr->picture_number, rc->rate_error_estimate, rc->rolling_target_bits, rc->rolling_actual_bits, rc->buffer_level);
     // Undershoot.
     if (rc->rate_error_estimate > rc_cfg->under_shoot_pct) {
       --twopass->extend_maxq;

@@ -503,6 +503,22 @@ typedef struct MotionEstimationData {
     uint16_t sb_total_count_unscaled;
 } MotionEstimationData;
 #endif
+
+#if TWOPASS_RC
+/*!
+ * \brief Refresh frame flags for different type of frames.
+ *
+ * If the refresh flag is true for a particular reference frame, after the
+ * current frame is encoded, the reference frame gets refreshed (updated) to
+ * be the current frame. Note: Usually at most one flag will be set to true at
+ * a time. But, for key-frames, all flags are set to true at once.
+ */
+typedef struct {
+  bool golden_frame;  /*!< Refresh flag for golden frame */
+  bool bwd_ref_frame; /*!< Refresh flag for bwd-ref frame */
+  bool alt_ref_frame; /*!< Refresh flag for alt-ref frame */
+} RefreshFrameFlagsInfo;
+#endif
 //CHKN
 // Add the concept of PictureParentControlSet which is a subset of the old PictureControlSet.
 // It actually holds only high level Picture based control data:(GOP management,when to start a picture, when to release the PCS, ....).
@@ -664,6 +680,7 @@ typedef struct PictureParentControlSet {
 #endif
 #if TWOPASS_RC
     FirstPassData firstpass_data;
+    RefreshFrameFlagsInfo refresh_frame;
     int internal_altref_allowed;
     int64_t ts_duration;
 #if !TWOPASS_STAT_BUF
