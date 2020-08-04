@@ -6525,16 +6525,20 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
         rc->best_quality    = MINQ;
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
-        active_best_quality = get_kf_active_quality_org(rc, active_worst_quality, bit_depth);
+        active_best_quality = get_kf_active_quality_tpl(rc, active_worst_quality, bit_depth);
         if (/*is_stat_consumption_stage_twopass(cpi) &&*/
                 twopass->kf_zeromotion_pct >= STATIC_KF_GROUP_THRESH) {
             active_best_quality /= 3;
         }
         // Allow somewhat lower kf minq with small image formats.
+#if 0 //TPL_240P_IMP //anaghdin
+        if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
+            q_adj_factor -= 0.15;
+#else
         if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
              pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height) <= (352 * 288))
             q_adj_factor -= 0.25;
-
+#endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
             0.05 - (0.001 * /*(double)pcs_ptr->parent_pcs_ptr->kf_zeromotion_pct*/
@@ -6627,10 +6631,10 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
         q = rc->avg_frame_qindex[INTER_FRAME];
     }
     if (rc_mode == AOM_CQ && q < cq_level) q = cq_level;
-    active_best_quality = get_gf_active_quality_org(rc, q, bit_depth);
+    active_best_quality = get_gf_active_quality_tpl_la(rc, q, bit_depth);
     // Constrained quality use slightly lower active best.
     if (rc_mode == AOM_CQ) active_best_quality = active_best_quality * 15 / 16;
-    const int min_boost = get_gf_high_motion_quality_org(q, bit_depth);
+    const int min_boost = get_gf_high_motion_quality(q, bit_depth);
     const int boost = min_boost - active_best_quality;
     active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
     if (!is_intrl_arf_boost) return active_best_quality;
