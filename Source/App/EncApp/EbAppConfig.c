@@ -150,6 +150,13 @@
 #define MAX_QP_TOKEN "-max-qp"
 #define VBV_BUFSIZE_TOKEN "-vbv-bufsize"
 #define MIN_QP_TOKEN "-min-qp"
+#if TWOPASS_RC
+#define VBR_BIAS_PCT_TOKEN "-bias-pct"
+#define VBR_MIN_SECTION_PCT_TOKEN "-minsection-pct"
+#define VBR_MAX_SECTION_PCT_TOKEN "-maxsection-pct"
+#define UNDER_SHOOT_PCT_TOKEN "-undershoot-pct"
+#define OVER_SHOOT_PCT_TOKEN "-overshoot-pct"
+#endif
 #define ADAPTIVE_QP_ENABLE_TOKEN "-adaptive-quantization"
 #define LOOK_AHEAD_DIST_TOKEN "-lad"
 #if TPL_LA
@@ -605,6 +612,23 @@ static void set_max_qp_allowed(const char *value, EbConfig *cfg) {
 static void set_min_qp_allowed(const char *value, EbConfig *cfg) {
     cfg->min_qp_allowed = strtoul(value, NULL, 0);
 };
+#if TWOPASS_RC
+static void set_vbr_bias_pct(const char *value, EbConfig *cfg) {
+    cfg->vbr_bias_pct = strtoul(value, NULL, 0);
+};
+static void set_vbr_min_section_pct(const char *value, EbConfig *cfg) {
+    cfg->vbr_min_section_pct = strtoul(value, NULL, 0);
+};
+static void set_vbr_max_section_pct(const char *value, EbConfig *cfg) {
+    cfg->vbr_max_section_pct = strtoul(value, NULL, 0);
+};
+static void set_under_shoot_pct(const char *value, EbConfig *cfg) {
+    cfg->under_shoot_pct = strtoul(value, NULL, 0);
+};
+static void set_over_shoot_pct(const char *value, EbConfig *cfg) {
+    cfg->over_shoot_pct = strtoul(value, NULL, 0);
+};
+#endif
 static void set_adaptive_quantization(const char *value, EbConfig *cfg) {
     cfg->enable_adaptive_quantization = (EbBool)strtol(value, NULL, 0);
 };
@@ -965,6 +989,10 @@ ConfigEntry config_entry_rc[] = {
      "Set adaptive QP level(0: OFF ,1: variance base using segments ,2: Deltaq pred efficiency)",
      set_adaptive_quantization},
     {SINGLE_INPUT, VBV_BUFSIZE_TOKEN, "VBV buffer size", set_vbv_buf_size},
+#if TWOPASS_RC
+    {SINGLE_INPUT, UNDER_SHOOT_PCT_TOKEN, "Datarate undershoot (min) target (%)", set_under_shoot_pct},
+    {SINGLE_INPUT, OVER_SHOOT_PCT_TOKEN, "Datarate overshoot (max) target (%)", set_over_shoot_pct},
+#endif
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
 ConfigEntry config_entry_2p[] = {
@@ -984,6 +1012,11 @@ ConfigEntry config_entry_2p[] = {
      ENCMODE2P_TOKEN,
      "Use Hme/Me settings of the second pass'encoder mode in the first pass",
      set_snd_pass_enc_mode},
+#endif
+#if TWOPASS_RC
+    {SINGLE_INPUT, VBR_BIAS_PCT_TOKEN, "CBR/VBR bias (0=CBR, 100=VBR)", set_vbr_bias_pct},
+    {SINGLE_INPUT, VBR_MIN_SECTION_PCT_TOKEN, "GOP min bitrate (% of target)", set_vbr_min_section_pct},
+    {SINGLE_INPUT, VBR_MAX_SECTION_PCT_TOKEN, "GOP max bitrate (% of target)", set_vbr_max_section_pct},
 #endif
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -1418,6 +1451,13 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, MIN_QP_TOKEN, "MinQpAllowed", set_min_qp_allowed},
     {SINGLE_INPUT, VBV_BUFSIZE_TOKEN, "VBVBufSize", set_vbv_buf_size},
     {SINGLE_INPUT, ADAPTIVE_QP_ENABLE_TOKEN, "AdaptiveQuantization", set_adaptive_quantization},
+#if TWOPASS_RC
+    {SINGLE_INPUT, VBR_BIAS_PCT_TOKEN, "CBR/VBR bias (0=CBR, 100=VBR)", set_vbr_bias_pct},
+    {SINGLE_INPUT, VBR_MIN_SECTION_PCT_TOKEN, "GOP min bitrate (% of target)", set_vbr_min_section_pct},
+    {SINGLE_INPUT, VBR_MAX_SECTION_PCT_TOKEN, "GOP max bitrate (% of target)", set_vbr_max_section_pct},
+    {SINGLE_INPUT, UNDER_SHOOT_PCT_TOKEN, "Datarate undershoot (min) target (%)", set_under_shoot_pct},
+    {SINGLE_INPUT, OVER_SHOOT_PCT_TOKEN, "Datarate overshoot (max) target (%)", set_over_shoot_pct},
+#endif
 
     // DLF
     {SINGLE_INPUT, LOOP_FILTER_DISABLE_TOKEN, "LoopFilterDisable", set_disable_dlf_flag},
@@ -1717,6 +1757,13 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->enc_mode                                  = MAX_ENC_PRESET;
 #if !TWOPASS_CLEANUP
     config_ptr->snd_pass_enc_mode                         = MAX_ENC_PRESET + 1;
+#endif
+#if TWOPASS_RC
+    config_ptr->vbr_bias_pct         = 50;
+    config_ptr->vbr_min_section_pct  = 0;
+    config_ptr->vbr_max_section_pct  = 2000;
+    config_ptr->under_shoot_pct      = 25;
+    config_ptr->over_shoot_pct       = 25;
 #endif
     config_ptr->intra_period                              = -2;
     config_ptr->intra_refresh_type                        = 1;

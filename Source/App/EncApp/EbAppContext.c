@@ -116,6 +116,13 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.max_qp_allowed         = config->max_qp_allowed;
     callback_data->eb_enc_parameters.min_qp_allowed         = config->min_qp_allowed;
     callback_data->eb_enc_parameters.vbv_bufsize            = config->vbv_bufsize;
+#if TWOPASS_RC
+    callback_data->eb_enc_parameters.vbr_bias_pct           = config->vbr_bias_pct;
+    callback_data->eb_enc_parameters.vbr_min_section_pct    = config->vbr_min_section_pct;
+    callback_data->eb_enc_parameters.vbr_max_section_pct    = config->vbr_max_section_pct;
+    callback_data->eb_enc_parameters.under_shoot_pct        = config->under_shoot_pct;
+    callback_data->eb_enc_parameters.over_shoot_pct         = config->over_shoot_pct;
+#endif
     callback_data->eb_enc_parameters.enable_adaptive_quantization =
         (EbBool)config->enable_adaptive_quantization;
     callback_data->eb_enc_parameters.qp                   = config->qp;

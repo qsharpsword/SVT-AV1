@@ -450,6 +450,13 @@ typedef struct EbConfig {
     uint32_t max_qp_allowed;
     uint32_t min_qp_allowed;
     uint32_t vbv_bufsize;
+#if TWOPASS_RC
+    uint32_t vbr_bias_pct;
+    uint32_t vbr_min_section_pct;
+    uint32_t vbr_max_section_pct;
+    uint32_t under_shoot_pct;
+    uint32_t over_shoot_pct;
+#endif
 
     EbBool enable_adaptive_quantization;
 

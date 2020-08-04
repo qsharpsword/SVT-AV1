@@ -3264,15 +3264,14 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       frame_info->num_mbs = frame_info->mb_cols * frame_info->mb_rows;
       frame_info->bit_depth = scs_ptr->static_config.encoder_bit_depth;
       // kelvinhack should input from options
-      encode_context_ptr->two_pass_cfg.vbrmin_section = 0;
-      encode_context_ptr->two_pass_cfg.vbrmax_section = 2000;
-      encode_context_ptr->two_pass_cfg.vbrbias        = 50;
-      //oxcf->pass = 2;
-      encode_context_ptr->rc_cfg.mode = AOM_VBR;
-      encode_context_ptr->rc_cfg.best_allowed_q = 0;
-      encode_context_ptr->rc_cfg.worst_allowed_q = 255;
-      encode_context_ptr->rc_cfg.over_shoot_pct  = 25;
-      encode_context_ptr->rc_cfg.under_shoot_pct = 25;
+      encode_context_ptr->two_pass_cfg.vbrmin_section = scs_ptr->static_config.vbr_min_section_pct;//0;
+      encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;//2000;
+      encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;//50;
+      encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ?  AOM_VBR : AOM_Q;
+      encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];//0;
+      encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];//255;
+      encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;//25;
+      encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;//25;
       encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
       encode_context_ptr->gf_cfg.lag_in_frames = 25;//kelvinhack scs_ptr->static_config.look_ahead_distance + 1;
       encode_context_ptr->gf_cfg.gf_min_pyr_height = scs_ptr->static_config.hierarchical_levels;

@@ -2557,6 +2557,13 @@ void copy_api_from_app(
     scs_ptr->static_config.min_qp_allowed = (scs_ptr->static_config.rate_control_mode) ?
         ((EbSvtAv1EncConfiguration*)config_struct)->min_qp_allowed :
         1; // lossless coding not supported
+#if TWOPASS_RC
+    scs_ptr->static_config.vbr_bias_pct        = ((EbSvtAv1EncConfiguration*)config_struct)->vbr_bias_pct;
+    scs_ptr->static_config.vbr_min_section_pct = ((EbSvtAv1EncConfiguration*)config_struct)->vbr_min_section_pct;
+    scs_ptr->static_config.vbr_max_section_pct = ((EbSvtAv1EncConfiguration*)config_struct)->vbr_max_section_pct;
+    scs_ptr->static_config.under_shoot_pct     = ((EbSvtAv1EncConfiguration*)config_struct)->under_shoot_pct;
+    scs_ptr->static_config.over_shoot_pct      = ((EbSvtAv1EncConfiguration*)config_struct)->over_shoot_pct;
+#endif
 
     //Segmentation
     //TODO: check RC mode and set only when RC is enabled in the final version.
