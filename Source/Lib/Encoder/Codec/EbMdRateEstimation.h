@@ -84,7 +84,7 @@ extern "C" {
         int32_t *nmvcoststack[2];
         int dv_cost[2][MV_VALS];
         int dv_joint_cost[MV_JOINTS];
-#if ENABLE_PR_1133        
+#if ENABLE_PR_1133
         // Compouned Mode
         int32_t inter_compound_mode_fac_bits[INTER_MODE_CONTEXTS][INTER_COMPOUND_MODES];
         int32_t compound_type_fac_bits[BlockSizeS_ALL][MASKED_COMPOUND_TYPES];

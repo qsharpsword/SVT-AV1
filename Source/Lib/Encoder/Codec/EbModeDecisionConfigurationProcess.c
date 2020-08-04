@@ -477,7 +477,7 @@ EbErrorType mode_decision_configuration_context_ctor(EbThreadContext *  thread_c
 }
 #if !SHUT_ME_DISTORTION
 
-/******************************************************	
+/******************************************************
 * Predict the SB partitionning
 ******************************************************/
 void perform_early_sb_partitionning(ModeDecisionConfigurationContext *context_ptr,

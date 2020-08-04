@@ -5831,7 +5831,7 @@ uint32_t product_full_mode_decision(
         if (blk_ptr->prediction_mode_flag != INTER_MODE && blk_ptr->av1xd->use_intrabc == 0)
         {
             pu_ptr->inter_pred_direction_index = 0x03;
-#if ENABLE_PR_1133            
+#if ENABLE_PR_1133
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].merge_flag = EB_FALSE;
 #else
             pu_ptr->merge_flag = EB_FALSE;
@@ -5864,7 +5864,7 @@ uint32_t product_full_mode_decision(
         pu_ptr->ref_mv_index = candidate_ptr->ref_mv_index;
         pu_ptr->is_new_mv = candidate_ptr->is_new_mv;
         pu_ptr->is_zero_mv = candidate_ptr->is_zero_mv;
-#endif        
+#endif
         if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_0)
         {
             //eb_memcpy(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs_l0,4);
@@ -5902,8 +5902,8 @@ uint32_t product_full_mode_decision(
             blk_ptr->predmv[1].as_mv.row = candidate_ptr->motion_vector_pred_y[REF_LIST_1];
         }
 #if !ENABLE_PR_1133
-                // The MV prediction indicies are recalcated by the EncDec.	
-        pu_ptr->mvd[REF_LIST_0].pred_idx = 0;	
+                // The MV prediction indicies are recalcated by the EncDec.
+        pu_ptr->mvd[REF_LIST_0].pred_idx = 0;
         pu_ptr->mvd[REF_LIST_1].pred_idx = 0;
 #endif
         pu_ptr->overlappable_neighbors[0] = context_ptr->blk_ptr->prediction_unit_array[0].overlappable_neighbors[0];
@@ -5911,7 +5911,7 @@ uint32_t product_full_mode_decision(
         pu_ptr->motion_mode = candidate_ptr->motion_mode;
         pu_ptr->num_proj_ref = candidate_ptr->num_proj_ref;
         if (pu_ptr->motion_mode == WARPED_CAUSAL) {
-#if ENABLE_PR_1133            
+#if ENABLE_PR_1133
             eb_memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l0, &candidate_ptr->wm_params_l0, sizeof(EbWarpedMotionParams));
             eb_memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1, &candidate_ptr->wm_params_l1, sizeof(EbWarpedMotionParams));
 #else

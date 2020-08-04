@@ -1298,7 +1298,7 @@ void get_av1_mv_pred_drl(ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
 #else
         nearestmv[0] = blk_ptr->ref_mvs[ref_frame][0];
         nearmv[0]    = blk_ptr->ref_mvs[ref_frame][1];
-#endif        
+#endif
     }
 
     if (is_compound && mode != GLOBAL_GLOBALMV) {
@@ -1576,7 +1576,7 @@ void update_mi_map(struct ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
                             : EB_FALSE;
 #else
                         (blk_ptr->txb_array[0].y_has_coeff == 0) ? EB_TRUE : EB_FALSE;
-#endif                    
+#endif
             }
 
             mi_ptr[mi_x + mi_y * mi_stride].mbmi.block_mi.interp_filters = blk_ptr->interp_filters;

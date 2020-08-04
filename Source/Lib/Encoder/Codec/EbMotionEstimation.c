@@ -11256,7 +11256,7 @@ EbErrorType motion_estimate_sb(
 
             }
 #endif
-            
+
         }
     }
 

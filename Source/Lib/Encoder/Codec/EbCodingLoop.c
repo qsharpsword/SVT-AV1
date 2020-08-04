@@ -272,7 +272,7 @@ static void encode_pass_update_recon_sample_neighbour_arrays(
 }
 #if !ENABLE_PR_1133
 /************************************************************
-* Update Intra Luma Neighbor Modes	
+* Update Intra Luma Neighbor Modes
 ************************************************************/
 void generate_pu_intra_luma_neighbor_nodes(BlkStruct *blk_ptr, uint32_t pu_origin_x,
                                            uint32_t pu_origin_y, uint32_t sb_sz,
