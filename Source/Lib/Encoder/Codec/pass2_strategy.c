@@ -893,10 +893,12 @@ static void allocate_gf_group_bits(GF_GROUP *gf_group, RATE_CONTROL *const rc,
   int i;
   int layer_extra_bits[MAX_ARF_LAYERS + 1] = { 0 };
   for (i = 1; i <= max_arf_layer; ++i) {
-    double fraction = (i == max_arf_layer) ? 1.0 : layer_fraction[i];
-    layer_extra_bits[i] =
-        (int)((gf_arf_bits * fraction) / AOMMAX(1, layer_frames[i]));
-    gf_arf_bits -= (int)(gf_arf_bits * fraction);
+      if (layer_frames[i]) {// to make sure there is a picture with the depth
+          double fraction = (i == max_arf_layer) ? 1.0 : layer_fraction[i];
+          layer_extra_bits[i] =
+              (int)((gf_arf_bits * fraction) / AOMMAX(1, layer_frames[i]));
+          gf_arf_bits -= (int)(gf_arf_bits * fraction);
+      }
   }
 
   // Now combine ARF layer and baseline bits to give total bits for each frame.
@@ -1665,22 +1667,51 @@ static int construct_multi_layer_gf_structure(
     gf_group->max_layer_depth = 0;
     ++frame_index;
 
-    // ALTREF.
-    const int use_altref = gf_group->max_layer_depth_allowed > 0;
-    if (use_altref) {
-        gf_group->update_type[frame_index] = ARF_UPDATE;
-        gf_group->arf_src_offset[frame_index] = gf_interval - 1;
-        gf_group->cur_frame_idx[frame_index] = cur_frame_index;
-        gf_group->frame_disp_idx[frame_index] = gf_interval;
-        gf_group->layer_depth[frame_index] = 1;
-        gf_group->arf_boost[frame_index] = rc->gfu_boost;
-        gf_group->max_layer_depth = 1;
-        ++frame_index;
+#if 1
+    //anaghdin for now only 5L is supported. In 5L case, when there are not enough picture,
+    // we switch to 4L and after that we use 4L P pictures. In the else, we handle the P-case manually
+    // this logic has to move to picture decision
+    if (gf_interval >= 8) {
+        // ALTREF.
+        const int use_altref = gf_group->max_layer_depth_allowed > 0;
+        if (use_altref) {
+            gf_group->update_type[frame_index] = ARF_UPDATE;
+            gf_group->arf_src_offset[frame_index] = gf_interval - 1;
+            gf_group->cur_frame_idx[frame_index] = cur_frame_index;
+            gf_group->frame_disp_idx[frame_index] = gf_interval;
+            gf_group->layer_depth[frame_index] = 1;
+            gf_group->arf_boost[frame_index] = rc->gfu_boost;
+            gf_group->max_layer_depth = 1;
+            ++frame_index;
+        }
+        // Rest of the frames.
+        set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
+            &cur_frame_index, &frame_index, use_altref + 1);
     }
+    else {
 
+        int start = 0;
+        int end = gf_interval;
+        const int num_frames_to_process = end - start - 1;
+        while (++start <= end) {
+            gf_group->update_type[frame_index] = (frame_index % 2 == 0) ? INTNL_ARF_UPDATE : LF_UPDATE;
+            gf_group->arf_src_offset[frame_index] = 0;
+            gf_group->cur_frame_idx[frame_index] = start;
+            gf_group->frame_disp_idx[frame_index] = start;
+            gf_group->layer_depth[frame_index] = (frame_index % 4 == 0) ? 2 :
+                (frame_index % 2 == 0) ? 3 : MAX_ARF_LAYERS;
+            gf_group->arf_boost[frame_index] = av1_calc_arf_boost(
+                twopass, rc, frame_info, start, end - start, 0, NULL, NULL);
+            gf_group->max_layer_depth =
+                AOMMAX(gf_group->max_layer_depth, gf_group->layer_depth[frame_index]);
+            ++(frame_index);
+        }
+    }
+#else
     // Rest of the frames.
     set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
         &cur_frame_index, &frame_index, use_altref + 1);
+#endif
 
     //// The end frame will be Overlay frame for an ARF GOP; otherwise set it to
     //// be GF, for consistency, which will be updated in the next GOP.
