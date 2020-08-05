@@ -677,8 +677,8 @@ extern "C" {
 
 
 /******************************/
-#define SUPER_FAST_SHUT_PME           1
-#define SUPER_FAST_SHUT_RDOQ          0 
+#define SUPER_FAST_SHUT_PME           0
+#define SUPER_FAST_SHUT_RDOQ          1 
 #define SUPER_FAST_SHUT_SPATIAL_SSE   0
 #define SUPER_FAST_SHUT_TXT           0
 #define SUPER_FAST_SHUT_TXS           0
