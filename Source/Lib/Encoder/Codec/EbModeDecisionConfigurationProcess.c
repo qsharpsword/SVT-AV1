@@ -1361,6 +1361,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             ? 1
             : 0;
 
+#if SUPER_FAST_HP_OFF
+    frm_hdr->allow_high_precision_mv = 0;
+#endif
     // Warped
     EbBool enable_wm;
 #if PRESETS_SHIFT
@@ -1503,6 +1506,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #if SHUT_LAYER_BASED_FEATURES
     enable_wm = EB_TRUE;
+#endif
+
+
+#if SUPER_FAST_WARP_OFF
+    enable_wm = 0;
 #endif
     frm_hdr->allow_warped_motion =
         enable_wm &&

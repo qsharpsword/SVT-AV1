@@ -6130,6 +6130,10 @@ void mctf_frame(
             }
     else
         context_ptr->tf_level = 0;
+
+#if TF_OFF
+    context_ptr->tf_level = 0;
+#endif
 #else
     if (perform_filtering) {
 #if UPGRADE_M6_M7_M8

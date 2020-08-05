@@ -2026,6 +2026,9 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
 #endif
 #endif
 
+#if SUPER_FAST_MRP_OFF
+    ref_count_used = 1;
+#endif
     // Insert manual prediction structure into array
     if (config->enable_manual_pred_struct) {
         prediction_structure_config_array[config->hierarchical_levels].entry_count = config->manual_pred_struct_entry_num;

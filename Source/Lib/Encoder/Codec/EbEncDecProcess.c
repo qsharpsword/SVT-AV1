@@ -3345,6 +3345,10 @@ EbErrorType signal_derivation_update(
 #if REMOVE_UNUSED_CODE_PH2
     else
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+
+#if SUPER_FAST_SHUT_TXT
+    context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
 #else
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M8_ADOPTIONS
@@ -4950,6 +4954,10 @@ EbErrorType signal_derivation_update(
     else
         context_ptr->predictive_me_level = 0;
 
+#if SUPER_FAST_SHUT_PME
+        context_ptr->predictive_me_level = 0;
+#endif
+
 #if ADD_SAD_AT_PME_SIGNAL
     // Level                    Settings
     // FALSE                    Use SSD at PME
@@ -5121,6 +5129,10 @@ EbErrorType signal_derivation_update(
     else
         context_ptr->spatial_sse_full_loop_level =
         sequence_control_set_ptr->static_config.spatial_sse_full_loop_level;
+#if SUPER_FAST_SHUT_SPATIAL_SSE
+    context_ptr->spatial_sse_full_loop_level = EB_FALSE;
+#endif
+
 #else
     if (pd_pass == PD_PASS_0)
         context_ptr->spatial_sse_full_loop = EB_FALSE;
@@ -5233,6 +5245,10 @@ EbErrorType signal_derivation_update(
         else
             context_ptr->rdoq_level =
             sequence_control_set_ptr->static_config.rdoq_level;
+
+#if SUPER_FAST_SHUT_RDOQ
+    context_ptr->rdoq_level = EB_FALSE;
+#endif
 #else
     // Derive Trellis Quant Coeff Optimization Flag
     if (pd_pass == PD_PASS_0)
@@ -6740,6 +6756,10 @@ EbErrorType signal_derivation_update(
         context_ptr->md_tx_size_search_mode = tx_size_search_mode;
 #else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
+#endif
+
+#if SUPER_FAST_SHUT_TXS
+    context_ptr->md_tx_size_search_mode = 0;
 #endif
 
 #if ADD_SQ64_LEVELS
@@ -14721,8 +14741,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
+#if SUPER_FAST_PRED_ONLY_B_SLICE
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+#else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
                                 }
 #if ADD_M9
                                 else if (pcs_ptr->enc_mode <= ENC_M9) {

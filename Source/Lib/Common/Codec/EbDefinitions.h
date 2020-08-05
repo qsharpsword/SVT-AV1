@@ -673,6 +673,22 @@ extern "C" {
 
 #define JULY31_PRESETS_ADOPTIONS 1
 #define REMAP_MODES_2            1 //enc_mode remap
+
+
+
+/******************************/
+#define SUPER_FAST_SHUT_PME           0
+#define SUPER_FAST_SHUT_RDOQ          0 
+#define SUPER_FAST_SHUT_SPATIAL_SSE   0
+#define SUPER_FAST_SHUT_TXT           0
+#define SUPER_FAST_SHUT_TXS           0
+#define SUPER_FAST_MRP_OFF            0
+#define SUPER_FAST_HP_OFF             0
+#define SUPER_FAST_WARP_OFF           0
+#define SUPER_FAST_PRED_ONLY_B_SLICE  0
+#define TF_OFF                        0
+/******************************/
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
