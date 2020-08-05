@@ -7929,7 +7929,6 @@ Input   : encoder mode and pd pass
 Output  : EncDec Kernel signal(s)
 ******************************************************/
 EbErrorType first_pass_signal_derivation_enc_dec_kernel(
-    SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
     ModeDecisionContext *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
@@ -8171,7 +8170,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     uint8_t nsq_cycles_red_mode = 0;
     set_nsq_cycle_redcution_controls(context_ptr, nsq_cycles_red_mode);
 
-    NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
+    // NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
     // Overwrite allcation action when nsq_cycles_reduction th is higher.
         context_ptr->nsq_cycles_reduction_th = 0;
 
@@ -11233,7 +11232,7 @@ void *enc_dec_kernel(void *input_ptr) {
                     context_ptr->md_context->pd_pass = PD_PASS_2;
 #if FIRST_PASS_SETUP
                     if (scs_ptr->use_output_stat_file)
-                        first_pass_signal_derivation_enc_dec_kernel(scs_ptr, pcs_ptr, context_ptr->md_context);
+                        first_pass_signal_derivation_enc_dec_kernel(pcs_ptr, context_ptr->md_context);
                     else
                         signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr->md_context);
 #else

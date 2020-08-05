@@ -1215,11 +1215,11 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
                       (stats.image_data_start_row * mi_params->mb_cols * 2));
   }
 #endif
-#if TWOPASS_STAT_BUF
-  TWO_PASS *twopass = &scs_ptr->twopass;
-#else
-  TWO_PASS *twopass = &pcs_ptr->twopass;
-#endif
+//#if TWOPASS_STAT_BUF
+//  TWO_PASS *twopass = &scs_ptr->twopass;
+//#else
+//  TWO_PASS *twopass = &pcs_ptr->twopass;
+//#endif
   const int num_mbs = mb_rows * mb_cols;
                       /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
                           ? cpi->initial_mbs
@@ -1289,7 +1289,7 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
     // anaghdin check this
     // Clamp the image start to rows/2. This number of rows is discarded top
     // and bottom as dead data so rows / 2 means the frame is blank.
-    if ((stats.image_data_start_row > mb_rows / 2) ||
+    if ((stats.image_data_start_row > (int)mb_rows / 2) ||
         (stats.image_data_start_row == INVALID_ROW)) {
         stats.image_data_start_row = mb_rows / 2;
     }
@@ -1297,13 +1297,13 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
     if (stats.image_data_start_row > 0) {
         stats.intra_skip_count =
             AOMMAX(0, stats.intra_skip_count -
-            (stats.image_data_start_row * mb_cols * 2));
+            (stats.image_data_start_row * (int)mb_cols * 2));
     }
-#if TWOPASS_STAT_BUF
-    TWO_PASS *twopass = &scs_ptr->twopass;
-#else
-    TWO_PASS *twopass = &pcs_ptr->twopass;
-#endif
+//#if TWOPASS_STAT_BUF
+//    TWO_PASS *twopass = &scs_ptr->twopass;
+//#else
+//    TWO_PASS *twopass = &pcs_ptr->twopass;
+//#endif
     const int num_mbs = mb_rows * mb_cols;
     /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
         ? cpi->initial_mbs

@@ -10679,11 +10679,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 }
 
 #if FIRST_PASS_SETUP
-void first_pass_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
+void first_pass_loop_core(PictureControlSet *pcs_ptr, /*SuperBlock *sb_ptr, */BlkStruct *blk_ptr,
     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
     ModeDecisionCandidate *candidate_ptr, EbPictureBufferDesc *input_picture_ptr,
-    uint32_t input_origin_index, uint32_t input_cb_origin_in_index,
-    uint32_t blk_origin_index, uint32_t blk_chroma_origin_index,
+    uint32_t input_origin_index,// uint32_t input_cb_origin_in_index,
+    uint32_t blk_origin_index,// uint32_t blk_chroma_origin_index,
     uint64_t ref_fast_cost) {
     uint64_t y_full_distortion[DIST_CALC_TOTAL];
     uint32_t count_non_zero_coeffs[3][MAX_NUM_OF_TU_PER_CU];
@@ -10914,11 +10914,11 @@ void first_pass_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStr
 //   stats->frame_avg_wavelet_energy
 // Returns:
 //   this_intra_error.
-static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
+static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
     ModeDecisionCandidate *candidate_ptr, EbPictureBufferDesc *input_picture_ptr,
-    uint32_t input_origin_index, uint32_t input_cb_origin_in_index,
-    uint32_t blk_origin_index, uint32_t blk_chroma_origin_index,
+    uint32_t input_origin_index,// uint32_t input_cb_origin_in_index,
+    uint32_t blk_origin_index,// uint32_t blk_chroma_origin_index,
     uint64_t ref_fast_cost, FRAME_STATS *const stats){
 
     int32_t       mb_row = context_ptr->blk_origin_y >> 4;
@@ -10940,16 +10940,16 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
 
     first_pass_loop_core(pcs_ptr,
-        context_ptr->sb_ptr,
+        //context_ptr->sb_ptr,
         blk_ptr,
         context_ptr,
         candidate_buffer,
         candidate_ptr,
         input_picture_ptr,
         input_origin_index,
-        input_cb_origin_in_index,
+        //input_cb_origin_in_index,
         blk_origin_index,
-        blk_chroma_origin_index,
+        //blk_chroma_origin_index,
         ref_fast_cost);
 
     EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
@@ -11054,13 +11054,13 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
 //    stats: many member params in it.
 //  Returns:
 //    this_inter_error
-static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
+static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
     ModeDecisionCandidate *candidate_ptr, EbPictureBufferDesc *input_picture_ptr,
-    uint32_t input_origin_index, uint32_t input_cb_origin_in_index,
-    uint32_t blk_origin_index, uint32_t blk_chroma_origin_index,
+    uint32_t input_origin_index,// uint32_t input_cb_origin_in_index,
+    uint32_t blk_origin_index,// uint32_t blk_chroma_origin_index,
     uint64_t ref_fast_cost, uint32_t fast_candidate_total_count, const int this_intra_error,
-    int *raw_motion_err_list, MV *best_ref_mv,
+    /*int *raw_motion_err_list, */MV *best_ref_mv,
     MV *last_mv, FRAME_STATS *stats) {
 
     int32_t       mb_row = context_ptr->blk_origin_y >> 4;
@@ -11068,8 +11068,8 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     const uint32_t mb_cols = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
     const uint32_t mb_rows = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
     int this_inter_error = this_intra_error;
-    const int is_high_bitdepth = context_ptr->hbd_mode_decision;
-    const int bitdepth = pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth;
+    //const int is_high_bitdepth = context_ptr->hbd_mode_decision;
+    //const int bitdepth = pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth;
     const BlockSize bsize = context_ptr->blk_geom->bsize;
     // Assume 0,0 motion with no mv overhead.
     FULLPEL_MV mv = kZeroFullMv;
@@ -11094,7 +11094,7 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
     // Compute the motion error of the 0,0 motion using the last source
     // frame as the reference. Skip the further motion search on
     // reconstructed frame if this error is small.
-    const int raw_motion_error = raw_motion_err_list[0];
+    //const int raw_motion_error = raw_motion_err_list[0];
 
     // TODO(pengchong): Replace the hard-coded threshold
     // anaghdin to check
@@ -11134,16 +11134,16 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
         candidate_buffer->candidate_ptr->interp_filters = 0;
 
         first_pass_loop_core(pcs_ptr,
-            context_ptr->sb_ptr,
+            //context_ptr->sb_ptr,
             blk_ptr,
             context_ptr,
             candidate_buffer,
             candidate_ptr,
             input_picture_ptr,
             input_origin_index,
-            input_cb_origin_in_index,
+            //input_cb_origin_in_index,
             blk_origin_index,
-            blk_chroma_origin_index,
+            //blk_chroma_origin_index,
             ref_fast_cost);
 
         // anaghdin to check the above logic
@@ -11192,16 +11192,16 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, SuperBlock *sb
             candidate_buffer->candidate_ptr->interp_filters = 0;
             // anaghdin: no need to do everything, we just need the prediction
             first_pass_loop_core(pcs_ptr,
-                context_ptr->sb_ptr,
+                //context_ptr->sb_ptr,
                 blk_ptr,
                 context_ptr,
                 candidate_buffer,
                 candidate_ptr,
                 input_picture_ptr,
                 input_origin_index,
-                input_cb_origin_in_index,
+                //input_cb_origin_in_index,
                 blk_origin_index,
-                blk_chroma_origin_index,
+                //blk_chroma_origin_index,
                 ref_fast_cost);
 
             gf_motion_error = (uint32_t)(
@@ -14299,18 +14299,18 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
         (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
 
-    const uint32_t input_cb_origin_in_index =
-        ((context_ptr->round_origin_y >> 1) + (input_picture_ptr->origin_y >> 1)) *
-        input_picture_ptr->stride_cb +
-        ((context_ptr->round_origin_x >> 1) + (input_picture_ptr->origin_x >> 1));
+    //const uint32_t input_cb_origin_in_index =
+    //    ((context_ptr->round_origin_y >> 1) + (input_picture_ptr->origin_y >> 1)) *
+    //    input_picture_ptr->stride_cb +
+    //    ((context_ptr->round_origin_x >> 1) + (input_picture_ptr->origin_x >> 1));
 #if SB64_MEM_OPT
     const uint32_t blk_origin_index = blk_geom->origin_x + blk_geom->origin_y * context_ptr->sb_size;
-    const uint32_t blk_chroma_origin_index =
-        ROUND_UV(blk_geom->origin_x) / 2 + ROUND_UV(blk_geom->origin_y) / 2 * (context_ptr->sb_size >> 1);
+    //const uint32_t blk_chroma_origin_index =
+    //    ROUND_UV(blk_geom->origin_x) / 2 + ROUND_UV(blk_geom->origin_y) / 2 * (context_ptr->sb_size >> 1);
 #else
     const uint32_t blk_origin_index = blk_geom->origin_x + blk_geom->origin_y * SB_STRIDE_Y;
-    const uint32_t blk_chroma_origin_index =
-        ROUND_UV(blk_geom->origin_x) / 2 + ROUND_UV(blk_geom->origin_y) / 2 * SB_STRIDE_UV;
+    //const uint32_t blk_chroma_origin_index =
+    //    ROUND_UV(blk_geom->origin_x) / 2 + ROUND_UV(blk_geom->origin_y) / 2 * SB_STRIDE_UV;
 #endif
     BlkStruct *blk_ptr = context_ptr->blk_ptr;
     candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
@@ -14403,8 +14403,8 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
     const uint32_t mb_cols = (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
     FRAME_STATS *mb_stats =
         pcs_ptr->parent_pcs_ptr->firstpass_data.mb_stats + mb_row * mb_cols + mb_col;
-    int *raw_motion_err_list = pcs_ptr->parent_pcs_ptr->firstpass_data.raw_motion_err_list +
-        mb_row * mb_cols + mb_col;
+    //int *raw_motion_err_list = pcs_ptr->parent_pcs_ptr->firstpass_data.raw_motion_err_list +
+    //    mb_row * mb_cols + mb_col;
 
     ModeDecisionCandidate *      candidate_ptr;
     uint32_t cand_index = 0;
@@ -14413,16 +14413,15 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         &fast_candidate_array[cand_index];
 
     int this_intra_error = firstpass_intra_prediction(pcs_ptr,
-        context_ptr->sb_ptr,
         blk_ptr,
         context_ptr,
         candidate_buffer,
         candidate_ptr,
         input_picture_ptr,
         input_origin_index,
-        input_cb_origin_in_index,
+        //input_cb_origin_in_index,
         blk_origin_index,
-        blk_chroma_origin_index,
+        //blk_chroma_origin_index,
         ref_fast_cost,
         mb_stats);
 
@@ -14432,20 +14431,19 @@ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
         MV *best_ref_mv = &firstpass_top_mv; // anaghdin to set we might need later if we modify me
         MV last_mv = kZeroMv;// anaghdin: for now we overright it internaly with the mv pred
         this_inter_error = firstpass_inter_prediction(pcs_ptr,
-            context_ptr->sb_ptr,
             blk_ptr,
             context_ptr,
             candidate_buffer,
             candidate_ptr,
             input_picture_ptr,
             input_origin_index,
-            input_cb_origin_in_index,
+            //input_cb_origin_in_index,
             blk_origin_index,
-            blk_chroma_origin_index,
+            //blk_chroma_origin_index,
             ref_fast_cost,
             fast_candidate_total_count,
             this_intra_error,
-            raw_motion_err_list,
+            //raw_motion_err_list,
             best_ref_mv,
             &last_mv,
             mb_stats);

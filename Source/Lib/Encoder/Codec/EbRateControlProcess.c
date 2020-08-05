@@ -4499,7 +4499,7 @@ static int kf_high_motion_minq_cqp_12[QINDEX_RANGE] = {
         183,    184,    186,    188,
         190,    191,    193,    195
 };
-#if TWOPASS_RC
+#if 0 //TWOPASS_RC
 static int kf_low_motion_minq_org_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4537,6 +4537,7 @@ static int kf_high_motion_minq_org_8[QINDEX_RANGE] = {
 #define kf_high_motion_minq_org_10 kf_high_motion_minq_10
 #define kf_high_motion_minq_org_12 kf_high_motion_minq_12
 #endif
+#if !TWOPASS_CLEANUP
 static int kf_low_motion_minq_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4552,6 +4553,7 @@ static int kf_low_motion_minq_8[QINDEX_RANGE] = {
     83,  85,  87,  90,  91,  94,  96,  99,  102, 104, 107, 108, 110, 113, 114, 116, 119, 121, 122,
     125, 128, 130, 133, 135, 138, 141, 144, 147, 150, 152, 155, 158, 161, 165, 168, 171, 174, 177,
     180, 184, 187, 190, 194, 197, 201, 205, 208};
+#endif
 
 static int kf_high_motion_minq_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   2,   2,   3,   3,   4,   4,   5,
@@ -4569,7 +4571,7 @@ static int kf_high_motion_minq_8[QINDEX_RANGE] = {
     171, 173, 174, 176, 178, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 200, 201, 204, 206,
     209, 212, 214, 216, 219, 222, 224, 227, 230};
 
-#if TWOPASS_RC
+#if 0 //TWOPASS_RC
 static int arfgf_low_motion_minq_org_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,
@@ -4679,6 +4681,7 @@ static int rtc_minq_8[QINDEX_RANGE] = {
         241};
 */
 
+#if !TWOPASS_CLEANUP
 static int kf_low_motion_minq_10[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4694,6 +4697,7 @@ static int kf_low_motion_minq_10[QINDEX_RANGE] = {
     86,  88,  90,  92,  94,  96,  98,  101, 104, 106, 108, 109, 111, 114, 115, 117, 119, 122, 123,
     126, 128, 131, 134, 136, 139, 142, 145, 147, 150, 153, 156, 159, 162, 165, 168, 171, 174, 177,
     180, 184, 187, 190, 194, 197, 202, 205, 208};
+#endif
 
 static int kf_high_motion_minq_10[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4784,6 +4788,7 @@ static int rtc_minq_10[QINDEX_RANGE] = {
         241};
 */
 
+#if !TWOPASS_CLEANUP
 static int kf_low_motion_minq_12[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4799,6 +4804,7 @@ static int kf_low_motion_minq_12[QINDEX_RANGE] = {
     80,  82,  83,  85,  86,  88,  90,  91,  93,  95,  96,  97,  99,  100, 101, 102, 104, 105, 106,
     108, 110, 111, 113, 115, 117, 119, 121, 122, 124, 126, 128, 130, 132, 134, 136, 138, 140, 142,
     144, 147, 149, 152, 154, 156, 159, 161, 163};
+#endif
 
 static int kf_high_motion_minq_12[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4890,9 +4896,11 @@ static int rtc_minq_12[QINDEX_RANGE] = {
         241};
 */
 
+#if !TWOPASS_CLEANUP
 static int gf_high = 2000;
 static int gf_low  = 400;
-#if TWOPASS_RC
+#endif
+#if 0 //TWOPASS_RC
 static int gf_high_org = 2400;
 static int gf_low_org  = 300;
 #endif
@@ -4937,6 +4945,7 @@ static int get_kf_active_quality_cqp(const RATE_CONTROL *const rc, int q,
     return get_active_quality(q, rc->kf_boost, kf_low, kf_high,
         kf_low_motion_minq_cqp, kf_high_motion_minq_cqp);
 }
+#if !TWOPASS_CLEANUP
 static int get_kf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *kf_low_motion_minq;
     int *kf_high_motion_minq;
@@ -4945,8 +4954,9 @@ static int get_kf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
     return get_active_quality(
         q, rc->kf_boost, kf_low, kf_high, kf_low_motion_minq, kf_high_motion_minq);
 }
+#endif
 
-#if TWOPASS_RC
+#if 0 //TWOPASS_RC
 static int get_kf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *kf_low_motion_minq_org;
     int *kf_high_motion_minq_org;
@@ -4966,6 +4976,7 @@ static int get_gf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBit
 }
 #endif
 
+#if !TWOPASS_CLEANUP
 static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *arfgf_low_motion_minq;
     int *arfgf_high_motion_minq;
@@ -4974,6 +4985,7 @@ static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
     return get_active_quality(
         q, rc->gfu_boost, gf_low, gf_high, arfgf_low_motion_minq, arfgf_high_motion_minq);
 }
+#endif
 #if TPL_LA && TPL_LA_QPS
 static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *arfgf_low_motion_minq;
@@ -4985,7 +4997,7 @@ static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, Aom
 }
 #endif
 
-#if TWOPASS_RC
+#if 0
 static int get_gf_high_motion_quality_org(int q, AomBitDepth bit_depth) {
     int *arfgf_high_motion_minq_org;
     ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq_org);
@@ -5001,6 +5013,7 @@ static int get_gf_high_motion_quality(int q, AomBitDepth bit_depth) {
 #if TPL_LA
 int16_t eb_av1_dc_quant_qtx(int32_t qindex, int32_t delta, AomBitDepth bit_depth);
 
+#if !TWOPASS_CLEANUP
 static int get_kf_boost_from_r0(double r0, int frames_to_key, int is_smaller_360p) {
     double factor = sqrt((double)frames_to_key);
     factor = AOMMIN(factor, 10.0);
@@ -5009,6 +5022,7 @@ static int get_kf_boost_from_r0(double r0, int frames_to_key, int is_smaller_360
                                       : (int)rint(2 * (75.0 + 14.0 * factor) / r0);
     return boost;
 }
+#endif
 
 #if TPL_IMP
 static int get_cqp_kf_boost_from_r0(double r0, int frames_to_key, EbInputResolution input_resolution) {
@@ -6158,6 +6172,7 @@ static void sb_qp_derivation_tpl_la(
 }
 #endif
 
+#if !TWOPASS_CLEANUP
 // Calculates the QP per SB based on the non moving index. For now, only active for I Slice.
 static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
@@ -6297,6 +6312,7 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
         }
     }
 }
+#endif
 
 #if TWOPASS_RC
 int av1_rc_get_default_min_gf_interval(int width, int height,
@@ -6588,12 +6604,10 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
-    TWO_PASS *const twopass                  = &scs_ptr->twopass;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
     GF_GROUP *const gf_group                 = &encode_context_ptr->gf_group;
     const int bit_depth = scs_ptr->static_config.encoder_bit_depth;
     //int rf_level, update_type;
-    int is_src_frame_alt_ref  = 0;
     const RefreshFrameFlagsInfo *const refresh_frame_flags = &pcs_ptr->parent_pcs_ptr->refresh_frame;
     const int is_intrl_arf_boost = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
     int *inter_minq;
@@ -6650,8 +6664,8 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
     return active_best_quality;
 }
 
-static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr, int width,
-                                         int height) {
+static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr/*,
+                                         int width, int height*/) {
   //const RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -6680,8 +6694,8 @@ static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr, int 
   return fclamp(rcf, MIN_BPB_FACTOR, MAX_BPB_FACTOR);
 }
 
-static void set_rate_correction_factor(PictureParentControlSet *ppcs_ptr, double factor, int width,
-                                       int height) {
+static void set_rate_correction_factor(PictureParentControlSet *ppcs_ptr, double factor/*,
+                                       int width, int height*/) {
   //RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -6782,7 +6796,7 @@ int av1_rc_regulate_q(PictureControlSet *pcs_ptr, int target_bits_per_frame,
                       int width, int height) {
   const int MBs = ((width + 15) / 16) * ((height + 15) / 16);//av1_get_MBs(width, height);
   const double correction_factor =
-      get_rate_correction_factor(pcs_ptr->parent_pcs_ptr, width, height);
+      get_rate_correction_factor(pcs_ptr->parent_pcs_ptr/*, width, height*/);
   const int target_bits_per_mb =
       (int)(((uint64_t)target_bits_per_frame << BPER_MB_NORMBITS) / MBs);
 
@@ -6849,7 +6863,6 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
-    TWO_PASS *const twopass                  = &scs_ptr->twopass;
     GF_GROUP *const gf_group                 = &encode_context_ptr->gf_group;
     const RefreshFrameFlagsInfo *const refresh_frame_flags = &pcs_ptr->parent_pcs_ptr->refresh_frame;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
@@ -6942,7 +6955,7 @@ static void av1_rc_update_rate_correction_factors(PictureParentControlSet *ppcs_
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
   int correction_factor = 100;
   double rate_correction_factor =
-      get_rate_correction_factor(ppcs_ptr, width, height);
+      get_rate_correction_factor(ppcs_ptr/*, width, height*/);
   double adjustment_limit;
   //const int MBs = av1_get_MBs(width, height);
   const int MBs = ((width + 15) / 16) * ((height + 15) / 16);//av1_get_MBs(width, height);
@@ -7012,7 +7025,7 @@ static void av1_rc_update_rate_correction_factors(PictureParentControlSet *ppcs_
       rate_correction_factor = MIN_BPB_FACTOR;
   }
 
-  set_rate_correction_factor(ppcs_ptr, rate_correction_factor, width, height);
+  set_rate_correction_factor(ppcs_ptr, rate_correction_factor/*, width, height*/);
 }
 
 // Update the buffer level: leaky bucket model.
@@ -7057,7 +7070,6 @@ static void update_golden_frame_stats(PictureParentControlSet *ppcs_ptr) {
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
-  GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
 
   // Update the Golden frame usage counts.
   if (/*cpi->refresh_frame.golden_frame*/frame_is_intra_only(ppcs_ptr) || rc->is_src_frame_alt_ref) {

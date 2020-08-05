@@ -1314,8 +1314,6 @@ EbErrorType first_pass_signal_derivation_me_kernel(
     MotionEstimationContext_t   *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
-    EbEncMode enc_mode = pcs_ptr->enc_mode;
-
     context_ptr->me_context_ptr->mrp_level = pcs_ptr->mrp_level;
     // Set ME/HME search regions
 
@@ -1972,8 +1970,7 @@ EbErrorType compute_decimated_zz_sad(MotionEstimationContext_t *context_ptr, Pic
 /***************************************************************************************************
 * ZZ Decimated SAD Computation
 ***************************************************************************************************/
-EbErrorType compute_zz_ssd(MotionEstimationContext_t *context_ptr, PictureParentControlSet *pcs_ptr,
-    EbPictureBufferDesc *sixteenth_decimated_picture_ptr,
+EbErrorType compute_zz_ssd(/*MotionEstimationContext_t *context_ptr, */PictureParentControlSet *pcs_ptr,
     uint32_t x_sb_start_index, uint32_t x_sb_end_index,
     uint32_t y_sb_start_index, uint32_t y_sb_end_index) {
     EbErrorType return_error = EB_ErrorNone;
@@ -2376,10 +2373,8 @@ void *motion_estimation_kernel(void *input_ptr) {
                 // ZZ SSDs Computation using full picture
                 if (pcs_ptr->picture_number > 0) {
                     compute_zz_ssd(
-                        context_ptr,
+                        //context_ptr,
                         pcs_ptr,
-                        (EbPictureBufferDesc *)pa_ref_obj_
-                        ->sixteenth_decimated_picture_ptr, // Hsan: always use decimated for ZZ SAD derivation until studying the trade offs and regenerating the activity threshold
                         x_sb_start_index,
                         x_sb_end_index,
                         y_sb_start_index,
