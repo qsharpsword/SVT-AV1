@@ -684,8 +684,8 @@ extern "C" {
 #define SUPER_FAST_SHUT_TXS           0
 #define SUPER_FAST_MRP_OFF            0
 #define SUPER_FAST_HP_OFF             0
-#define SUPER_FAST_WARP_OFF           1
-#define SUPER_FAST_PRED_ONLY_B_SLICE  0
+#define SUPER_FAST_WARP_OFF           0
+#define SUPER_FAST_PRED_ONLY_B_SLICE  1
 #define TF_OFF                        0
 /******************************/
 
