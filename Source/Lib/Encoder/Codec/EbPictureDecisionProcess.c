@@ -1234,7 +1234,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set disallow_nsq
 #if DISALLOW_NSQ_DEPTH
 #if FAST_M8_V1
+#if JULY31_PRESETS_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5)
+#else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
         pcs_ptr->disallow_nsq = EB_FALSE;
     else
         pcs_ptr->disallow_nsq = EB_TRUE;
@@ -2587,6 +2591,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->tx_size_search_mode = 1;
 #endif
+#if !MOVE_SIGNALS_TO_MD
 #if APR22_ADOPTIONS
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
@@ -2635,6 +2640,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->txs_in_inter_classes = 1;
 #endif
+#endif
 #if !INTER_COMP_REDESIGN
     // Set Wedge mode      Settings
     // 0                 FULL: Full search
@@ -2667,6 +2673,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->wedge_mode = 0;
 #endif
 #endif
+#if !MOVE_SIGNALS_TO_MD
     // inter intra pred                      Settings
     // 0                                     OFF
     // 1                                     FULL
@@ -2717,6 +2724,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->enable_inter_intra =
         scs_ptr->static_config.inter_intra_compound;
 #endif
+
     // Set compound mode      Settings
     // 0                      OFF: No compond mode search : AVG only
     // 1                      ON: Full
@@ -2816,6 +2824,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->compound_mode =
         scs_ptr->static_config.compound_level;
 
+#endif
     // Set frame end cdf update mode      Settings
     // 0                                  OFF
     // 1                                  ON

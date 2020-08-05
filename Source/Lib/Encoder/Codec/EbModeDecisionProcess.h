@@ -220,11 +220,19 @@ typedef struct  NsqCycleRControls {
 #if SOFT_CYCLES_REDUCTION
 typedef struct  AMdCycleRControls {
     uint8_t enabled; // On/Off feature control
+#if !SWITCH_MODE_BASED_ON_STATISTICS
     uint16_t sq_weight_th;  // Threshold adjust the sq_weight <the higher th the higher speed>
+#endif
     uint16_t skip_nsq_th;  // Threshold to bypass nsq <the higher th the higher speed>
+#if !SWITCH_MODE_BASED_ON_STATISTICS
     uint16_t nics_th;  // Threshold to adjust nics <the higher th the higher speed>
     uint16_t mrp_th;  // Threshold to adjust mrp <the higher th the higher speed>
     uint16_t compound_th;  // Threshold to adjust compound <the higher th the higher speed>
+#endif
+#if SWITCH_MODE_BASED_ON_STATISTICS
+    uint16_t switch_mode_th;
+    uint8_t mode_offset;
+#endif
 }AMdCycleRControls;
 #endif
 #if DEPTH_CYCLES_REDUCTION
@@ -391,6 +399,13 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t eight_pel_search_pos_cnt;           // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt best MV)
 #endif
 }MdSubPelSearchCtrls;
+#endif
+#if SWITCH_MODE_BASED_ON_SQ_COEFF
+typedef struct CoeffBSwMdCtrls {
+    uint8_t enabled;                // 0:  OFF; 1:  ON
+    uint8_t mode_offset;            // Offset to the mode to switch to
+    uint8_t skip_block;             // Allow skipping NSQ blocks
+}CoeffBSwMdCtrls;
 #endif
 #if SEARCH_TOP_N
 typedef struct MdMotionSearchResults {
@@ -759,7 +774,9 @@ typedef struct ModeDecisionContext {
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
     uint8_t      full_cost_shut_fast_rate_flag;
+#if !SWITCH_MODE_BASED_ON_SQ_COEFF
     EbBool       coeff_based_nsq_cand_reduction;
+#endif
     uint8_t      tx_search_level;
 #if !TXT_CONTROL
     uint64_t     tx_weight;
@@ -774,7 +791,7 @@ typedef struct ModeDecisionContext {
 #endif
     uint8_t      md_enable_paeth;
     uint8_t      md_enable_smooth;
-    uint8_t      md_enable_inter_intra;
+    uint8_t      md_inter_intra_level;
 #if FILTER_INTRA_CLI
     uint8_t      md_filter_intra_level;
 #else
@@ -960,6 +977,15 @@ typedef struct ModeDecisionContext {
     int16_t sprs_lev0_end_x;
     int16_t sprs_lev0_start_y;
     int16_t sprs_lev0_end_y;
+#endif
+#if MOVE_SIGNALS_TO_MD
+    uint8_t txs_in_inter_classes;
+    uint8_t nic_scaling_level;
+    uint8_t inter_compound_mode;
+#endif
+#if SWITCH_MODE_BASED_ON_SQ_COEFF
+    uint8_t switch_md_mode_based_on_sq_coeff;
+    CoeffBSwMdCtrls cb_sw_md_ctrls;
 #endif
 } ModeDecisionContext;
 

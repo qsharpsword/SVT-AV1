@@ -2183,6 +2183,33 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 }
 #endif
 #endif
+
+#if SWITCH_MODE_BASED_ON_SQ_COEFF
+void coeff_based_switch_md_controls(ModeDecisionContext *mdctxt, uint8_t switch_md_mode_based_on_sq_coeff_level) {
+    CoeffBSwMdCtrls *coeffb_sw_md_ctrls = &mdctxt->cb_sw_md_ctrls;
+
+    switch (switch_md_mode_based_on_sq_coeff_level) {
+    case 0: coeffb_sw_md_ctrls->enabled = 0; break;
+    case 1:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 3;
+        coeffb_sw_md_ctrls->skip_block = 0;
+        break;
+    case 2:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 4;
+        coeffb_sw_md_ctrls->skip_block = 0;
+        break;
+    case 3:
+        coeffb_sw_md_ctrls->enabled = 1;
+        coeffb_sw_md_ctrls->mode_offset = 4;
+        coeffb_sw_md_ctrls->skip_block = 1;
+        break;
+    default: assert(0); break;
+    }
+}
+#endif
+
 #if SB_CLASSIFIER
 /******************************************************
 * Derive SB classifier thresholds
@@ -2509,6 +2536,29 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 
 #if MULTI_BAND_ACTIONS
 #if NON_UNIFORM_NSQ_BANDING
+#if JULY31_PRESETS_ADOPTIONS
+uint8_t nsq_cycles_reduction_th[19] = {
+ 0, // NONE
+ 17, //[85%;100%]
+ 15,//[75%;85%]
+ 14,//[65%;75%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;65%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 6,//[20%;25%]
+ 5,//[17%;20%]
+ 5,//[14%;17%]
+ 4,//[10%;14%]
+ 3,//[6%;10%]
+ 2,//[3%;6%]
+ 1 //[0%;3%]
+};
+#else
 uint8_t m0_nsq_cycles_reduction_th[19] = {
  0, // NONE
  17, //[85%;100%]
@@ -2551,6 +2601,7 @@ uint8_t m1_nsq_cycles_reduction_th[19] = {
  2,//[3%;6%]
  1 //[0%;3%]
 };
+#endif
 #else
 uint8_t m0_nsq_cycles_reduction_th[21] = {
 0, // NONE
@@ -2743,6 +2794,59 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
 #endif
 
 #if SOFT_CYCLES_REDUCTION
+#if SWITCH_MODE_BASED_ON_STATISTICS
+void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &mdctxt->admd_cycles_red_ctrls;
+    switch (adaptive_md_cycles_red_mode)
+    {
+    case 0:
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 0;
+        adaptive_md_cycles_red_ctrls->mode_offset = 0;
+        break;
+    case 1:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 2:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 700;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 3:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 4:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 300;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 300;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 5:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 500;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1000;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    case 6:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 750;
+        adaptive_md_cycles_red_ctrls->switch_mode_th = 1500;
+        adaptive_md_cycles_red_ctrls->mode_offset = 2;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#else
 void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode) {
     AMdCycleRControls*adaptive_md_cycles_red_ctrls = &mdctxt->admd_cycles_red_ctrls;
     switch (adaptive_md_cycles_red_mode)
@@ -2924,6 +3028,7 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
     }
 }
 #endif
+#endif
 #if DEPTH_CYCLES_REDUCTION
 void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode) {
 
@@ -3047,6 +3152,490 @@ void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_c
         assert(0);
         break;
     }
+}
+#endif
+#if SWITCH_MODE_BASED_ON_SQ_COEFF || SWITCH_MODE_BASED_ON_STATISTICS
+/*
+ * Update the non-NSQ and non-depth SB-level feature settings.  This is used by features that
+ * switch modes at the block level (e.g. which use SQ block info to use less accurate settings
+ * for NSQ block).  Contains only features that vary between enc modes.
+ */
+EbErrorType signal_derivation_update(
+    SequenceControlSet *sequence_control_set_ptr,
+    PictureControlSet *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    EbEncMode enc_mode ) {
+
+    EbErrorType return_error = EB_ErrorNone;
+    uint8_t pd_pass = context_ptr->pd_pass;
+
+    if (enc_mode <= ENC_M6)
+         context_ptr->mrp_level = 2;
+    else
+         context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag  ? 6 : 9;
+
+    uint8_t txt_cycles_reduction_level = 0;
+    if (pcs_ptr->parent_pcs_ptr->slice_type == I_SLICE) {
+        txt_cycles_reduction_level = 0;
+    }
+    else {
+        if (pd_pass == PD_PASS_0)
+            txt_cycles_reduction_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            txt_cycles_reduction_level = 0;
+        else if (enc_mode <= ENC_M5)
+            txt_cycles_reduction_level = 0;
+        else
+            txt_cycles_reduction_level = 5;
+    }
+    set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
+
+    // Set Chroma Mode
+    // Level                Settings
+    // CHROMA_MODE_0  0     Full chroma search @ MD
+    // CHROMA_MODE_1  1     Fast chroma search @ MD
+    // CHROMA_MODE_2  2     Chroma blind @ MD + CFL @ EP
+    // CHROMA_MODE_3  3     Chroma blind @ MD + no CFL @ EP
+    if (pd_pass == PD_PASS_0)
+        context_ptr->chroma_level = CHROMA_MODE_2; // or CHROMA_MODE_3
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->chroma_level = CHROMA_MODE_1;
+    }
+    else if (sequence_control_set_ptr->static_config.set_chroma_mode ==
+        DEFAULT) {
+        if (enc_mode <= ENC_M6)
+            context_ptr->chroma_level = CHROMA_MODE_0;
+        else
+            context_ptr->chroma_level = CHROMA_MODE_1;
+    }
+    else // use specified level
+        context_ptr->chroma_level =
+        sequence_control_set_ptr->static_config.set_chroma_mode;
+
+    // Chroma independent modes search
+    // Level                Settings
+    // 0                    post first md_stage
+    // 1                    post last md_stage
+    if (enc_mode <= ENC_MR) {
+        context_ptr->chroma_at_last_md_stage = 0;
+        context_ptr->chroma_at_last_md_stage_intra_th = (uint64_t)~0;
+        context_ptr->chroma_at_last_md_stage_cfl_th = (uint64_t)~0;
+    }
+    else if (enc_mode <= ENC_M4) {
+        context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) ? 1 : 0;
+        context_ptr->chroma_at_last_md_stage_intra_th = 130;
+        context_ptr->chroma_at_last_md_stage_cfl_th = 130;
+    }
+    else {
+        context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) ? 1 : 0;
+        context_ptr->chroma_at_last_md_stage_intra_th = 100;
+        context_ptr->chroma_at_last_md_stage_cfl_th = 100;
+    }
+
+    // Set global MV injection
+    // Level                Settings
+    // 0                    Injection off
+    // 1                    On
+    if (sequence_control_set_ptr->static_config.enable_global_motion == EB_TRUE) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->global_mv_injection = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->global_mv_injection = 0;
+        else
+            if (enc_mode <= ENC_M6)
+                context_ptr->global_mv_injection = 1;
+            else
+                context_ptr->global_mv_injection = 0;
+    }
+    else
+        context_ptr->global_mv_injection = 0;
+
+    if (pd_pass == PD_PASS_0)
+        context_ptr->new_nearest_near_comb_injection = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->new_nearest_near_comb_injection = 0;
+    else if (sequence_control_set_ptr->static_config.new_nearest_comb_inject == DEFAULT) {
+        if (enc_mode <= ENC_M1)
+            context_ptr->new_nearest_near_comb_injection = 1;
+        else
+            context_ptr->new_nearest_near_comb_injection = 0;
+    } else
+        context_ptr->new_nearest_near_comb_injection =
+        sequence_control_set_ptr->static_config.new_nearest_comb_inject;
+
+    // Set unipred3x3 injection
+    // Level                Settings
+    // 0                    OFF
+    // 1                    ON FULL
+    // 2                    Reduced set
+    if (pd_pass == PD_PASS_0) {
+        context_ptr->unipred3x3_injection = 0;
+    }
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->unipred3x3_injection = 2;
+    }
+    else {
+        if (enc_mode <= ENC_M0)
+            context_ptr->unipred3x3_injection = 1;
+        else
+            context_ptr->unipred3x3_injection = 0;
+    }
+
+    // Set bipred3x3 injection
+    // Level                Settings
+    // 0                    OFF
+    // 1                    ON FULL
+    // 2                    Reduced set
+    if (pd_pass == PD_PASS_0) {
+        context_ptr->bipred3x3_injection = 0;
+    }
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->bipred3x3_injection = 2;
+    }
+    else if (sequence_control_set_ptr->static_config.bipred_3x3_inject == DEFAULT) {
+        if (enc_mode <= ENC_M2)
+            context_ptr->bipred3x3_injection = 1;
+        else if (enc_mode <= ENC_M7)
+            context_ptr->bipred3x3_injection = 2;
+        else
+            context_ptr->bipred3x3_injection = 0;
+    } else
+        context_ptr->bipred3x3_injection =
+        sequence_control_set_ptr->static_config.bipred_3x3_inject;
+
+#if MOVE_SIGNALS_TO_MD
+        // Set compound mode      Settings
+        // 0                      OFF: No compond mode search : AVG only
+        // 1                      ON: Full
+        // 2                      ON: Fast : similar based disable
+        // 3                      ON: Fast : MRP pruning/ similar based disable
+        if (sequence_control_set_ptr->static_config.compound_level == DEFAULT) {
+            if (sequence_control_set_ptr->compound_mode) {
+                if (enc_mode <= ENC_M0)
+                    context_ptr->inter_compound_mode = 1;
+                else if (enc_mode <= ENC_M3)
+                    context_ptr->inter_compound_mode = 3;
+                else
+                    context_ptr->inter_compound_mode = 0;
+            }
+            else {
+                context_ptr->inter_compound_mode = 0;
+            }
+        }
+        else
+            context_ptr->inter_compound_mode = sequence_control_set_ptr->static_config.compound_level;
+#endif
+
+    // Level                Settings
+    // 0                    Level 0: OFF
+    // 1                    Level 1: pme_distortion to me_distortion deviation on, and search restricted to 1 ref per list
+    // 2                    Level 2: pme_distortion to me_distortion deviation off
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->predictive_me_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->predictive_me_level = 1;
+        else if (sequence_control_set_ptr->static_config.pred_me == DEFAULT) {
+            if (enc_mode <= ENC_M2)
+                    context_ptr->predictive_me_level = 2;
+            else if (enc_mode <= ENC_M9)
+                context_ptr->predictive_me_level = 1;
+            else
+                context_ptr->predictive_me_level = 0;
+        } else
+            context_ptr->predictive_me_level =
+            sequence_control_set_ptr->static_config.pred_me;
+    }
+    else
+        context_ptr->predictive_me_level = 0;
+
+    if (context_ptr->chroma_level <= CHROMA_MODE_1)
+        context_ptr->blk_skip_decision = EB_TRUE;
+    else
+        context_ptr->blk_skip_decision = EB_FALSE;
+
+    // md_stage_1_cand_prune_th (for single candidate removal per class)
+    // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_stage_1_cand_prune_th = 75;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->md_stage_1_cand_prune_th = 110;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->md_stage_1_cand_prune_th = 75;
+    else
+        context_ptr->md_stage_1_cand_prune_th = 45;
+
+    // md_stage_1_class_prune_th (for class removal)
+    // Remove class if deviation to the best higher than TH_C
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_stage_1_class_prune_th = 100;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
+    else
+        context_ptr->md_stage_1_class_prune_th =
+        sequence_control_set_ptr->static_config.md_stage_1_class_prune_th;
+
+    // md_stage_2_3_cand_prune_th (for single candidate removal per class)
+    // Remove candidate if deviation to the best is higher than
+    // md_stage_2_3_cand_prune_th
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_stage_2_3_cand_prune_th = 5;
+    else if (enc_mode <= ENC_MRS)
+        context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+    else if (enc_mode <= ENC_MR)
+        context_ptr->md_stage_2_3_cand_prune_th = 45;
+    else if (enc_mode <= ENC_M9)
+        context_ptr->md_stage_2_3_cand_prune_th = 15;
+    else
+        context_ptr->md_stage_2_3_cand_prune_th = 5;
+
+    // Set pred ME full search area
+    if (pd_pass == PD_PASS_0) {
+        context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
+        context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
+    }
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
+        context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
+    }
+    else {
+        context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M3 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M3 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+    }
+
+    // Set pic_obmc_level @ MD
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_pic_obmc_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_pic_obmc_level = 0;
+    else if (enc_mode <= ENC_M5)
+        context_ptr->md_pic_obmc_level =
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+    else if (enc_mode <= ENC_M6)
+        context_ptr->md_pic_obmc_level = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ?
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level : 0;
+    else
+        context_ptr->md_pic_obmc_level =
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+
+    set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_level);
+
+    // Set enable_inter_intra @ MD
+    //Block level switch, has to follow the picture level
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE && sequence_control_set_ptr->seq_header.enable_interintra_compound) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->md_inter_intra_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->md_inter_intra_level = 0;
+        else if (enc_mode <= ENC_M1)
+            context_ptr->md_inter_intra_level = 2;
+        else if (enc_mode <= ENC_M3)
+            context_ptr->md_inter_intra_level = pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0 ? 2 : 0;
+        else
+            context_ptr->md_inter_intra_level = 0;
+    }
+    else
+        context_ptr->md_inter_intra_level = 0;
+
+    // Set md_tx_size_search_mode @ MD
+    if (pcs_ptr->parent_pcs_ptr->tx_size_search_mode) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->md_tx_size_search_mode = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->md_tx_size_search_mode = 0;
+        else if (enc_mode <= ENC_M4)
+            context_ptr->md_tx_size_search_mode = 1;
+        else if (enc_mode <= ENC_M9)
+            context_ptr->md_tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
+        else
+            context_ptr->md_tx_size_search_mode = 0;
+    }
+    else
+        context_ptr->md_tx_size_search_mode = 0;
+
+#if MOVE_SIGNALS_TO_MD
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+    if (enc_mode <= ENC_MRS)
+        context_ptr->txs_in_inter_classes = 1;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->txs_in_inter_classes = 2;
+    else
+        context_ptr->txs_in_inter_classes = 0;
+
+    //{10, 8},   // level0
+    //{ 8,8 },    // level1
+    //{ 7,8 },    // level2
+    //{ 6,8 },    // level3
+    //{ 5,8 },    // level4
+    //{ 4,8 },    // level5
+    //{ 3,8 },    // level6
+    //{ 2,8 },    // level7
+    //{ 3,16 },   // level8
+    //{ 1,8 },    // level9
+    //{ 1,16 }    // level10
+    if (pcs_ptr->enc_mode <= ENC_MR)
+        context_ptr->nic_scaling_level = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        context_ptr->nic_scaling_level = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        context_ptr->nic_scaling_level = 3;
+    else if (pcs_ptr->enc_mode <= ENC_M2)
+        context_ptr->nic_scaling_level = 5;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        context_ptr->nic_scaling_level = 7;
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+        context_ptr->nic_scaling_level = 8;
+    else
+        context_ptr->nic_scaling_level = 9;
+#endif
+#if COEFF_BASED_TXS_BYPASS
+    uint8_t txs_cycles_reduction_level = 0;
+    set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
+#endif
+
+    // Set md_filter_intra_mode @ MD
+    // md_filter_intra_level specifies whether filter intra would be active
+    // for a given prediction candidate in mode decision.
+    // md_filter_intra_level  | Settings
+    // 0                      | OFF
+    // 1                      | ON
+#if SWITCH_MODE_BASED_ON_SQ_COEFF
+    if (sequence_control_set_ptr->static_config.filter_intra_level == DEFAULT) {
+        if (sequence_control_set_ptr->seq_header.filter_intra_level) {
+            if (pd_pass == PD_PASS_0)
+                context_ptr->md_filter_intra_level = 0;
+            else if (pd_pass == PD_PASS_1)
+                context_ptr->md_filter_intra_level = 0;
+            if (enc_mode <= ENC_M6)
+                context_ptr->md_filter_intra_level = 1;
+            else
+                context_ptr->md_filter_intra_level = 0;
+        }
+        else
+            context_ptr->md_filter_intra_level = 0;
+    }
+    else
+        context_ptr->md_filter_intra_level = sequence_control_set_ptr->static_config.filter_intra_level;
+#endif
+
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_sq_mv_search_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_sq_mv_search_level = 0;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->md_sq_mv_search_level = 1;
+    else if (enc_mode <= ENC_M5)
+        context_ptr->md_sq_mv_search_level = 2;
+    else
+        context_ptr->md_sq_mv_search_level = 3;
+
+    md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
+
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_nsq_mv_search_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_nsq_mv_search_level = 0;
+    else
+        if (enc_mode <= ENC_MRS)
+            context_ptr->md_nsq_mv_search_level = 1;
+        else if (enc_mode <= ENC_M3)
+            context_ptr->md_nsq_mv_search_level = 2;
+        else
+            context_ptr->md_nsq_mv_search_level = 4;
+
+    md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
+
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_subpel_me_level = enc_mode <= ENC_M7 ? 3 : 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_subpel_me_level = 3;
+    else
+        if (enc_mode <= ENC_M7)
+            context_ptr->md_subpel_me_level = 1;
+        else
+            context_ptr->md_subpel_me_level = 2;
+
+    md_subpel_me_controls(context_ptr, context_ptr->md_subpel_me_level);
+
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_subpel_pme_level = enc_mode <= ENC_M7 ? 3 : 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_subpel_pme_level = 3;
+    else if (enc_mode <= ENC_M7)
+        context_ptr->md_subpel_pme_level = 1;
+    else
+        context_ptr->md_subpel_pme_level = 2;
+
+    md_subpel_pme_controls(context_ptr, context_ptr->md_subpel_pme_level);
+
+    // Set inter_inter_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (enc_mode <= ENC_M0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+        else if (enc_mode <= ENC_M5)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+    }
+    else {
+        context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+    }
+    set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
+
+    // set compound_types_to_try
+    uint8_t compound_mode = context_ptr->inter_compound_mode;
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls(context_ptr,0);
+    else {
+        set_inter_comp_controls(context_ptr, compound_mode);
+    }
+    context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
+
+    BlkStruct *similar_cu = &context_ptr->md_blk_arr_nsq[context_ptr->similar_blk_mds];
+    if (context_ptr->compound_types_to_try > MD_COMP_AVG && context_ptr->similar_blk_avail) {
+        int32_t is_src_compound = similar_cu->pred_mode >= NEAREST_NEARESTMV;
+        if (context_ptr->inter_comp_ctrls.similar_previous_blk == 1) {
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : context_ptr->compound_types_to_try;
+        }
+        else if (context_ptr->inter_comp_ctrls.similar_previous_blk == 2) {
+            context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : similar_cu->interinter_comp.type;
+        }
+    }
+
+    // Do not add MD_COMP_WEDGE  beyond this point
+    if (get_wedge_params_bits(context_ptr->blk_geom->bsize) == 0)
+        context_ptr->compound_types_to_try = MIN(context_ptr->compound_types_to_try,MD_COMP_DIFF0);
+
+    context_ptr->inject_inter_candidates = 1;
+    if (context_ptr->pd_pass > PD_PASS_1 && context_ptr->similar_blk_avail) {
+        int32_t is_src_intra = similar_cu->pred_mode <= PAETH_PRED;
+        if (context_ptr->intra_similar_mode)
+            context_ptr->inject_inter_candidates = is_src_intra ? 0 : context_ptr->inject_inter_candidates;
+    }
+
+    return return_error;
 }
 #endif
 /******************************************************
@@ -4585,6 +5174,28 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_injection =
         sequence_control_set_ptr->static_config.bipred_3x3_inject;
 
+#if MOVE_SIGNALS_TO_MD
+        // Set compound mode      Settings
+        // 0                      OFF: No compond mode search : AVG only
+        // 1                      ON: Full
+        // 2                      ON: Fast : similar based disable
+        // 3                      ON: Fast : MRP pruning/ similar based disable
+        if (sequence_control_set_ptr->static_config.compound_level == DEFAULT) {
+            if (sequence_control_set_ptr->compound_mode) {
+                if (enc_mode <= ENC_M1)
+                    context_ptr->inter_compound_mode = 1;
+                else if (enc_mode <= ENC_M3)
+                    context_ptr->inter_compound_mode = 3;
+                else
+                    context_ptr->inter_compound_mode = 0;
+            }
+            else {
+                context_ptr->inter_compound_mode = 0;
+            }
+        }
+        else
+            context_ptr->inter_compound_mode = sequence_control_set_ptr->static_config.compound_level;
+#endif
 #if UPGRADE_SUBPEL
     // Level                Settings
     // 0                    Level 0: OFF
@@ -5711,6 +6322,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
     else if (pd_pass == PD_PASS_1)
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
+#if JULY31_PRESETS_ADOPTIONS
+    else
+        context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
+#else
     else if (pd_pass == PD_PASS_2) {
         if (enc_mode == ENC_M0)
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m0_nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
@@ -5719,6 +6334,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
     }
+#endif
 #endif
 
 
@@ -5946,6 +6562,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if IMPROVED_MD_ADAPTIVE_CYCLES
     if (pd_pass == PD_PASS_2) {
+#if SWITCH_MODE_BASED_ON_STATISTICS
+        if (enc_mode <= ENC_M0)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 1;
+        else if (enc_mode <= ENC_M1)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 2;
+        else if (enc_mode <= ENC_M2)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 3;
+        else if (enc_mode <= ENC_M3)
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 0 : 5;
+        else
+            adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 4 : 6;
+#else
         if (enc_mode <= ENC_M0)
             adaptive_md_cycles_level = 0;
         else if (enc_mode <= ENC_M3)
@@ -5956,6 +6584,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 5 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 7 : 8;
         else
             adaptive_md_cycles_level = pcs_ptr->slice_type == I_SLICE ? 7 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 11 : 11;
+#endif
     }
 #endif
     adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
@@ -5999,7 +6628,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_SC_NSC
             if (enc_mode <= ENC_M0)
                 context_ptr->sq_weight = 105;
+#if JULY31_PRESETS_ADOPTIONS
             else if (enc_mode <= ENC_M1)
+                context_ptr->sq_weight = 95;
+            else
+                context_ptr->sq_weight = 90;
+#else
                 context_ptr->sq_weight = 100;
 #if JUNE23_ADOPTIONS
 #if JUNE25_ADOPTIONS
@@ -6019,6 +6653,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             else
                 context_ptr->sq_weight = 80;
+#endif
 #else
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -6389,6 +7024,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->comp_similar_mode = 2;
 
 #endif
+#if SWITCH_MODE_BASED_ON_SQ_COEFF
+    if (pcs_ptr->slice_type == I_SLICE)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 0;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 1;
+    else if (enc_mode <= ENC_M4)
+        context_ptr->switch_md_mode_based_on_sq_coeff = 2;
+    else
+        context_ptr->switch_md_mode_based_on_sq_coeff = 3;
+
+    coeff_based_switch_md_controls(context_ptr, context_ptr->switch_md_mode_based_on_sq_coeff);
+#else
     // Set coeff_based_nsq_cand_reduction
     if (pd_pass == PD_PASS_0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
@@ -6425,6 +7072,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
+#endif
 
 #if OBMC_CLI
     // Set pic_obmc_level @ MD
@@ -6458,13 +7106,33 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if  CLEANUP_INTER_INTRA
     //Block level switch, has to follow the picture level
 #endif
-    if (pd_pass == PD_PASS_0)
-        context_ptr->md_enable_inter_intra = 0;
-    else if (pd_pass == PD_PASS_1)
-        context_ptr->md_enable_inter_intra = 0;
+#if MOVE_SIGNALS_TO_MD
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE && sequence_control_set_ptr->seq_header.enable_interintra_compound) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->md_inter_intra_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->md_inter_intra_level = 0;
+        else if (enc_mode <= ENC_M2)
+            context_ptr->md_inter_intra_level = 2;
+        else
+            context_ptr->md_inter_intra_level = 0;
+    }
     else
-        context_ptr->md_enable_inter_intra =
+        context_ptr->md_inter_intra_level = 0;
+#else
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_inter_intra_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_inter_intra_level = 0;
+    else
+        context_ptr->md_inter_intra_level =
         pcs_ptr->parent_pcs_ptr->enable_inter_intra;
+#endif
 
     // Set enable_paeth @ MD
     if (pd_pass == PD_PASS_0)
@@ -6494,6 +7162,42 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
 
+#if MOVE_SIGNALS_TO_MD
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+    if (enc_mode <= ENC_MRS)
+        context_ptr->txs_in_inter_classes = 1;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->txs_in_inter_classes = 2;
+    else
+        context_ptr->txs_in_inter_classes = 0;
+
+    //{10, 8},   // level0
+    //{ 8,8 },    // level1
+    //{ 7,8 },    // level2
+    //{ 6,8 },    // level3
+    //{ 5,8 },    // level4
+    //{ 4,8 },    // level5
+    //{ 3,8 },    // level6
+    //{ 2,8 },    // level7
+    //{ 3,16 },   // level8
+    //{ 1,8 },    // level9
+    //{ 1,16 }    // level10
+    if (pcs_ptr->enc_mode <= ENC_MR)
+        context_ptr->nic_scaling_level = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        context_ptr->nic_scaling_level = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        context_ptr->nic_scaling_level = 4;
+    else if (pcs_ptr->enc_mode <= ENC_M2)
+        context_ptr->nic_scaling_level = 6;
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+        context_ptr->nic_scaling_level = 8;
+    else
+        context_ptr->nic_scaling_level = 9;
+#endif
 #if COEFF_BASED_TXS_BYPASS
     uint8_t txs_cycles_reduction_level = 0;
     set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
@@ -8227,11 +8931,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     //Block level switch, has to follow the picture level
 #endif
     if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->md_enable_inter_intra = 0;
+        context_ptr->md_inter_intra_level = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->md_enable_inter_intra = 0;
+        context_ptr->md_inter_intra_level = 0;
     else
-        context_ptr->md_enable_inter_intra =
+        context_ptr->md_inter_intra_level =
         pcs_ptr->parent_pcs_ptr->enable_inter_intra;
 
     // Set enable_paeth @ MD
@@ -10060,7 +10764,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
 #if FAST_M8_V1
+#if JULY31_PRESETS_ADOPTIONS
+                                if (pcs_ptr->enc_mode <= ENC_M9) {
+#else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }

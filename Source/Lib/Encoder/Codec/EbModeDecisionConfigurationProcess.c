@@ -1594,6 +1594,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
 #endif
 #else
+#if JULY31_PRESETS_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#else
 #if JUNE25_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
 #else
@@ -1601,6 +1604,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
 #else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #endif
 #endif
 #endif

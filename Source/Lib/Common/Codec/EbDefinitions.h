@@ -640,6 +640,12 @@ extern "C" {
 #define SHUT_SIMILARITY_FEATURES 1 // turn off features related to similar blocks
 #define MERGE_SQW_FEATURES 1 // Merge nsq_hv_level and sq_weight; if sq_weight on, so is nsq_hv_level
 #define SHUT_EDGE_BASED_SKIP_ANGLE_INTRA 1 // Turn off disable_edge_based_skip_angle_intra_feature
+
+#define MOVE_SIGNALS_TO_MD              1 // move txs_in_inter_classes, compound_mode and inter_intra to MD
+#define SWITCH_MODE_BASED_ON_SQ_COEFF   1 // Use aggressive settings for NSQ blocks if SQ block has zero coeffs
+#define SWITCH_MODE_BASED_ON_STATISTICS 1 // Use aggressive settings for unlikely partitions (determined using stats)
+#define JULY31_PRESETS_ADOPTIONS        1
+#define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
