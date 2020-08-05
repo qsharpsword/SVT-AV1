@@ -42,7 +42,9 @@
 #if R2R_FIX_PADDING
 #include "EbPictureDecisionProcess.h"
 #endif
-
+#if INL_ME
+#include "EbPictureAnalysisProcess.h"
+#endif
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
                         PictureControlSet *pcs_ptr);
 
@@ -1359,6 +1361,58 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                               (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
                               (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
     }
+#if INL_ME
+    // Save down scaled reference for HME
+    if (scs_ptr->in_loop_me) {
+        if (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) {
+            downsample_filtering_input_picture(
+                    pcs_ptr->parent_pcs_ptr,
+                    ref_pic_ptr,
+                    reference_object->quarter_reference_picture,
+                    reference_object->sixteenth_reference_picture);
+        } else {
+            downsample_decimation_input_picture(
+                    pcs_ptr->parent_pcs_ptr,
+                    ref_pic_ptr,
+                    reference_object->quarter_reference_picture,
+                    reference_object->sixteenth_reference_picture);
+        }
+#if INL_ME_DBG
+        // Copy original input to reference->input_picture
+        EbPictureBufferDesc *src_ptr = pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+        uint16_t luma_height = (uint16_t)(src_ptr->height - scs_ptr->max_input_pad_bottom);
+        uint32_t src_offset = (src_ptr->stride_y*src_ptr->origin_y + src_ptr->origin_x);
+        uint16_t src_stride = src_ptr->stride_y;
+        uint8_t *src = src_ptr->buffer_y + src_offset;
+
+        EbPictureBufferDesc *dst_ptr = reference_object->input_picture;
+        uint32_t dst_offset = (dst_ptr->stride_y*dst_ptr->origin_y + dst_ptr->origin_x);
+        uint16_t dst_stride = dst_ptr->stride_y;
+        uint8_t *dst = dst_ptr->buffer_y + dst_offset;
+        for (int i=0; i<luma_height; i++) {
+            EB_MEMCPY(dst, src, src_stride);
+            src += src_stride;
+            dst += dst_stride;
+        }
+        pad_input_pictures(scs_ptr, dst_ptr);
+        // Generate 1/4 and 1/16 for reference->quarter_input_picture and reference->sixteenth_input_picture
+        if (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) {
+            downsample_filtering_input_picture(
+                    pcs_ptr->parent_pcs_ptr,
+                    reference_object->input_picture,
+                    reference_object->quarter_input_picture,
+                    reference_object->sixteenth_input_picture);
+        } else {
+            downsample_decimation_input_picture(
+                    pcs_ptr->parent_pcs_ptr,
+                    reference_object->input_picture,
+                    reference_object->quarter_input_picture,
+                    reference_object->sixteenth_input_picture);
+        }
+#endif
+    }
+#endif
+
     // set up the ref POC
     reference_object->ref_poc = pcs_ptr->parent_pcs_ptr->picture_number;
 

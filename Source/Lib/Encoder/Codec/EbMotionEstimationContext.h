@@ -578,6 +578,12 @@ typedef struct MeContext {
     uint16_t adj_search_area_height;
     EbBool   me_alt_ref;
     void *   alt_ref_reference_ptr;
+
+#if INL_ME
+    // Open Loop ME
+    EbBool   me_in_loop;
+    void * alt_ref_reference_ptr_inl;
+#endif
     // tf
 #if FAST_M8_V1 // tf_hp
     uint8_t high_precision;

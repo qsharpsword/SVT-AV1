@@ -103,8 +103,15 @@ EbErrorType picture_manager_context_ctor(EbThreadContext *  thread_context_ptr,
 
     context_ptr->picture_input_fifo_ptr =
         eb_system_resource_get_consumer_fifo(enc_handle_ptr->picture_demux_results_resource_ptr, 0);
+#if INL_ME
+    UNUSED(rate_control_index);
+    context_ptr->picture_manager_output_fifo_ptr = eb_system_resource_get_producer_fifo(
+        enc_handle_ptr->pic_mgr_res_srm, 0);
+#else
     context_ptr->picture_manager_output_fifo_ptr = eb_system_resource_get_producer_fifo(
         enc_handle_ptr->rate_control_tasks_resource_ptr, rate_control_index);
+#endif
+
     context_ptr->picture_control_set_fifo_ptr = eb_system_resource_get_producer_fifo(
         enc_handle_ptr->picture_control_set_pool_ptr_array[0], 0); //The Child PCS Pool here
 
@@ -259,8 +266,10 @@ void *picture_manager_kernel(void *input_ptr) {
     EbObjectWrapper *    input_picture_demux_wrapper_ptr;
     PictureDemuxResults *input_picture_demux_ptr;
 
+#if !INL_ME
     EbObjectWrapper * output_wrapper_ptr;
     RateControlTasks *rate_control_tasks_ptr;
+#endif
 
     EbBool availability_flag;
 
@@ -1540,6 +1549,24 @@ void *picture_manager_kernel(void *input_ptr) {
                                                      1);
                         }
 
+#if INL_ME
+                        const uint32_t segment_counts =  child_pcs_ptr->parent_pcs_ptr->inloop_me_segments_total_count;
+                        for (uint32_t segment_index = 0; segment_index < segment_counts; ++segment_index) {
+                            EbObjectWrapper               *out_results_wrapper_ptr;
+                            // Get Empty Results Object
+                            eb_get_empty_object(
+                                context_ptr->picture_manager_output_fifo_ptr,
+                                &out_results_wrapper_ptr);
+
+                            PictureManagerResults   *out_results_ptr = (PictureManagerResults*)out_results_wrapper_ptr->object_ptr;
+                            out_results_ptr->pcs_wrapper_ptr = child_pcs_wrapper_ptr;
+                            out_results_ptr->segment_index = segment_index;
+                            out_results_ptr->task_type = 0;
+                            // Post the Full Results Object
+                            eb_post_full_object(out_results_wrapper_ptr);
+                        }
+
+#else
                         // Get Empty Results Object
                         eb_get_empty_object(context_ptr->picture_manager_output_fifo_ptr,
                                             &output_wrapper_ptr);
@@ -1550,6 +1577,7 @@ void *picture_manager_kernel(void *input_ptr) {
 
                         // Post the Full Results Object
                         eb_post_full_object(output_wrapper_ptr);
+#endif
 
                         // Remove the Input Entry from the Input Queue
                         input_entry_ptr->input_object_ptr = (EbObjectWrapper *)EB_NULL;

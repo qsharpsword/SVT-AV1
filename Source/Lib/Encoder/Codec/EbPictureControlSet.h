@@ -512,6 +512,9 @@ typedef struct PictureParentControlSet {
     EbObjectWrapper *    input_picture_wrapper_ptr;
     EbObjectWrapper *    reference_picture_wrapper_ptr;
     EbObjectWrapper *    pa_reference_picture_wrapper_ptr;
+#if INL_ME
+    EbObjectWrapper *    down_scaled_picture_wrapper_ptr;
+#endif
     EbPictureBufferDesc *enhanced_picture_ptr;
     EbPictureBufferDesc *enhanced_downscaled_picture_ptr;
     EbPictureBufferDesc *enhanced_unscaled_picture_ptr;
@@ -636,6 +639,13 @@ typedef struct PictureParentControlSet {
     uint8_t  me_segments_column_count;
     uint8_t  me_segments_row_count;
     uint64_t me_segments_completion_mask;
+
+#if INL_ME
+    uint16_t inloop_me_segments_total_count;
+    uint8_t  inloop_me_segments_column_count;
+    uint8_t  inloop_me_segments_row_count;
+    uint64_t inloop_me_segments_completion_mask;
+#endif
 
     // Motion Estimation Results
     uint8_t       max_number_of_pus_per_sb;

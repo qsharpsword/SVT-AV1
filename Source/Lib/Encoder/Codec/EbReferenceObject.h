@@ -15,6 +15,15 @@ typedef struct EbReferenceObject {
     EbDctor              dctor;
     EbPictureBufferDesc *reference_picture;
     EbPictureBufferDesc *reference_picture16bit;
+#if INL_ME
+    EbPictureBufferDesc *quarter_reference_picture;
+    EbPictureBufferDesc *sixteenth_reference_picture;
+#if INL_ME_DBG
+    EbPictureBufferDesc *input_picture;
+    EbPictureBufferDesc *quarter_input_picture;
+    EbPictureBufferDesc *sixteenth_input_picture;
+#endif
+#endif
     uint64_t             ref_poc;
     uint16_t             qp;
     EB_SLICE             slice_type;
@@ -70,6 +79,11 @@ typedef struct EbReferenceObjectDescInitData {
     uint8_t hbd_mode_decision;
 #endif
 #endif
+#if INL_ME
+    // whether enable 1/4,1/16 8bit luma for inloop me
+    uint8_t hme_quarter_luma_recon;
+    uint8_t hme_sixteenth_luma_recon;
+#endif
 } EbReferenceObjectDescInitData;
 
 typedef struct EbPaReferenceObject {
@@ -79,18 +93,43 @@ typedef struct EbPaReferenceObject {
     EbPictureBufferDesc *sixteenth_decimated_picture_ptr;
     EbPictureBufferDesc *quarter_filtered_picture_ptr;
     EbPictureBufferDesc *sixteenth_filtered_picture_ptr;
+#if !INL_ME
     uint16_t             variance[MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE];
     uint8_t              y_mean[MAX_NUMBER_OF_TREEBLOCKS_PER_PICTURE];
     EB_SLICE             slice_type;
     uint32_t             dependent_pictures_count; //number of pic using this reference frame
-
+#endif
 } EbPaReferenceObject;
 
 typedef struct EbPaReferenceObjectDescInitData {
     EbPictureBufferDescInitData reference_picture_desc_init_data;
     EbPictureBufferDescInitData quarter_picture_desc_init_data;
     EbPictureBufferDescInitData sixteenth_picture_desc_init_data;
+#if INL_ME
+    uint8_t empty_pa_buffers;
+#endif
 } EbPaReferenceObjectDescInitData;
+
+#if INL_ME
+typedef struct EbDownScaledObject {
+    EbDctor              dctor;
+    EbPictureBufferDesc *picture_ptr; // original picture, just a pointer, don't allocate resource here
+    EbPictureBufferDesc *quarter_picture_ptr;
+    EbPictureBufferDesc *sixteenth_picture_ptr;
+} EbDownScaledObject;
+
+typedef struct EbDownScaledObjectDescInitData {
+    EbPictureBufferDescInitData quarter_picture_desc_init_data;
+    EbPictureBufferDescInitData sixteenth_picture_desc_init_data;
+
+#if INL_ME
+    // whether enable 1/4,1/16 8bit luma for in_loop global motion
+    uint8_t enable_quarter_luma_input;
+    uint8_t enable_sixteenth_luma_input;
+#endif
+} EbDownScaledObjectDescInitData;
+#endif
+
 
 /**************************************
  * Extern Function Declarations
@@ -100,4 +139,8 @@ extern EbErrorType eb_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr obje
 extern EbErrorType eb_pa_reference_object_creator(EbPtr *object_dbl_ptr,
                                                   EbPtr  object_init_data_ptr);
 
+#if INL_ME
+extern EbErrorType eb_down_scaled_object_creator(EbPtr *object_dbl_ptr,
+                                                 EbPtr object_init_data_ptr);
+#endif
 #endif //EbReferenceObject_h

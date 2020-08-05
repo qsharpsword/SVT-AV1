@@ -646,6 +646,14 @@ extern "C" {
 #define SWITCH_MODE_BASED_ON_STATISTICS 1 // Use aggressive settings for unlikely partitions (determined using stats)
 #define JULY31_PRESETS_ADOPTIONS        1
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
+
+#define INL_ME 1 //In loop me
+#define PAD_CHROMA_AFTER_MCTF 1 // Padding chroma after altref
+#define INL_ME_DBG 0 //In loop me for debug
+#if INL_ME_DBG
+#define INL_ME_ON_INPUT_DBG 1 //ME on original debug
+#define INL_GM_ON_INPUT_DBG 1 //GM on original debug
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
