@@ -2002,7 +2002,11 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
 #else
 #if FAST_M8_V1
 #if JULY31_PRESETS_ADOPTIONS
+#if SHIFT_PRESETS
+    uint8_t ref_count_used = enc_mode <= ENC_M4 ? MAX_REF_IDX : enc_mode <= ENC_M5 ? 2 : 1;
+#else
     uint8_t ref_count_used = enc_mode <= ENC_M5 ? MAX_REF_IDX : enc_mode <= ENC_M6 ? 2 : 1;
+#endif
 #else
     uint8_t ref_count_used = enc_mode <= ENC_M7 ? MAX_REF_IDX : 1;
 #endif

@@ -646,6 +646,7 @@ extern "C" {
 #define SWITCH_MODE_BASED_ON_STATISTICS 1 // Use aggressive settings for unlikely partitions (determined using stats)
 #define JULY31_PRESETS_ADOPTIONS        1
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
+#define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

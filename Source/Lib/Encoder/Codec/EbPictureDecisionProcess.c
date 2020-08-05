@@ -1052,7 +1052,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
 #if UPGRADE_M6_M7_M8
 #if JUNE26_ADOPTIONS
+#if SHIFT_PRESETS
+    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -1235,7 +1239,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if DISALLOW_NSQ_DEPTH
 #if FAST_M8_V1
 #if JULY31_PRESETS_ADOPTIONS
+#if SHIFT_PRESETS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
@@ -1537,6 +1545,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_FALSE;
+#if !SHIFT_PRESETS
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M6)
 #else
@@ -1547,6 +1556,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#endif
     else
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_TRUE;
 #else
@@ -2020,7 +2030,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESET_SHIFITNG
 #if M6_LOOP_FILTER_MODE
 #if UNIFY_SC_NSC
+#if SHIFT_PRESETS
+        if (pcs_ptr->enc_mode <= ENC_M5)
+#else
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M6 || pcs_ptr->sc_content_detected)
 #endif
@@ -2090,7 +2104,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if UPGRADE_M6_M7_M8
 #if PRESET_SHIFITNG
+#if SHIFT_PRESETS
+                if (pcs_ptr->enc_mode <= ENC_M4)
+#else
                 if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
                 if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
@@ -2318,7 +2336,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if MAY19_ADOPTIONS
 #if JUNE17_ADOPTIONS
+#if SHIFT_PRESETS
+        if (pcs_ptr->enc_mode <= ENC_M4)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
 #if PRESET_SHIFITNG
         if (pcs_ptr->enc_mode <= ENC_M4)
@@ -2560,7 +2582,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
 #if JUNE26_ADOPTIONS
+#if SHIFT_PRESETS
+    if (pcs_ptr->enc_mode <= ENC_M3)
+#else
     if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
 #else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M5)
@@ -2915,7 +2941,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         pcs_ptr->gm_level = GM_FULL;
 #if JUNE26_ADOPTIONS
+#if SHIFT_PRESETS
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
         pcs_ptr->gm_level = GM_DOWN;
     else
         pcs_ptr->gm_level = GM_DOWN16;
@@ -3229,6 +3259,10 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->mrp_level = 9;
         else
 #endif
+#if SHIFT_PRESETS
+            // MRP is being shut at RPS construction because it yields better trade-offs
+            pcs_ptr->mrp_level = 2;
+#else
 #if JUNE26_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M6)
                 pcs_ptr->mrp_level = 2;
@@ -3244,11 +3278,16 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             else
                 pcs_ptr->mrp_level = pcs_ptr->is_used_as_reference_flag  ? 6 : 9;
+#endif
     }else
         pcs_ptr->mrp_level = scs_ptr->static_config.mrp_level;
 #endif
 #if TPL_OPT
+#if SHIFT_PRESETS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
         pcs_ptr->tpl_opt_flag = 0;
     else
         pcs_ptr->tpl_opt_flag = 1;
@@ -6081,7 +6120,11 @@ void mctf_frame(
     if (perform_filtering) {
         if (scs_ptr->static_config.tf_level == DEFAULT) {
 #if JUNE26_ADOPTIONS
+#if SHIFT_PRESETS
+            if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
 #if JUNE25_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -6094,19 +6137,25 @@ void mctf_frame(
                 else
                     context_ptr->tf_level = 0;
             }
+#if SHIFT_PRESETS
+            else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 2;
                 else
                     context_ptr->tf_level = 0;
             }
 #if FAST_M8_V1
+#if !SHIFT_PRESETS
             else if (pcs_ptr->enc_mode <= ENC_M7) {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;
                 else
                     context_ptr->tf_level = 0;
             }
+#endif
             else {
                 if (pcs_ptr->temporal_layer_index == 0)
                     context_ptr->tf_level = 3;
