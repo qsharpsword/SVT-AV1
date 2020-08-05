@@ -609,6 +609,7 @@ extern "C" {
 #if SVT_02_TEMP
 #define TWOPASS_RC 1 // port 2pass RC code
 #define TWOPASS_RC_HACK_AS_AOM 0 //hack change to be the same as AOM
+#define TWOPASS_AOM_Q 1 // enable AOM_Q or CQP mode for two pass
 #define TWOPASS_STAT_BUF 1 //
 #define TWOPASS_MOVE_TO_PD 0
 #define TWOPASS_IMPOSE_PD_DECISIONS 1

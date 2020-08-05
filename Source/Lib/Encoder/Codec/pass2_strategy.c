@@ -3257,23 +3257,25 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
   if (!twopass->stats_buf_ctx->stats_in_end) return;
 
   {
-      //kelvinhack init frame_info and two_pass_cfg
       frame_info->frame_width  = scs_ptr->seq_header.max_frame_width;
       frame_info->frame_height = scs_ptr->seq_header.max_frame_height;
       frame_info->mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
       frame_info->mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
       frame_info->num_mbs = frame_info->mb_cols * frame_info->mb_rows;
       frame_info->bit_depth = scs_ptr->static_config.encoder_bit_depth;
-      // kelvinhack should input from options
+      // input config  from options
       encode_context_ptr->two_pass_cfg.vbrmin_section = scs_ptr->static_config.vbr_min_section_pct;//0;
       encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;//2000;
       encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;//50;
-      encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ?  AOM_VBR : AOM_Q;
+      encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ? AOM_VBR : AOM_Q;
       encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];//0;
       encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];//255;
       encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;//25;
       encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;//25;
       encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
+      encode_context_ptr->rc_cfg.maximum_buffer_size_ms   = 240000;//is_vbr ? 240000 : cfg->rc_buf_sz;
+      encode_context_ptr->rc_cfg.starting_buffer_level_ms = 60000;//is_vbr ? 60000 : cfg->rc_buf_initial_sz;
+      encode_context_ptr->rc_cfg.optimal_buffer_level_ms  = 60000;//is_vbr ? 60000 : cfg->rc_buf_optimal_sz;
       encode_context_ptr->gf_cfg.lag_in_frames = 25;//kelvinhack scs_ptr->static_config.look_ahead_distance + 1;
       encode_context_ptr->gf_cfg.gf_min_pyr_height = scs_ptr->static_config.hierarchical_levels;
       encode_context_ptr->gf_cfg.gf_max_pyr_height = scs_ptr->static_config.hierarchical_levels;
@@ -3281,7 +3283,7 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
       encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
       encode_context_ptr->kf_cfg.auto_key      = 0;
-      encode_context_ptr->kf_cfg.key_freq_max  = scs_ptr->intra_period_length+1;//anaghdin do we need the +1?
+      encode_context_ptr->kf_cfg.key_freq_max  = scs_ptr->intra_period_length + 1;//anaghdin do we need the +1?
   }
 
   stats = twopass->stats_buf_ctx->total_stats;

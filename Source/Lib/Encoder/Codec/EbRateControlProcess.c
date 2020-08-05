@@ -6339,14 +6339,10 @@ void set_rc_buffer_sizes(SequenceControlSet *scs_ptr) {
   //const int64_t optimal = oxcf->rc_cfg.optimal_buffer_level_ms;
   //const int64_t maximum = oxcf->rc_cfg.maximum_buffer_size_ms;
 
-  EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
-  RATE_CONTROL *rc                         = &encode_context_ptr->rc;
+  EncodeContext *encode_context_ptr  = scs_ptr->encode_context_ptr;
+  RATE_CONTROL *rc                   = &encode_context_ptr->rc;
   RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
-  //kelvinhack
-  rc_cfg->maximum_buffer_size_ms   = 240000;//is_vbr ? 240000 : cfg->rc_buf_sz;
-  rc_cfg->starting_buffer_level_ms = 60000;//is_vbr ? 60000 : cfg->rc_buf_initial_sz;
-  rc_cfg->optimal_buffer_level_ms  = 60000;//is_vbr ? 60000 : cfg->rc_buf_optimal_sz;
-  const int64_t bandwidth = scs_ptr->static_config.target_bit_rate;//oxcf->target_bandwidth;
+  const int64_t bandwidth = scs_ptr->static_config.target_bit_rate;
   const int64_t starting  = rc_cfg->starting_buffer_level_ms;
   const int64_t optimal   = rc_cfg->optimal_buffer_level_ms;
   const int64_t maximum   = rc_cfg->maximum_buffer_size_ms;
@@ -7476,11 +7472,22 @@ void *rate_control_kernel(void *input_ptr) {
                     pcs_ptr->parent_pcs_ptr->sad_me +=
                         pcs_ptr->parent_pcs_ptr->rc_me_distortion[sb_addr];
                 }
+#if TWOPASS_RC && TWOPASS_AOM_Q
+            if (scs_ptr->static_config.rate_control_mode == 0 &&
+                scs_ptr->use_input_stat_file &&
+                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                1//scs_ptr->static_config.look_ahead_distance != 0
+                ) {
+                if (pcs_ptr->picture_number == 0) {
+                    av1_rc_init(scs_ptr);
+                }
+            }
+#endif
             if (scs_ptr->static_config.rate_control_mode) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
                 // High level RC
-#if TWOPASS_RC
                 if (scs_ptr->static_config.rate_control_mode == 1)
+#if TWOPASS_RC
                     if (scs_ptr->use_input_stat_file &&
                         !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0
@@ -7598,6 +7605,28 @@ void *rate_control_kernel(void *input_ptr) {
                             new_qindex = cqp_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
 #endif
                         else
+#if TWOPASS_AOM_Q
+                        if (scs_ptr->use_input_stat_file &&
+                            !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                            scs_ptr->static_config.look_ahead_distance != 0) {
+                            int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
+                            frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
+                            if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
+#if TWOPASS_RC_HACK_AS_AOM
+                                if (pcs_ptr->picture_number == 0) {
+                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
+                                } else if (pcs_ptr->picture_number == 16) {
+                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
+                                }
+#endif
+                                process_tpl_stats_frame_gfu_boost(pcs_ptr);
+                            }
+                            // VBR Qindex calculating
+                            new_qindex = rc_pick_q_and_bounds(pcs_ptr);
+                        } else
+#endif
                             new_qindex = cqp_qindex_calc(pcs_ptr, &rc, qindex);
                     }
                     else {
