@@ -7133,7 +7133,19 @@ void* picture_decision_kernel(void *input_ptr)
                             if (encode_context_ptr->pre_assignment_buffer_count > 1) {
                                 initialize_mini_gop_activity_array(
                                         context_ptr);
-
+#if KF_MINI_GOP_FIX
+                                if (encode_context_ptr->pre_assignment_buffer_count >= 32 &&
+                                    !(encode_context_ptr->pre_assignment_buffer_count == 32 && pcs_ptr->idr_flag))
+                                    context_ptr->mini_gop_activity_array[L6_INDEX] = EB_FALSE;
+                                if (encode_context_ptr->pre_assignment_buffer_count >= 16 &&
+                                    !(encode_context_ptr->pre_assignment_buffer_count == 16 && pcs_ptr->idr_flag))
+                                    context_ptr->mini_gop_activity_array[L5_0_INDEX] = EB_FALSE;
+                                if (encode_context_ptr->pre_assignment_buffer_count >= 8 &&
+                                    !(encode_context_ptr->pre_assignment_buffer_count == 8 && pcs_ptr->idr_flag)) {
+                                    context_ptr->mini_gop_activity_array[L4_0_INDEX] = EB_FALSE;
+                                    context_ptr->mini_gop_activity_array[L4_1_INDEX] = EB_FALSE;
+                                }
+#else
                                 if (encode_context_ptr->pre_assignment_buffer_count >= 32)
                                     context_ptr->mini_gop_activity_array[L6_INDEX] = EB_FALSE;
                                 if (encode_context_ptr->pre_assignment_buffer_count >= 16)
@@ -7142,7 +7154,7 @@ void* picture_decision_kernel(void *input_ptr)
                                     context_ptr->mini_gop_activity_array[L4_0_INDEX] = EB_FALSE;
                                     context_ptr->mini_gop_activity_array[L4_1_INDEX] = EB_FALSE;
                                 }
-
+#endif
                                 generate_picture_window_split(
                                         context_ptr,
                                         encode_context_ptr);

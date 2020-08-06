@@ -7410,6 +7410,7 @@ void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
     if (rc_cfg->mode == AOM_VBR || rc_cfg->mode == AOM_CQ)
         vbr_rate_correction(pcs_ptr, &target_rate);
     av1_rc_set_frame_target(pcs_ptr, target_rate, width, height);
+ //   printf("\n%lld\t%lld\t%lld\n", pcs_ptr->picture_number, rc->base_frame_target, rc->this_frame_target);
 }
 #endif
 void *rate_control_kernel(void *input_ptr) {
@@ -7476,7 +7477,6 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC && TWOPASS_AOM_Q
             if (scs_ptr->static_config.rate_control_mode == 0 &&
                 scs_ptr->use_input_stat_file &&
-                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                 1//scs_ptr->static_config.look_ahead_distance != 0
                 ) {
                 if (pcs_ptr->picture_number == 0) {
@@ -7496,7 +7496,6 @@ void *rate_control_kernel(void *input_ptr) {
                 if (scs_ptr->static_config.rate_control_mode == 1)
 #if TWOPASS_RC
                     if (scs_ptr->use_input_stat_file &&
-                        !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0
                         ) {
                         if (pcs_ptr->picture_number == 0) {
@@ -7614,7 +7613,6 @@ void *rate_control_kernel(void *input_ptr) {
                         else
 #if TWOPASS_RC && TWOPASS_AOM_Q
                         if (scs_ptr->use_input_stat_file &&
-                            !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                             scs_ptr->static_config.look_ahead_distance != 0) {
                             int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                             frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
@@ -7674,7 +7672,6 @@ void *rate_control_kernel(void *input_ptr) {
                 if (scs_ptr->static_config.rate_control_mode == 1) {
 #if TWOPASS_RC
                     if (scs_ptr->use_input_stat_file &&
-                        !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
@@ -7757,7 +7754,6 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC
                 if (scs_ptr->static_config.rate_control_mode == 1 &&
                     scs_ptr->use_input_stat_file &&
-                    !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                     scs_ptr->static_config.look_ahead_distance != 0)
                     ;//kelvinhack skip base_q_idx writeback for accuracy loss like 89 to 88
                 else
@@ -7944,7 +7940,6 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC && TWOPASS_AOM_Q
             if (scs_ptr->static_config.rate_control_mode == 0 &&
                 scs_ptr->use_input_stat_file &&
-                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                 1//scs_ptr->static_config.look_ahead_distance != 0
                 ) {
 #if TWOPASS_RC_HACK_AS_AOM
@@ -7972,7 +7967,6 @@ void *rate_control_kernel(void *input_ptr) {
 
 #if TWOPASS_RC
                 if (scs_ptr->use_input_stat_file &&
-                    !parentpicture_control_set_ptr->sc_content_detected &&
                     scs_ptr->static_config.look_ahead_distance != 0) {
                     ;
                 } else
@@ -7981,7 +7975,6 @@ void *rate_control_kernel(void *input_ptr) {
                 if (scs_ptr->static_config.rate_control_mode == 1)
 #if TWOPASS_RC
                     if (scs_ptr->use_input_stat_file &&
-                        !parentpicture_control_set_ptr->sc_content_detected &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
 #if TWOPASS_RC_HACK_AS_AOM
                         if (parentpicture_control_set_ptr->picture_number<=32) {

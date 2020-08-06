@@ -619,10 +619,11 @@ extern "C" {
 #define MAX_LAG_BUFFERS 35
 #define LOW_DELAY_TUNE 1
 #define FORCED_BLK_SIZE 16
+#define KF_MINI_GOP_FIX 1
 //first_pass_opt
 
-#define FIX_MV_BOUND       1 //Clip inherited ME MVs to stay within pic boundaries
-#define NEW_DELAY          1 //Change delay some sorts of I in PicDecision
+#define FIX_MV_BOUND       0 //Clip inherited ME MVs to stay within pic boundaries
+#define NEW_DELAY          0 //Change delay some sorts of I in PicDecision
 
 
 
