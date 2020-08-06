@@ -10848,11 +10848,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
-#if 1 // version_2
+#if 0 // version_2
                                         s_depth =  0;
                                         e_depth = -1;
 #endif
-#if 0 // version_3
+#if 1 // version_3
                                         if (context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff) {
                                             s_depth = -1;
                                             e_depth = 1;
