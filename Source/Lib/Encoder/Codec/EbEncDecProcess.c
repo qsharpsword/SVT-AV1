@@ -10844,11 +10844,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth =  0;
                                         e_depth =  0;
 #endif
-#if 1 // version_1
+#if 0 // version_1
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
-#if 0 // version_2
+#if 1 // version_2
                                         s_depth =  0;
                                         e_depth = -1;
 #endif
