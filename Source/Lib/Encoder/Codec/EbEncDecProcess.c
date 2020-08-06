@@ -10840,8 +10840,19 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                     }
                                     else {
                                         // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
+#if 0 // version_0
+                                        s_depth =  0;
+                                        e_depth =  0;
+#endif
+#if 0 // version_1
                                         s_depth = -1;
-                                        e_depth = 0;
+                                        e_depth =  0;
+#endif
+#if 1 // version_2
+                                        s_depth =  0;
+                                        e_depth = -1;
+#endif
+
                                     }
 #else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
