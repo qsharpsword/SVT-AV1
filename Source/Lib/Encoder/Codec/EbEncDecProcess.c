@@ -10848,7 +10848,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
-#if 0 // version_2
+#if 1 // version_2
                                         s_depth =  0;
                                         e_depth =  1;
 #endif
@@ -10863,7 +10863,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             e_depth = 0;
                                         }
 #endif 
-#if 1 // version_5
+#if 0 // version_5
                                         // Get current_to_parent_deviation
                                         uint32_t parent_depth_sqi_mds =
                                             (blk_geom->sqi_mds -
