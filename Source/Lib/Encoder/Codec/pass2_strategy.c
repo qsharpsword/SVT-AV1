@@ -1925,6 +1925,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 #define REDUCE_GF_LENGTH_TO_KEY_THRESH 9
 #define REDUCE_GF_LENGTH_BY 1
   int alt_offset = 0;
+#if 0 //anaghdin not supported
   // The length reduction strategy is tweaked for certain cases, and doesn't
   // work well for certain other cases.
   const int allow_gf_length_reduction =
@@ -1958,7 +1959,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
       }
     }
   }
-
+#endif
   // Should we use the alternate reference frame.
   if (use_alt_ref) {
     rc->source_alt_ref_pending = 1;
@@ -2068,11 +2069,11 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 #if 1 //kelvinTODO gop_structure.c
   // Set up the structure of this Group-Of-Pictures (same as GF_GROUP)
   av1_gop_setup_structure(pcs_ptr, frame_params);
-  printf("\ngf_group_bits:%lld\tgf_group_err:%.2f\tkf_group_error_left:%lld\tgf_interval:%d\n",
+ /* printf("\ngf_group_bits:%lld\tgf_group_err:%.2f\tkf_group_error_left:%lld\tgf_interval:%d\n",
       gf_group_bits,
       gf_stats.gf_group_err,
       twopass->kf_group_error_left,
-      rc->baseline_gf_interval);
+      rc->baseline_gf_interval);*/
 #endif
 
   // Reset the file position.
@@ -2089,12 +2090,12 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   twopass->rolling_arf_group_target_bits = 1;
   twopass->rolling_arf_group_actual_bits = 1;
 
-  av1_gop_bit_allocation(/*pcs_ptr, */rc, gf_group,
+  av1_gop_bit_allocation(rc, gf_group,
                          frame_params->frame_type == KEY_FRAME, use_alt_ref,
                          gf_group_bits);
 
   //for (int idx = 1; idx < rc->baseline_gf_interval; ++idx) {
-  //    printf("%d\t%d\n", 
+  //    printf("%d\t%d\n",
   //        gf_group->frame_disp_idx[idx],
   //        gf_group->bit_allocation[idx]);
   //}
@@ -2456,8 +2457,6 @@ static double get_kf_group_avg_error(TWO_PASS *twopass,
 
 static int64_t get_kf_group_bits(PictureParentControlSet *pcs_ptr, double kf_group_err/*,
                                  double kf_group_avg_error*/) {
-  //RATE_CONTROL *const rc = &cpi->rc;
-  //TWO_PASS *const twopass = &cpi->twopass;
   SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
   //EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   //RATE_CONTROL *const rc = &encode_context_ptr->rc;
