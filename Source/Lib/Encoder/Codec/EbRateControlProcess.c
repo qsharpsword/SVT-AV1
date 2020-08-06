@@ -6650,7 +6650,7 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
     if (!is_intrl_arf_boost) return active_best_quality;
 
     if (rc_mode == AOM_Q || rc_mode == AOM_CQ) active_best_quality = rc->arf_q;
-#if 0
+#if 1
     int this_height = gf_group->layer_depth[pcs_ptr->parent_pcs_ptr->gf_group_index];//gf_group_pyramid_level(gf_group, gf_index);
     while (this_height > 1) {
         active_best_quality = (active_best_quality + active_worst_quality + 1) / 2;
@@ -7403,10 +7403,11 @@ void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc = &encode_context_ptr->rc;
     int target_rate = rc->base_frame_target;
+    const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
 
     // Correction to rate target based on prior over or under shoot.
-   //anaghdin fix the condition
-    // if (cpi->oxcf.rc_cfg.mode == AOM_VBR || cpi->oxcf.rc_cfg.mode == AOM_CQ)
+    //anaghdin fix the condition
+    if (rc_cfg->mode == AOM_VBR || rc_cfg->mode == AOM_CQ)
         vbr_rate_correction(pcs_ptr, &target_rate);
     av1_rc_set_frame_target(pcs_ptr, target_rate, width, height);
 }
@@ -7479,8 +7480,14 @@ void *rate_control_kernel(void *input_ptr) {
                 1//scs_ptr->static_config.look_ahead_distance != 0
                 ) {
                 if (pcs_ptr->picture_number == 0) {
+                    set_rc_buffer_sizes(scs_ptr);
                     av1_rc_init(scs_ptr);
                 }
+                av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
+                av1_configure_buffer_updates(pcs_ptr, &(pcs_ptr->parent_pcs_ptr->refresh_frame), 0);
+                av1_set_target_rate(pcs_ptr,
+                    pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
+                    pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
             }
 #endif
             if (scs_ptr->static_config.rate_control_mode) {
@@ -7605,7 +7612,7 @@ void *rate_control_kernel(void *input_ptr) {
                             new_qindex = cqp_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
 #endif
                         else
-#if TWOPASS_AOM_Q
+#if TWOPASS_RC && TWOPASS_AOM_Q
                         if (scs_ptr->use_input_stat_file &&
                             !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                             scs_ptr->static_config.look_ahead_distance != 0) {
@@ -7614,11 +7621,11 @@ void *rate_control_kernel(void *input_ptr) {
                             if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
 #if TWOPASS_RC_HACK_AS_AOM
                                 if (pcs_ptr->picture_number == 0) {
-                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
-                                    pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
+                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.262381;
                                 } else if (pcs_ptr->picture_number == 16) {
-                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
-                                    pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
+                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.219375, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.219375;
                                 }
 #endif
                                 process_tpl_stats_frame_gfu_boost(pcs_ptr);
@@ -7934,6 +7941,27 @@ void *rate_control_kernel(void *input_ptr) {
                         ? context_ptr->rate_control_param_queue[PARALLEL_GOP_MAX_NUMBER - 1]
                         : context_ptr->rate_control_param_queue[interval_index_temp - 1];
             }
+#if TWOPASS_RC && TWOPASS_AOM_Q
+            if (scs_ptr->static_config.rate_control_mode == 0 &&
+                scs_ptr->use_input_stat_file &&
+                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                1//scs_ptr->static_config.look_ahead_distance != 0
+                ) {
+#if TWOPASS_RC_HACK_AS_AOM
+                if (parentpicture_control_set_ptr->picture_number<=32) {
+                    static int bytes_used[33] = {21757, 64, 257, 47, 3069, 36, 289, 51, 8705, 56, 379, 50, 3495, 51, 287, 57, 16798,
+                                                        57, 313, 39, 4033, 46, 360, 56, 10219, 51, 416, 58, 3987, 65, 396, 63, 19916};
+                    printf("kelvinhack CQP set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
+                    parentpicture_control_set_ptr->total_num_bits = bytes_used[parentpicture_control_set_ptr->picture_number]*8;
+                }
+#endif
+                av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
+                av1_twopass_postencode_update(parentpicture_control_set_ptr);
+#if !TWOPASS_MOVE_TO_PD & !TWOPASS_IMPOSE_PD_DECISIONS
+                update_rc_counts(parentpicture_control_set_ptr);
+#endif
+            }
+#endif
             if (scs_ptr->static_config.rate_control_mode != 0) {
                 context_ptr->previous_virtual_buffer_level = context_ptr->virtual_buffer_level;
 
@@ -7958,7 +7986,7 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC_HACK_AS_AOM
                         if (parentpicture_control_set_ptr->picture_number<=32) {
                             static int bytes_used[33] = {19969, 42, 155, 38, 1583, 26, 134, 34, 5554, 40, 173, 40, 1850, 27, 139, 47, 13135,
-                                                         30, 104, 28, 1061, 27, 132, 38, 4076, 34, 102, 26, 982, 38, 108, 31, 8770};
+                                                                30, 104, 28, 1061, 27, 132, 38, 4076, 34, 102, 26, 982, 38, 108, 31, 8770};
                             //printf("kelvinhack set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = bytes_used[parentpicture_control_set_ptr->picture_number]*8;
                         }
