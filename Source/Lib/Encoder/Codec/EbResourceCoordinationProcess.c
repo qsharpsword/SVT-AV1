@@ -130,37 +130,7 @@ EbErrorType resource_coordination_context_ctor(EbThreadContext *thread_contxt_pt
 
     return EB_ErrorNone;
 }
-#if FIRST_PASS_SETUP
-/******************************************************
-* Derive Pre-Analysis settings for first pass
-Input   : encoder mode and tune
-Output  : Pre-Analysis signal(s)
-******************************************************/
-EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet *     scs_ptr,
-    PictureParentControlSet *pcs_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
-    // Derive HME Flag
-    pcs_ptr->enable_hme_flag = 1;
-    pcs_ptr->enable_hme_level0_flag = 1;
-    pcs_ptr->enable_hme_level1_flag = 1;
-    pcs_ptr->enable_hme_level2_flag = 1;
 
-    //// Set here to allocate resources for the downsampled pictures used in HME (generated in PictureAnalysis)
-    //// Will be later updated for SC/NSC in PictureDecisionProcess
-    pcs_ptr->tf_enable_hme_flag = 0;
-    pcs_ptr->tf_enable_hme_level0_flag = 0;
-    pcs_ptr->tf_enable_hme_level1_flag = 0;
-    pcs_ptr->tf_enable_hme_level2_flag = 0;
-    scs_ptr->seq_header.enable_intra_edge_filter = 0;
-    scs_ptr->seq_header.pic_based_rate_est = 0;
-    scs_ptr->seq_header.enable_restoration = 0;
-    scs_ptr->seq_header.enable_cdef = 0;
-    scs_ptr->seq_header.enable_warped_motion = 0;
-
-    return return_error;
-}
-
-#endif
 /******************************************************
 * Derive Pre-Analysis settings for OQ
 Input   : encoder mode and tune
@@ -832,7 +802,10 @@ static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceContro
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
 #endif
-
+#if FIRST_PASS_SETUP
+extern EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet *     scs_ptr,
+    PictureParentControlSet *pcs_ptr);
+#endif
 /* Resource Coordination Kernel */
 /*********************************************************************************
 *
