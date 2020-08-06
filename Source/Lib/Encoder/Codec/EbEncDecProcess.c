@@ -10597,8 +10597,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
         // derive split_flag
         split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
-
+#if PD0_REF_IF_VALID_ONLY        
+        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index] && is_blk_allowed) {
+#else
         if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+#endif
             if (blk_geom->shape == PART_N) {
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
                     int8_t s_depth = 0;
@@ -10840,6 +10843,8 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                     }
                                     else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
                                         // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
+                                        s_depth = -1;
+                                        e_depth = 1;
 #if 0 // version_0
                                         s_depth =  0;
                                         e_depth =  0;
@@ -10863,7 +10868,19 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             e_depth = 0;
                                         }
 #endif 
-#if 1 // version_5
+#if 0 // version_3
+                                        // 2x_faster
+                                        if (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) {
+                                            s_depth = -1;
+                                            e_depth = 1;
+                                        }
+                                        else {
+
+                                            s_depth = 0;
+                                            e_depth = 0;
+                                        }
+#endif
+#if 0 // version_5
                                         // Get current_to_parent_deviation
                                         uint32_t parent_depth_sqi_mds =
                                             (blk_geom->sqi_mds -
@@ -10879,6 +10896,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         else {
                                             s_depth = -1;                                       
                                         }
+
                                         e_depth = 1;
 #endif
                                     }

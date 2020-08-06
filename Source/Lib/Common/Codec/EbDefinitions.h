@@ -648,7 +648,7 @@ extern "C" {
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
-
+#define PD0_REF_IF_VALID_ONLY           1
 #define SUPER_FAST_PRED_ONLY_B_SLICE    1
 
 #endif
