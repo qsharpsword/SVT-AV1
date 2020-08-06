@@ -7801,6 +7801,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         (pcs_ptr->parent_pcs_ptr->frm_hdr
             .allow_high_precision_mv);
 #endif
+#if !ENABLE_INTRA_PD0
 #if ADD_SKIP_INTRA_SIGNAL
     if (pcs_ptr->slice_type == I_SLICE)
         context_ptr->skip_intra = 0;
@@ -7819,6 +7820,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->skip_intra = 1;
     else
         context_ptr->skip_intra = 0;
+#endif
 #endif
     return return_error;
 }
@@ -10597,11 +10599,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
         // derive split_flag
         split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
-#if PD0_REF_IF_VALID_ONLY        
-        if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index] && is_blk_allowed) {
-#else
+
         if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
-#endif
+
             if (blk_geom->shape == PART_N) {
                 if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
                     int8_t s_depth = 0;

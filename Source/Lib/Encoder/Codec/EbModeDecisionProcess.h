@@ -956,8 +956,10 @@ typedef struct ModeDecisionContext {
     uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];
     uint32_t txt_prob[TXT_DEPTH_DELTA_NUM][TX_TYPES];
 #endif
+#if !ENABLE_INTRA_PD0
 #if ADD_SKIP_INTRA_SIGNAL
     uint8_t skip_intra;
+#endif
 #endif
 #if ON_OFF_FEATURE_MRP
     uint8_t mrp_level;
