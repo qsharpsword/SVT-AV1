@@ -10833,8 +10833,20 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
+#if SUPER_FAST_PRED_ONLY_B_SLICE
+                                    if (pcs_ptr->slice_type == I_SLICE) {
+                                        s_depth = -1;
+                                        e_depth =  1;
+                                    }
+                                    else {
+                                        // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
+                                        s_depth = 0;
+                                        e_depth = 0;
+                                    }
+#else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
                                 }
 #if !SHIFT_PRESETS
 #if ADD_M9
