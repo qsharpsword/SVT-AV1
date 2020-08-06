@@ -10868,7 +10868,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             e_depth = 0;
                                         }
 #endif 
-#if 0 // version_3
+#if 1 // version_3
                                         // 2x_faster
                                         if (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) {
                                             s_depth = -1;
