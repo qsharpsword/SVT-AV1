@@ -10838,13 +10838,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth = -1;
                                         e_depth =  1;
                                     }
-                                    else {
+                                    else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
                                         // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
 #if 0 // version_0
                                         s_depth =  0;
                                         e_depth =  0;
 #endif
-#if 0 // version_1
+#if 1 // version_1
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
@@ -10852,7 +10852,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth =  0;
                                         e_depth = -1;
 #endif
-#if 1 // version_3
+#if 0 // version_3
                                         if (context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff) {
                                             s_depth = -1;
                                             e_depth = 1;
@@ -10863,7 +10863,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             e_depth = 0;
                                         }
 #endif
-
+                                    }
+                                    else {
+                                        // Pred Only
+                                        s_depth = 0;
+                                        e_depth = 0;
                                     }
 #else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
