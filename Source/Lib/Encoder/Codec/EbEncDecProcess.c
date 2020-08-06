@@ -10848,7 +10848,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
-#if 1 // version_2
+#if 0 // version_2
                                         s_depth =  0;
                                         e_depth =  1;
 #endif
@@ -10863,7 +10863,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             e_depth = 0;
                                         }
 #endif 
-#if 0 // version_5
+#if 1 // version_5
                                         // Get current_to_parent_deviation
                                         uint32_t parent_depth_sqi_mds =
                                             (blk_geom->sqi_mds -
@@ -10873,7 +10873,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
                                             current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost;
                                         }
-                                        if (current_to_parent_deviation <= 0/*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
+                                        if (current_to_parent_deviation <= 25/*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
                                             s_depth =  0;
                                         }
                                         else {
