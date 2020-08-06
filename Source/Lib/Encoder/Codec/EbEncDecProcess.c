@@ -10840,7 +10840,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                     }
                                     else {
                                         // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
-                                        s_depth = 0;
+                                        s_depth = -1;
                                         e_depth = 0;
                                     }
 #else
