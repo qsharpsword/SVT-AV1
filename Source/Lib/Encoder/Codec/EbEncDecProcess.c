@@ -10850,9 +10850,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if 0 // version_2
                                         s_depth =  0;
-                                        e_depth = -1;
+                                        e_depth =  1;
 #endif
-#if 1 // version_3
+#if 0 // version_3
                                         if (context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff) {
                                             s_depth = -1;
                                             e_depth = 1;
@@ -10862,6 +10862,24 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                             s_depth = 0;
                                             e_depth = 0;
                                         }
+#endif 
+#if 1 // version_5
+                                        // Get current_to_parent_deviation
+                                        uint32_t parent_depth_sqi_mds =
+                                            (blk_geom->sqi_mds -
+                                            (blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth]) -
+                                            parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+                                        int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
+                                        if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
+                                            current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost;
+                                        }
+                                        if (current_to_parent_deviation <= 0/*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
+                                            s_depth =  0;
+                                        }
+                                        else {
+                                            s_depth = -1;                                       
+                                        }
+                                        e_depth = 1;
 #endif
                                     }
                                     else {
