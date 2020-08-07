@@ -654,8 +654,8 @@ extern "C" {
 
 #define BLOCK_BASED_DEPTH_REFINMENT       1
 #if BLOCK_BASED_DEPTH_REFINMENT    
-#define BLOCK_BASED_DEPTH_REFINMENT_START 0
-#define BLOCK_BASED_DEPTH_REFINMENT_END   1
+#define BLOCK_BASED_DEPTH_REFINMENT_START 1
+#define BLOCK_BASED_DEPTH_REFINMENT_END   0
 #endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
