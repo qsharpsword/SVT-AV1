@@ -648,9 +648,15 @@ extern "C" {
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
-#define ENABLE_INTRA_PD0                0
-#define SUPER_FAST_PRED_ONLY_B_SLICE    0
-#define BLOCK_BASED_DEPTH_REFINMENT     1
+#define ENABLE_INTRA_PD0                  0
+#define SUPER_FAST_PRED_ONLY_B_SLICE      0
+
+
+#define BLOCK_BASED_DEPTH_REFINMENT       1
+#if BLOCK_BASED_DEPTH_REFINMENT    
+#define BLOCK_BASED_DEPTH_REFINMENT_START 0
+#define BLOCK_BASED_DEPTH_REFINMENT_END   1
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

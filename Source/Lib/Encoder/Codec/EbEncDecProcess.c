@@ -9198,16 +9198,17 @@ static void set_parent_to_be_considered(
         const BlockGeom *parent_blk_geom = get_blk_geom_mds(parent_depth_idx_mds);
 
 
-#if BLOCK_BASED_DEPTH_REFINMENT
+#if BLOCK_BASED_DEPTH_REFINMENT_START
         int64_t parent_to_current_deviation = MIN_SIGNED_VALUE;
         if (pcs_ptr->slice_type != I_SLICE) {
             if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
                 parent_to_current_deviation =
-                    (int64_t) (((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 1000) /
+                    (int64_t) (((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 100) /
                     (int64_t) (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4);
             }
         }
-        if (parent_to_current_deviation <= 5) {
+        if (parent_to_current_deviation <= 5)
+        {
 #endif
         uint32_t         parent_tot_d1_blocks =
             parent_blk_geom->sq_size == 128
@@ -9222,7 +9223,7 @@ static void set_parent_to_be_considered(
 #endif
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].consider_block = 1;
         }
-#if BLOCK_BASED_DEPTH_REFINMENT
+#if BLOCK_BASED_DEPTH_REFINMENT_START
         }
 #endif
         if (depth_step < -1)
@@ -11402,6 +11403,50 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 
                     // Add block indices of lower depth(s)
+#if BLOCK_BASED_DEPTH_REFINMENT_END
+                    // Child to be considered
+                    uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
+                    child_block_idx_1 = blk_index + d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+                    child_block_idx_2 = child_block_idx_1 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+                    child_block_idx_3 = child_block_idx_2 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+                    child_block_idx_4 = child_block_idx_3 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+                    const BlockGeom *child1_blk_geom = get_blk_geom_mds(child_block_idx_1);
+                    const BlockGeom *child2_blk_geom = get_blk_geom_mds(child_block_idx_2);
+                    const BlockGeom *child3_blk_geom = get_blk_geom_mds(child_block_idx_3);
+                    const BlockGeom *child4_blk_geom = get_blk_geom_mds(child_block_idx_4);
+
+                    int64_t child_to_current_deviation = MIN_SIGNED_VALUE;
+                    if (pcs_ptr->slice_type != I_SLICE && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index]) {
+
+                        uint64_t child_cost = 0;
+                        uint8_t child_cnt = 0;
+                        if (context_ptr->md_local_blk_unit[child_block_idx_1].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_1].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_2].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_2].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_3].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_3].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_4].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_4].default_cost;
+                            child_cnt++;
+                        }
+
+                        if (child_cnt) {
+                            child_cost = (child_cost / child_cnt) * 4;
+                            child_to_current_deviation =
+                                (int64_t)(((int64_t)child_cost - (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost) * 100) /
+                                (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost);
+                        }
+                    }
+                    if (child_to_current_deviation > -25)
+                        e_depth = 0;
+#endif
                     if (e_depth != 0)
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR
