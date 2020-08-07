@@ -11388,7 +11388,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                         }
                     }
-                    if (parent_to_current_deviation > -10)
+                    if (parent_to_current_deviation > 5)
                         s_depth = 0;
 #endif
                     if (s_depth != 0)
@@ -11450,7 +11450,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost);
                         }
                     }
-                    if (child_to_current_deviation > 20)
+                    if (child_to_current_deviation > 15)
                         e_depth = 0;
 #endif
                     if (e_depth != 0)
