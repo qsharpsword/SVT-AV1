@@ -9177,7 +9177,7 @@ void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *cont
 
 static void set_parent_to_be_considered(
 #if BLOCK_BASED_DEPTH_REFINMENT
-                                        ModeDecisionContext *context_ptr,
+                                        PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 #endif
                                         MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
 #if TRACK_PER_DEPTH_DELTA
@@ -9200,11 +9200,12 @@ static void set_parent_to_be_considered(
 
 #if BLOCK_BASED_DEPTH_REFINMENT
         int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
-        if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
-            current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost;
+        if (pcs_ptr->slice_type != I_SLICE) {
+            if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
+                current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost;
+            }
         }
-        current_to_parent_deviation = 1;
-        if (current_to_parent_deviation <= 0/*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
+        if (current_to_parent_deviation <= -25 /*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
 #endif
         uint32_t         parent_tot_d1_blocks =
             parent_blk_geom->sq_size == 128
@@ -9226,7 +9227,7 @@ static void set_parent_to_be_considered(
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR
 #if BLOCK_BASED_DEPTH_REFINMENT          
-            set_parent_to_be_considered(context_ptr,results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
+            set_parent_to_be_considered(pcs_ptr, context_ptr,results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
 #else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
 #endif
@@ -10873,7 +10874,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                         s_depth = -1;
                                         e_depth =  0;
 #endif
-#if 0 // version_2
+#if 1 // version_2
                                         s_depth =  0;
                                         e_depth =  1;
 #endif
@@ -11386,7 +11387,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if ADAPTIVE_DEPTH_CR
                         set_parent_to_be_considered(
 #if BLOCK_BASED_DEPTH_REFINMENT
-                            context_ptr,
+                            pcs_ptr, context_ptr,
 #endif
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth,sq_size_idx,  s_depth);
 #else
