@@ -1263,7 +1263,7 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
     }
     rc->cur_gf_index = 0;
 }
-#endif
+#else
 // This function decides the gf group length of future frames in batch
 // rc->gf_intervals is modified to store the group lengths
 //static void calculate_gf_length(AV1_COMP *cpi, int max_gop_length,
@@ -1439,6 +1439,7 @@ static void calculate_gf_length(PictureParentControlSet *pcs_ptr, int max_gop_le
   printf("\n\n");
 #endif
 }
+#endif
 
 #if 0
 static void correct_frames_to_key(AV1_COMP *cpi) {
@@ -1691,7 +1692,7 @@ static int construct_multi_layer_gf_structure(
 
         int start = 0;
         int end = gf_interval;
-        const int num_frames_to_process = end - start - 1;
+        //const int num_frames_to_process = end - start - 1;
         while (++start <= end) {
             gf_group->update_type[frame_index] = (frame_index % 2 == 0) ? INTNL_ARF_UPDATE : LF_UPDATE;
             gf_group->arf_src_offset[frame_index] = 0;
@@ -1825,7 +1826,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   }
 
   // TODO(urvang): Try logic to vary min and max interval based on q.
-  const int active_min_gf_interval = rc->min_gf_interval;
+  //const int active_min_gf_interval = rc->min_gf_interval;
   const int active_max_gf_interval =
       AOMMIN(rc->max_gf_interval, max_gop_length);
   //anaghdin: check added
@@ -2882,7 +2883,7 @@ static void process_first_pass_stats(PictureParentControlSet *pcs_ptr,
   const uint32_t mb_cols = (scs_ptr->seq_header.max_frame_width  + 16 - 1) / 16;
   const uint32_t mb_rows = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
 
-  if (/*cpi->oxcf.rc_cfg.mode != AOM_Q*/ /*&& current_frame->frame_number*/pcs_ptr->picture_number == 0 &&
+  if (rc_cfg->mode != AOM_Q && /*current_frame->frame_number*/pcs_ptr->picture_number == 0 &&
       twopass->stats_buf_ctx->total_stats &&
       twopass->stats_buf_ctx->total_left_stats) {
     if (scs_ptr->lap_enabled) {
@@ -3013,8 +3014,8 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 
   aom_clear_system_state();
 
-  //if (oxcf->rc_cfg.mode == AOM_Q)
-  //  rc->active_worst_quality = oxcf->rc_cfg.cq_level;
+  if (encode_context_ptr->rc_cfg.mode == AOM_Q)
+    rc->active_worst_quality = encode_context_ptr->rc_cfg.cq_level;
   FIRSTPASS_STATS this_frame;
   av1_zero(this_frame);
   // call above fn
@@ -3276,8 +3277,13 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;//2000;
       encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;//50;
       encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ? AOM_VBR : AOM_Q;
+#if TWOPASS_AOM_Q && TWOPASS_RC_HACK_AS_AOM
+      encode_context_ptr->rc_cfg.best_allowed_q  = 0;
+      encode_context_ptr->rc_cfg.worst_allowed_q = 255;
+#else
       encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];//0;
       encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];//255;
+#endif
       encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;//25;
       encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;//25;
       encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
@@ -3287,6 +3293,8 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->gf_cfg.lag_in_frames = 25;//kelvinhack scs_ptr->static_config.look_ahead_distance + 1;
       encode_context_ptr->gf_cfg.gf_min_pyr_height = scs_ptr->static_config.hierarchical_levels;
       encode_context_ptr->gf_cfg.gf_max_pyr_height = scs_ptr->static_config.hierarchical_levels;
+      encode_context_ptr->gf_cfg.min_gf_interval   = 1 << scs_ptr->static_config.hierarchical_levels;
+      encode_context_ptr->gf_cfg.max_gf_interval   = 1 << scs_ptr->static_config.hierarchical_levels;
       encode_context_ptr->gf_cfg.enable_auto_arf   = 1;
       encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
       encode_context_ptr->kf_cfg.sframe_mode   = 0; //?

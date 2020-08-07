@@ -4499,7 +4499,7 @@ static int kf_high_motion_minq_cqp_12[QINDEX_RANGE] = {
         183,    184,    186,    188,
         190,    191,    193,    195
 };
-#if 0 //TWOPASS_RC
+#if TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM
 static int kf_low_motion_minq_org_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4571,7 +4571,7 @@ static int kf_high_motion_minq_8[QINDEX_RANGE] = {
     171, 173, 174, 176, 178, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 200, 201, 204, 206,
     209, 212, 214, 216, 219, 222, 224, 227, 230};
 
-#if 0 //TWOPASS_RC
+#if TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM
 static int arfgf_low_motion_minq_org_8[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,
@@ -4681,7 +4681,7 @@ static int rtc_minq_8[QINDEX_RANGE] = {
         241};
 */
 
-#if !TWOPASS_CLEANUP
+#if !TWOPASS_CLEANUP || (TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM)
 static int kf_low_motion_minq_10[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4788,7 +4788,7 @@ static int rtc_minq_10[QINDEX_RANGE] = {
         241};
 */
 
-#if !TWOPASS_CLEANUP
+#if !TWOPASS_CLEANUP || (TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM)
 static int kf_low_motion_minq_12[QINDEX_RANGE] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
@@ -4900,7 +4900,7 @@ static int rtc_minq_12[QINDEX_RANGE] = {
 static int gf_high = 2000;
 static int gf_low  = 400;
 #endif
-#if 0 //TWOPASS_RC
+#if TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM
 static int gf_high_org = 2400;
 static int gf_low_org  = 300;
 #endif
@@ -4956,7 +4956,7 @@ static int get_kf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
 }
 #endif
 
-#if 0 //TWOPASS_RC
+#if TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM
 static int get_kf_active_quality_org(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *kf_low_motion_minq_org;
     int *kf_high_motion_minq_org;
@@ -4997,7 +4997,7 @@ static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, Aom
 }
 #endif
 
-#if 0
+#if TWOPASS_RC && TWOPASS_RC_HACK_AS_AOM
 static int get_gf_high_motion_quality_org(int q, AomBitDepth bit_depth) {
     int *arfgf_high_motion_minq_org;
     ASSIGN_MINQ_TABLE(bit_depth, arfgf_high_motion_minq_org);
@@ -6537,7 +6537,11 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
         rc->best_quality    = MINQ;
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
+#if TWOPASS_RC_HACK_AS_AOM
+        active_best_quality = get_kf_active_quality_org(rc, active_worst_quality, bit_depth);
+#else
         active_best_quality = get_kf_active_quality_tpl(rc, active_worst_quality, bit_depth);
+#endif
         if (/*is_stat_consumption_stage_twopass(cpi) &&*/
                 twopass->kf_zeromotion_pct >= STATIC_KF_GROUP_THRESH) {
             active_best_quality /= 3;
@@ -6641,10 +6645,18 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
         q = rc->avg_frame_qindex[INTER_FRAME];
     }
     if (rc_mode == AOM_CQ && q < cq_level) q = cq_level;
+#if TWOPASS_RC_HACK_AS_AOM
+    active_best_quality = get_gf_active_quality_org(rc, q, bit_depth);
+#else
     active_best_quality = get_gf_active_quality_tpl_la(rc, q, bit_depth);
+#endif
     // Constrained quality use slightly lower active best.
     if (rc_mode == AOM_CQ) active_best_quality = active_best_quality * 15 / 16;
+#if TWOPASS_RC_HACK_AS_AOM
+    const int min_boost = get_gf_high_motion_quality_org(q, bit_depth);
+#else
     const int min_boost = get_gf_high_motion_quality(q, bit_depth);
+#endif
     const int boost = min_boost - active_best_quality;
     active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
     if (!is_intrl_arf_boost) return active_best_quality;
@@ -6865,7 +6877,6 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     const int           cq_level             = encode_context_ptr->rc_cfg.cq_level;
     int                 active_best_quality  = 0;
     int                 active_worst_quality = rc->active_worst_quality;
-    rc->arf_q                                = 0;
     int q;
     int is_intrl_arf_boost = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
 
@@ -6876,11 +6887,6 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
                                          cq_level, bit_depth);
     }
 #endif
-    // Since many frames can be processed at the same time, storing/using arf_q in rc param is not sufficient and will create a run to run.
-    // So, for each frame, arf_q is updated based on the qp of its references.
-    rc->arf_q = MAX(rc->arf_q, ((pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2));
-    if (pcs_ptr->slice_type == B_SLICE)
-        rc->arf_q = MAX(rc->arf_q, ((pcs_ptr->ref_pic_qp_array[1][0] << 2) + 2));
 
     if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr)) {
         const int is_fwd_kf = pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type == KEY_FRAME && pcs_ptr->parent_pcs_ptr->frm_hdr.show_frame == 0;
@@ -6929,6 +6935,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
 #else
     clamp(q, active_best_quality, active_worst_quality);
 #endif
+    if (gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == ARF_UPDATE) rc->arf_q = q;
     //printf("rc_pick_q_and_bounds return poc%d boost=%d, q=%d, bottom_index=%d top_index=%d, isintra=%d base_frame_target=%d, buffer_level=%d\n", pcs_ptr->picture_number, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), rc->base_frame_target, rc->buffer_level);
 
     return q;
@@ -7614,16 +7621,19 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC && TWOPASS_AOM_Q
                         if (scs_ptr->use_input_stat_file &&
                             scs_ptr->static_config.look_ahead_distance != 0) {
-                            int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                             frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
                             if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
 #if TWOPASS_RC_HACK_AS_AOM
                                 if (pcs_ptr->picture_number == 0) {
-                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.262381;
                                 } else if (pcs_ptr->picture_number == 16) {
-                                    //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.219375, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219375, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219375;
+                                }
+                                if (pcs_ptr->picture_number == 32) {
+                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219069, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.219069;
                                 }
 #endif
                                 process_tpl_stats_frame_gfu_boost(pcs_ptr);
@@ -7678,10 +7688,10 @@ void *rate_control_kernel(void *input_ptr) {
                         if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
 #if TWOPASS_RC_HACK_AS_AOM
                             if (pcs_ptr->picture_number == 0) {
-                                //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
                             } else if (pcs_ptr->picture_number == 16) {
-                                //printf("kelvinhack set the same r0 as AOM ---> POC%d before QPS, forcing r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
 #endif
@@ -7937,7 +7947,7 @@ void *rate_control_kernel(void *input_ptr) {
                         ? context_ptr->rate_control_param_queue[PARALLEL_GOP_MAX_NUMBER - 1]
                         : context_ptr->rate_control_param_queue[interval_index_temp - 1];
             }
-#if TWOPASS_RC && TWOPASS_AOM_Q
+#if 0 //disable feedback for AOM_Q, TWOPASS_RC && TWOPASS_AOM_Q
             if (scs_ptr->static_config.rate_control_mode == 0 &&
                 scs_ptr->use_input_stat_file &&
                 1//scs_ptr->static_config.look_ahead_distance != 0
