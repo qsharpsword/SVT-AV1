@@ -9203,7 +9203,7 @@ static void set_parent_to_be_considered(
         if (pcs_ptr->slice_type != I_SLICE) {
             if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
                 parent_to_current_deviation =
-                    (int64_t) (((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 100) /
+                    (int64_t) (((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 1000) /
                     (int64_t) (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4);
             }
         }
