@@ -651,11 +651,10 @@ extern "C" {
 #define ENABLE_INTRA_PD0                  0
 #define SUPER_FAST_PRED_ONLY_B_SLICE      0
 
-
 #define BLOCK_BASED_DEPTH_REFINMENT       1
 #if BLOCK_BASED_DEPTH_REFINMENT    
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
-#define BLOCK_BASED_DEPTH_REFINMENT_END   0
+#define BLOCK_BASED_DEPTH_REFINMENT_END   1
 #endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
