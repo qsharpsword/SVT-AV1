@@ -9207,7 +9207,7 @@ static void set_parent_to_be_considered(
                     (int64_t) (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4);
             }
         }
-        if (parent_to_current_deviation <= 10) {
+        if (parent_to_current_deviation <= 5) {
 #endif
         uint32_t         parent_tot_d1_blocks =
             parent_blk_geom->sq_size == 128
