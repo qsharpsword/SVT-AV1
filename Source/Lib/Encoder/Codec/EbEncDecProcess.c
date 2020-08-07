@@ -9199,13 +9199,15 @@ static void set_parent_to_be_considered(
 
 
 #if BLOCK_BASED_DEPTH_REFINMENT
-        int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
+        int64_t parent_to_current_deviation = MIN_SIGNED_VALUE;
         if (pcs_ptr->slice_type != I_SLICE) {
             if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
-                current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost;
+                parent_to_current_deviation =
+                    (int64_t) (((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 100) /
+                    (int64_t) (context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4);
             }
         }
-        if (current_to_parent_deviation <= -25 /*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
+        if (parent_to_current_deviation <= 10) {
 #endif
         uint32_t         parent_tot_d1_blocks =
             parent_blk_geom->sq_size == 128
