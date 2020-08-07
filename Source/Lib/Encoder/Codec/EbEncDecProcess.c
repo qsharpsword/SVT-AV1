@@ -11444,7 +11444,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost);
                         }
                     }
-                    if (child_to_current_deviation > 0)
+                    if (child_to_current_deviation > 5)
                         e_depth = 0;
 #endif
                     if (e_depth != 0)
