@@ -11388,7 +11388,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                         }
                     }
-                    if (parent_to_current_deviation > 0)
+                    if (parent_to_current_deviation > -5)
                         s_depth = 0;
 #endif
                     if (s_depth != 0)
