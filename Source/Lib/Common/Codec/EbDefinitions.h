@@ -647,6 +647,8 @@ extern "C" {
 #define JULY31_PRESETS_ADOPTIONS        1
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
+#define UNIFY_LEVELS                    1 // Have the mode-switching features use the regular MD feature levels when switching modes
+#define AUG5_ADOPTS                     1 // Adoptions for MR and M2
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

@@ -710,22 +710,29 @@ static const uint32_t intra_adaptive_md_cycles_reduction_th[DEPTH_DELTA_NUM][NUM
 };
 #endif
 #if SWITCH_MODE_BASED_ON_STATISTICS
+#if !UNIFY_LEVELS
 void set_inter_inter_distortion_based_reference_pruning_controls(
     ModeDecisionContext *mdctxt,
     uint8_t inter_inter_distortion_based_reference_pruning_mode);
 
 void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode);
-
+#endif
 EbErrorType signal_derivation_enc_dec_kernel_oq(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
+#if UNIFY_LEVELS
+    ModeDecisionContext *context_ptr,
+    EbEncMode update_levels);
+#else
     ModeDecisionContext *context_ptr);
-
+#endif
+#if !UNIFY_LEVELS
 EbErrorType signal_derivation_update(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
     ModeDecisionContext *context_ptr,
     EbEncMode enc_mode);
+#endif
 #endif
 #ifdef __cplusplus
 }
