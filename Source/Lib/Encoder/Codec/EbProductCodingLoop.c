@@ -7366,7 +7366,27 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #endif
                     }
                 }
+#if PME_EARLY_EXIT
+                uint8_t exit_pme;
+                //exit_pme = ((((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion) < 20)
 
+                uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
+                    context_ptr->fast_lambda_md[EB_10_BIT_MD] :
+                    context_ptr->fast_lambda_md[EB_8_BIT_MD];
+
+
+                uint32_t full_lambda = context_ptr->hbd_mode_decision ?
+                    context_ptr->full_lambda_md[EB_10_BIT_MD] :
+                    context_ptr->full_lambda_md[EB_8_BIT_MD];
+
+                // Check if pa_me distortion is above the per-pixel threshold.  Rate is set to 16.
+                if (RDCOST(use_ssd ? full_lambda : fast_lambda, 16, best_mvp_distortion) >
+                    RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
+                    exit_pme = 1;
+                }
+                if (exit_pme)
+                    continue;
+#endif
                 // Step 2: perform full pel search around the best MVP
                 best_mvp_x = (best_mvp_x + 4) & ~0x07;
                 best_mvp_y = (best_mvp_y + 4) & ~0x07;
