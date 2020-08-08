@@ -12612,10 +12612,21 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 ******************************************************/
 EbErrorType signal_derivation_block(
     PictureControlSet     *pcs,
+#if UNIFY_LEVELS
+    ModeDecisionContext   *context_ptr,
+    EbEncMode              mode_offset) {
+#else
     ModeDecisionContext   *context_ptr) {
+#endif
 
     EbErrorType return_error = EB_ErrorNone;
-
+#if UNIFY_LEVELS
+    EbEncMode enc_mode;
+    if (mode_offset)
+        enc_mode = MIN(ENC_M8, pcs->parent_pcs_ptr->enc_mode + mode_offset);
+    else
+        enc_mode = pcs->parent_pcs_ptr->enc_mode;
+#endif
 #if INTER_COMP_REDESIGN
 #if SOFT_CYCLES_REDUCTION
     // Set inter_inter_distortion_based_reference_pruning
@@ -12641,7 +12652,11 @@ EbErrorType signal_derivation_block(
         else if (enc_mode <= ENC_M0)
 #else
 #if UNIFY_SC_NSC
+#if UNIFY_LEVELS
+        else if (enc_mode <= ENC_M0)
+#else
         else if (pcs->parent_pcs_ptr->enc_mode <= ENC_M0)
+#endif
 #else
         else if (MR_MODE || (pcs->parent_pcs_ptr->enc_mode <= ENC_M0 && !pcs->parent_pcs_ptr->sc_content_detected))
 #endif
@@ -15836,8 +15851,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
 #if SWITCH_MODE_BASED_ON_SQ_COEFF || SWITCH_MODE_BASED_ON_STATISTICS
         // Reset settings, in case they were over-written by previous block
+#if UNIFY_LEVELS
+        signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr,0);
+        signal_derivation_block(pcs_ptr, context_ptr,0);
+#else
         signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
         signal_derivation_block(pcs_ptr, context_ptr);
+#endif
 #endif
 #if SWITCH_MODE_BASED_ON_STATISTICS
         // Use more aggressive (faster, but less accurate) settigns for unlikely paritions (incl. SQ)
@@ -15849,8 +15869,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             pred_depth_refinement = MAX(pred_depth_refinement, -2);
             pred_depth_refinement += 2;
             if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->switch_mode_th) {
+#if UNIFY_LEVELS
+                signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr, adaptive_md_cycles_red_ctrls->mode_offset);
+                signal_derivation_block(pcs_ptr, context_ptr, adaptive_md_cycles_red_ctrls->mode_offset);
+#else
                 EbEncMode md_enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + adaptive_md_cycles_red_ctrls->mode_offset);
                 signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
+#endif
             }
         }
 #endif
@@ -15870,8 +15895,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     zero_sq_coeff_skip_action = 1;
                 }
                 else {
+#if UNIFY_LEVELS
+                    signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr, coeffb_sw_md_ctrls->mode_offset);
+                    signal_derivation_block(pcs_ptr, context_ptr, coeffb_sw_md_ctrls->mode_offset);
+#else
                     EbEncMode md_enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + coeffb_sw_md_ctrls->mode_offset);
                     signal_derivation_update(scs_ptr, pcs_ptr, context_ptr, md_enc_mode);
+#endif
                 }
             }
         }
