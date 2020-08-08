@@ -7368,8 +7368,13 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 }
 #if PME_EARLY_EXIT
                 uint8_t exit_pme=0;
-                //exit_pme = ((((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion) < 20)
+                int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
 
+                if(pa_me_distortion == 0)
+                    exit_pme = 1;
+                else 
+                    mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
+#if 0
                 uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
                     context_ptr->fast_lambda_md[EB_10_BIT_MD] :
                     context_ptr->fast_lambda_md[EB_8_BIT_MD];
@@ -7384,6 +7389,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
                     exit_pme = 1;
                 }
+#endif
                 if (exit_pme)
                     continue;
 #endif
