@@ -7381,7 +7381,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 
                 // Check if pa_me distortion is above the per-pixel threshold.  Rate is set to 16.
                 if (RDCOST(use_ssd ? full_lambda : fast_lambda, 16, best_mvp_distortion) >
-                    RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
+                    RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
                     exit_pme = 1;
                 }
                 if (exit_pme)
