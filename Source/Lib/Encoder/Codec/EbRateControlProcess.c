@@ -7089,10 +7089,6 @@ static void update_golden_frame_stats(PictureParentControlSet *ppcs_ptr) {
 }
 
 static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t bytes_used) {
-  //const AV1_COMMON *const cm = &cpi->common;
-  //const CurrentFrame *const current_frame = &cm->current_frame;
-  //RATE_CONTROL *const rc = &cpi->rc;
-  //const GF_GROUP *const gf_group = &cpi->gf_group;
   const RefreshFrameFlagsInfo *const refresh_frame_flags = &ppcs_ptr->refresh_frame;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -7511,7 +7507,6 @@ void *rate_control_kernel(void *input_ptr) {
                         }
                         av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                         av1_configure_buffer_updates(pcs_ptr, &(pcs_ptr->parent_pcs_ptr->refresh_frame), 0);
-                        //anaghdin to check the location
                         av1_set_target_rate(pcs_ptr,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
                             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
@@ -7947,7 +7942,7 @@ void *rate_control_kernel(void *input_ptr) {
                         ? context_ptr->rate_control_param_queue[PARALLEL_GOP_MAX_NUMBER - 1]
                         : context_ptr->rate_control_param_queue[interval_index_temp - 1];
             }
-#if 0 //disable feedback for AOM_Q, TWOPASS_RC && TWOPASS_AOM_Q
+#if 1 //disable feedback for AOM_Q, TWOPASS_RC && TWOPASS_AOM_Q
             if (scs_ptr->static_config.rate_control_mode == 0 &&
                 scs_ptr->use_input_stat_file &&
                 1//scs_ptr->static_config.look_ahead_distance != 0
