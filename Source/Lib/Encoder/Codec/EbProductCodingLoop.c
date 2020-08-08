@@ -7367,7 +7367,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     }
                 }
 #if PME_EARLY_EXIT
-                uint8_t exit_pme;
+                uint8_t exit_pme=0;
                 //exit_pme = ((((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion) < 20)
 
                 uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
