@@ -7368,12 +7368,16 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 }
 #if PME_EARLY_EXIT
                 uint8_t exit_pme=0;
-                int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
+                
 
                 if(pa_me_distortion == 0)
                     exit_pme = 1;
-                else 
+                else {
+                    int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
                     mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
+                    if(mvp_to_me_dist_deviation > 10)
+                        exit_pme = 1;
+                }
 #if 0
                 uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
                     context_ptr->fast_lambda_md[EB_10_BIT_MD] :
