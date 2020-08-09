@@ -9767,6 +9767,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
 
 #if FAST_TXT
+        if(pcs_ptr->slice_type != I_SLICE)
         if (tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
             continue;
 #endif
