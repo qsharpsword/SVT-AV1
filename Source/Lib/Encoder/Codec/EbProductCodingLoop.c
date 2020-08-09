@@ -7454,7 +7454,13 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #endif
 
 #if UPGRADE_SUBPEL
+#if PME_OPT
+                int besterr = (int) best_search_distortion;
+                if (context_ptr->md_subpel_pme_ctrls.enabled) 
+                    besterr = md_subpel_search(pcs_ptr,
+#else
                 int besterr = md_subpel_search(pcs_ptr,
+#endif
                     context_ptr,
                     context_ptr->md_subpel_pme_ctrls,
                     pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr, // 10BIT not supported

@@ -657,7 +657,8 @@ extern "C" {
 #define BLOCK_BASED_DEPTH_REFINMENT_END   1
 #endif
 
-#define PME_EARLY_EXIT 1
+#define PME_EARLY_EXIT 0
+#define PME_OPT 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
