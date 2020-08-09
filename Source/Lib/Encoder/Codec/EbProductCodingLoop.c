@@ -7150,10 +7150,15 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
 #endif
             uint32_t pa_me_distortion = ~0;//any non zero value
+#if PME_EARLY_EXIT
+            int16_t me_mv_x = (int16_t)~0;
+            int16_t me_mv_y = (int16_t)~0;
+#endif
             if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
-
+#if !PME_EARLY_EXIT
                 int16_t me_mv_x;
                 int16_t me_mv_y;
+#endif
                 if (list_idx == 0) {
                     me_mv_x = context_ptr
                         ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx][0];
@@ -7382,10 +7387,15 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                         //me_mv_y 
 
 
-
+#if 0
                     mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
                     if(mvp_to_me_dist_deviation > 50)
                         exit_pme = 1;
+#endif
+                    if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
+                        if (ABS(best_mvp_x - me_mv_x) == 0 && ABS(best_mvp_x - me_mv_x) == 0)
+                            exit_pme = 1;
+                    }
                 }
 #if 0
                 uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
