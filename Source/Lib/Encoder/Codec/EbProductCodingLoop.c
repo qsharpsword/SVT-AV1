@@ -7374,8 +7374,17 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     exit_pme = 1;
                 else {
                     int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
+
+                        //best_mvp_x
+                        //best_mvp_y
+
+                        //me_mv_x 
+                        //me_mv_y 
+
+
+
                     mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
-                    if(mvp_to_me_dist_deviation > 10)
+                    if(mvp_to_me_dist_deviation > 5)
                         exit_pme = 1;
                 }
 #if 0
