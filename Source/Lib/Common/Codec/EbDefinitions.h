@@ -649,7 +649,7 @@ extern "C" {
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
 
-#define BLOCK_BASED_DEPTH_REFINMENT       0
+#define BLOCK_BASED_DEPTH_REFINMENT       1
 #if BLOCK_BASED_DEPTH_REFINMENT    
 #define ENABLE_INTRA_PD0                  0
 #define SUPER_FAST_PRED_ONLY_B_SLICE      0

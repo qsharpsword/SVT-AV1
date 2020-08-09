@@ -11414,7 +11414,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                             // Derive currrent depth cost
                             current_depth_cost = (current_depth_cost / child_cnt) * 4;
-#if 1
+#if 0
                             parent_to_current_deviation =
                                 (int64_t)(((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)current_depth_cost) * 100) /
                                 (int64_t)current_depth_cost;
@@ -11426,7 +11426,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
 
                     }
-                    if (parent_to_current_deviation > 20)
+                    if (parent_to_current_deviation > -10)
                         s_depth = 0;
 #endif
                     if (s_depth != 0)
@@ -11488,7 +11488,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost);
                         }
                     }
-                    if (child_to_current_deviation > 15)
+                    if (child_to_current_deviation > 20)
                         e_depth = 0;
 #endif
                     if (e_depth != 0)
