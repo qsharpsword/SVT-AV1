@@ -7620,15 +7620,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (enc_mode <= ENC_M7)
 #endif
             context_ptr->md_subpel_pme_level = 1;
-#if PME_OPT
-        else if(enc_mode <= ENC_M5)
-            context_ptr->md_subpel_pme_level = 2;
-        else
-            context_ptr->md_subpel_pme_level = 0;
-#else
         else
             context_ptr->md_subpel_pme_level = 2;
-#endif
+
     md_subpel_pme_controls(context_ptr, context_ptr->md_subpel_pme_level);
 #else
     if (pd_pass == PD_PASS_0)
