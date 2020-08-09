@@ -9765,6 +9765,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
     uint64_t txb_full_distortion_txt[TX_TYPES][DIST_CALC_TOTAL]= { 0 };
 #endif
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
+
+#if FAST_TXT
+        if (tx_type != DCT_DCT)
+            continue;
+#endif
 #if COEFF_BASED_TXT_BYPASS
         // Perform search selectively based on statistics (DCT_DCT always performed)
         if (context_ptr->txt_cycles_red_ctrls.enabled && tx_type != DCT_DCT) {

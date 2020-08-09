@@ -659,6 +659,8 @@ extern "C" {
 
 #define PME_EARLY_EXIT 0
 #define PME_OPT 1
+
+#define FAST_TXT 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
