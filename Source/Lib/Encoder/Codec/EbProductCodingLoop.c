@@ -7371,51 +7371,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #endif
                     }
                 }
-#if PME_EARLY_EXIT
-                uint8_t exit_pme=0;
-                
 
-                if(pa_me_distortion == 0)
-                    exit_pme = 1;
-                else {
-                    int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
-
-                        //best_mvp_x
-                        //best_mvp_y
-
-                        //me_mv_x 
-                        //me_mv_y 
-
-
-#if 0
-                    mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
-                    if(mvp_to_me_dist_deviation > 50)
-                        exit_pme = 1;
-#endif
-                    if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
-                        if ((ABS(best_mvp_x - me_mv_x) <= 32) && (ABS(best_mvp_y - me_mv_y) <= 32))
-                            exit_pme = 1;
-                    }
-                }
-#if 0
-                uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
-                    context_ptr->fast_lambda_md[EB_10_BIT_MD] :
-                    context_ptr->fast_lambda_md[EB_8_BIT_MD];
-
-
-                uint32_t full_lambda = context_ptr->hbd_mode_decision ?
-                    context_ptr->full_lambda_md[EB_10_BIT_MD] :
-                    context_ptr->full_lambda_md[EB_8_BIT_MD];
-
-                // Check if pa_me distortion is above the per-pixel threshold.  Rate is set to 16.
-                if (RDCOST(use_ssd ? full_lambda : fast_lambda, 16, best_mvp_distortion) >
-                    RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
-                    exit_pme = 1;
-                }
-#endif
-                if (exit_pme)
-                    continue;
-#endif
                 // Step 2: perform full pel search around the best MVP
                 best_mvp_x = (best_mvp_x + 4) & ~0x07;
                 best_mvp_y = (best_mvp_y + 4) & ~0x07;
@@ -7448,6 +7404,52 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                    &best_search_mvx,
                                    &best_search_mvy,
                                    &best_search_distortion);
+
+#if PME_EARLY_EXIT
+                uint8_t exit_pme = 0;
+
+
+                if (pa_me_distortion == 0)
+                    exit_pme = 1;
+                else {
+                    int64_t mvp_to_me_dist_deviation = MIN_SIGNED_VALUE;
+
+                    //best_mvp_x
+                    //best_mvp_y
+
+                    //me_mv_x 
+                    //me_mv_y 
+
+
+#if 0
+                    mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
+                    if (mvp_to_me_dist_deviation > 50)
+                        exit_pme = 1;
+#endif
+                    if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
+                        if ((ABS(best_search_mvx - me_mv_x) == 0) && (ABS(best_search_mvy - me_mv_y) == 0))
+                            exit_pme = 1;
+                    }
+                }
+#if 0
+                uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
+                    context_ptr->fast_lambda_md[EB_10_BIT_MD] :
+                    context_ptr->fast_lambda_md[EB_8_BIT_MD];
+
+
+                uint32_t full_lambda = context_ptr->hbd_mode_decision ?
+                    context_ptr->full_lambda_md[EB_10_BIT_MD] :
+                    context_ptr->full_lambda_md[EB_8_BIT_MD];
+
+                // Check if pa_me distortion is above the per-pixel threshold.  Rate is set to 16.
+                if (RDCOST(use_ssd ? full_lambda : fast_lambda, 16, best_mvp_distortion) >
+                    RDCOST(use_ssd ? full_lambda : fast_lambda, 16, 10 * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight)) {
+                    exit_pme = 1;
+                }
+#endif
+                if (exit_pme)
+                    continue;
+#endif
 
 #if UPGRADE_SUBPEL
                 int besterr = md_subpel_search(pcs_ptr,
