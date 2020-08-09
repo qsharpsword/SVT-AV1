@@ -7393,7 +7393,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                         exit_pme = 1;
 #endif
                     if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
-                        if (ABS(best_mvp_x - me_mv_x) == 0 && ABS(best_mvp_x - me_mv_x) == 0)
+                        if (ABS(best_mvp_x - me_mv_x) == 0 && ABS(best_mvp_y - me_mv_y) == 0)
                             exit_pme = 1;
                     }
                 }
