@@ -7421,15 +7421,17 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     //me_mv_y 
 
 
-#if 0
-                    mvp_to_me_dist_deviation = (((best_mvp_distortion - pa_me_distortion) * 100) / pa_me_distortion);
+#if 1
+                    mvp_to_me_dist_deviation = (((best_search_distortion - pa_me_distortion) * 100) / pa_me_distortion);
                     if (mvp_to_me_dist_deviation > 50)
                         exit_pme = 1;
 #endif
+#if 0
                     if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
                         if ((ABS(best_search_mvx - me_mv_x) == 0) && (ABS(best_search_mvy - me_mv_y) == 0))
                             exit_pme = 1;
                     }
+#endif
                 }
 #if 0
                 uint32_t fast_lambda = context_ptr->hbd_mode_decision ?
