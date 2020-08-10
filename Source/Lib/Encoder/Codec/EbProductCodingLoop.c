@@ -9600,7 +9600,11 @@ EbBool bypass_txt_based_on_stats(PictureControlSet *pcs_ptr,
         freq_band = 0;
     }
 #if ADAPTIVE_TXT_CR
+#if OFFLINE_DATA
+    if(1) {
+#else
     if (pcs_ptr->slice_type == I_SLICE) {
+#endif
         if (is_inter) { // INTER path
             if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
                 < context_ptr->txt_cycles_red_ctrls.inter_th)

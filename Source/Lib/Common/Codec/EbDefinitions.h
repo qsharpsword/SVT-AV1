@@ -661,9 +661,10 @@ extern "C" {
 
 //TXT
 #define SUPER_FAST_TXT_OFF 0
-#define FAST_TXT 1
-#define PROB_TXT 1
+#define FAST_TXT 0
+#define PROB_TXT 0
 #define EXIT_IF_NO_COEFF 0
+#define OFFLINE_DATA 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
