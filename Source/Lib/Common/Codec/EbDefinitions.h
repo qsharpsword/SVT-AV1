@@ -666,8 +666,13 @@ extern "C" {
 #define OFFLINE_DATA 0
 
 // Quant coeff rate estimation 
-#define FAST_RATE_ESTIMATION 1
+#define FAST_RATE_ESTIMATION 0
 
+// Lossless opt
+#if 0
+#define OPT_0 1
+#define OPT_1 1
+#endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
 #if NEW_DELAY
