@@ -7616,8 +7616,10 @@ void *rate_control_kernel(void *input_ptr) {
 #if TWOPASS_RC && TWOPASS_AOM_Q
                         if (scs_ptr->use_input_stat_file &&
                             scs_ptr->static_config.look_ahead_distance != 0) {
+                            int32_t update_type = scs_ptr->encode_context_ptr->gf_group.update_type[pcs_ptr->parent_pcs_ptr->gf_group_index];
                             frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
-                            if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
+                            if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0 &&
+                                (update_type == KF_UPDATE || update_type == GF_UPDATE || update_type == ARF_UPDATE)) {
 #if TWOPASS_RC_HACK_AS_AOM
                                 if (pcs_ptr->picture_number == 0) {
                                     //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
@@ -7629,6 +7631,10 @@ void *rate_control_kernel(void *input_ptr) {
                                 if (pcs_ptr->picture_number == 32) {
                                     //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219069, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219069;
+                                }
+                                if (pcs_ptr->picture_number == 48) {
+                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219795, pcs_ptr->parent_pcs_ptr->r0);
+                                    pcs_ptr->parent_pcs_ptr->r0 = 0.219795;
                                 }
 #endif
                                 process_tpl_stats_frame_gfu_boost(pcs_ptr);
@@ -7679,8 +7685,10 @@ void *rate_control_kernel(void *input_ptr) {
                     if (scs_ptr->use_input_stat_file &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         int32_t new_qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
+                        int32_t update_type = scs_ptr->encode_context_ptr->gf_group.update_type[pcs_ptr->parent_pcs_ptr->gf_group_index];
                         frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
-                        if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0) {
+                        if (scs_ptr->static_config.enable_tpl_la && pcs_ptr->parent_pcs_ptr->r0 != 0 &&
+                            (update_type == KF_UPDATE || update_type == GF_UPDATE || update_type == ARF_UPDATE)) {
 #if TWOPASS_RC_HACK_AS_AOM
                             if (pcs_ptr->picture_number == 0) {
                                 //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
@@ -7942,15 +7950,16 @@ void *rate_control_kernel(void *input_ptr) {
                         ? context_ptr->rate_control_param_queue[PARALLEL_GOP_MAX_NUMBER - 1]
                         : context_ptr->rate_control_param_queue[interval_index_temp - 1];
             }
-#if 1 //disable feedback for AOM_Q, TWOPASS_RC && TWOPASS_AOM_Q
+#if TWOPASS_RC && TWOPASS_AOM_Q
             if (scs_ptr->static_config.rate_control_mode == 0 &&
                 scs_ptr->use_input_stat_file &&
                 1//scs_ptr->static_config.look_ahead_distance != 0
                 ) {
 #if TWOPASS_RC_HACK_AS_AOM
                 if (parentpicture_control_set_ptr->picture_number<=32) {
-                    static int bytes_used[33] = {21757, 64, 257, 47, 3069, 36, 289, 51, 8705, 56, 379, 50, 3495, 51, 287, 57, 16798,
-                                                        57, 313, 39, 4033, 46, 360, 56, 10219, 51, 416, 58, 3987, 65, 396, 63, 19916};
+                    static int bytes_used[49] = {21757, 64, 257, 47, 3069, 36, 289, 51, 8705, 56, 379, 50, 3495, 51, 287, 57, 16798,
+                                                        57, 313, 39, 4033, 46, 360, 56, 10219, 51, 416, 58, 3987, 65, 396, 63, 19916,
+                                                        57, 332, 53, 3380, 58, 373, 66, 8668,  57, 441, 47, 3455, 51, 381, 61, 16211};
                     printf("kelvinhack CQP set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
                     parentpicture_control_set_ptr->total_num_bits = bytes_used[parentpicture_control_set_ptr->picture_number]*8;
                 }
