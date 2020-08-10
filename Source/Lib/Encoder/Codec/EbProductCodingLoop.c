@@ -9767,10 +9767,6 @@ void tx_type_search(PictureControlSet *pcs_ptr,
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
 
 #if FAST_TXT
-        int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
-            candidate_buffer->candidate_ptr->use_intrabc)
-            ? EB_TRUE
-            : EB_FALSE;
         if(!is_inter)
         //if(pcs_ptr->slice_type != I_SLICE)
         //if (tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
