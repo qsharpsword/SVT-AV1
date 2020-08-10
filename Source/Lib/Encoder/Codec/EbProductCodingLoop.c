@@ -9771,7 +9771,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             candidate_buffer->candidate_ptr->use_intrabc)
             ? EB_TRUE
             : EB_FALSE;
-        if(is_inter)
+        if(!is_inter)
         //if(pcs_ptr->slice_type != I_SLICE)
         //if (tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
         if (tx_type != DCT_DCT)
