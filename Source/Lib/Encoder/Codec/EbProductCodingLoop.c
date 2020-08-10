@@ -10195,7 +10195,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             candidate_buffer->residual_quant_coeff_ptr,
 #endif
 #if UNIFY_TXT
+#if FAST_RATE_ESTIMATION
+            MIN((uint32_t)((context_ptr->blk_geom->tx_width[context_ptr->tx_depth][0] / 4) * (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][0] / 4)), y_count_non_zero_coeffs_txt[tx_type]),
+#else
             y_count_non_zero_coeffs_txt[tx_type],
+#endif
 #else
             y_count_non_zero_coeffs,
 #endif
@@ -10222,11 +10226,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                                 candidate_buffer->candidate_ptr,
                                 context_ptr->txb_itr,
                                 context_ptr->blk_geom->txsize[context_ptr->tx_depth][0],
-#if FAST_RATE_ESTIMATION
-                                MIN((uint32_t) ((context_ptr->blk_geom->tx_width[context_ptr->tx_depth][0] / 4) * (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][0] / 4)),y_count_non_zero_coeffs_txt[tx_type]),
-#else
                                 y_count_non_zero_coeffs_txt[tx_type],
-#endif
                                 txb_full_distortion_txt[tx_type],
                                 &(y_txb_coeff_bits_txt[tx_type]),
                                 &y_full_cost,
