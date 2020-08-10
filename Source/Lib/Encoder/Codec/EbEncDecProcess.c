@@ -9176,9 +9176,6 @@ void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *cont
                            uint32_t sb_org_y);
 
 static void set_parent_to_be_considered(
-#if BLOCK_BASED_DEPTH_REFINMENT
-                                        PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
-#endif
                                         MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
 #if TRACK_PER_DEPTH_DELTA
                                         int8_t pred_depth,
@@ -9215,11 +9212,7 @@ static void set_parent_to_be_considered(
         if (depth_step < -1)
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR
-#if BLOCK_BASED_DEPTH_REFINMENT          
-            set_parent_to_be_considered(pcs_ptr, context_ptr,results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
-#else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
-#endif
 #else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, depth_step + 1);
 #endif
@@ -11309,7 +11302,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             (blk_geom->sqi_mds -
                             (blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth]) -
                             parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
-                        
+
                         if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
 
                             // Get the child of the parent (1 of the child is the current block)
@@ -11362,9 +11355,6 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR
                         set_parent_to_be_considered(
-#if BLOCK_BASED_DEPTH_REFINMENT
-                            pcs_ptr, context_ptr,
-#endif
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth,sq_size_idx,  s_depth);
 #else
                         set_parent_to_be_considered(

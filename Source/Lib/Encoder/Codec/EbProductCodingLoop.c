@@ -7417,8 +7417,8 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     //best_mvp_x
                     //best_mvp_y
 
-                    //me_mv_x 
-                    //me_mv_y 
+                    //me_mv_x
+                    //me_mv_y
 
 
 #if 1
@@ -7456,7 +7456,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 #if UPGRADE_SUBPEL
 #if PME_OPT
                 int besterr = (int) best_search_distortion;
-                if (context_ptr->md_subpel_pme_ctrls.enabled) 
+                if (context_ptr->md_subpel_pme_ctrls.enabled)
                     besterr = md_subpel_search(pcs_ptr,
 #else
                 int besterr = md_subpel_search(pcs_ptr,
@@ -9771,8 +9771,8 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             candidate_buffer->candidate_ptr->use_intrabc)
             ? EB_TRUE
             : EB_FALSE;
-        if(is_inter) 
-        if(pcs_ptr->slice_type != I_SLICE) 
+        if(is_inter)
+        if(pcs_ptr->slice_type != I_SLICE)
         if (tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
             continue;
 #endif
