@@ -6474,6 +6474,11 @@ void process_tpl_stats_frame_gfu_boost(PictureControlSet *pcs_ptr) {
                 MIN_BOOST_COMBINE_FACTOR, MAX_BOOST_COMBINE_FACTOR,
                 rc->gfu_boost, gfu_boost, rc->frames_to_key);
     }
+#if USE_OLD_SETTING
+    rc->kf_boost = get_cqp_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, rc->frames_to_key, scs_ptr->input_resolution);
+    double min_boost_factor = sqrt(1 << pcs_ptr->parent_pcs_ptr->hierarchical_levels);
+    rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, rc->frames_to_key);
+#endif
 }
 
 static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
@@ -6547,7 +6552,7 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
             active_best_quality /= 3;
         }
         // Allow somewhat lower kf minq with small image formats.
-#if 0 //TPL_240P_IMP //anaghdin
+#if USE_OLD_SETTING //TPL_240P_IMP //anaghdin
         if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
             q_adj_factor -= 0.15;
 #else
@@ -6658,6 +6663,13 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
     const int min_boost = get_gf_high_motion_quality(q, bit_depth);
 #endif
     const int boost = min_boost - active_best_quality;
+#if USE_OLD_SETTING
+    rc->arf_boost_factor =
+        (pcs_ptr->ref_slice_type_array[0][0] == I_SLICE &&
+            pcs_ptr->ref_pic_r0[0][0] - pcs_ptr->parent_pcs_ptr->r0 >= 0.1)
+        ? (float_t)1.3
+        : (float_t)1;
+#endif
     active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
     if (!is_intrl_arf_boost) return active_best_quality;
 
@@ -6936,7 +6948,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     clamp(q, active_best_quality, active_worst_quality);
 #endif
     if (gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == ARF_UPDATE) rc->arf_q = q;
-    //printf("rc_pick_q_and_bounds return poc%d boost=%d, q=%d, bottom_index=%d top_index=%d, isintra=%d base_frame_target=%d, buffer_level=%d\n", pcs_ptr->picture_number, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), rc->base_frame_target, rc->buffer_level);
+    printf("\nrc_pick_q_and_bounds return poc%d boost=%d, q=%d, bottom_index=%d top_index=%d, isintra=%d base_frame_target=%d, buffer_level=%d\n", pcs_ptr->picture_number, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), rc->base_frame_target, rc->buffer_level);
 
     return q;
 }
