@@ -2117,7 +2117,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
                            candidate_buffer->candidate_ptr,
                            txb_itr,
                            context_ptr->blk_geom->txsize[tx_depth][0],
+#if FAST_RATE_ESTIMATION
+                            MIN((uint32_t)((context_ptr->blk_geom->tx_width[tx_depth][0] / 2) * (context_ptr->blk_geom->tx_height[tx_depth][0] / 2)), y_count_non_zero_coeffs[txb_itr]),
+#else
                            y_count_non_zero_coeffs[txb_itr],
+#endif
                            txb_full_distortion[0], //gets updated inside based on cbf decision
                            &y_txb_coeff_bits, //gets updated inside based on cbf decision
                            &y_full_cost,

@@ -649,7 +649,6 @@ extern "C" {
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
 // #depth @ PD2: ~2.5 days
-#if 1
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
 #define BLOCK_BASED_DEPTH_REFINMENT_END 1
@@ -663,9 +662,12 @@ extern "C" {
 #define SUPER_FAST_TXT_OFF 0
 #define FAST_TXT 1
 #define PROB_TXT 0
-#define EXIT_IF_NO_COEFF 1
+#define EXIT_IF_NO_COEFF 0
 #define OFFLINE_DATA 0
-#endif
+
+// Quant coeff rate estimation 
+#define FAST_RATE_ESTIMATION 1
+
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
 #if NEW_DELAY
