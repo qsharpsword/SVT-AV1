@@ -3863,6 +3863,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
 #endif
+#if SUPER_FAST_TXT_OFF
+    context_ptr->tx_search_level = TX_SEARCH_OFF;
+#endif
+
+
 #if TXT_CONTROL
     // Set MD tx_level
     // md_txt_search_level                            Settings
