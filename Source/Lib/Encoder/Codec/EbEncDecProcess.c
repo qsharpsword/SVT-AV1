@@ -3126,8 +3126,8 @@ void set_txt_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txt_c
 #if PROB_TXT
     case 6:
         txt_cycle_red_ctrls->enabled = 1;
-        txt_cycle_red_ctrls->intra_th = 10000;
-        txt_cycle_red_ctrls->inter_th = 10000;
+        txt_cycle_red_ctrls->intra_th = 100;
+        txt_cycle_red_ctrls->inter_th = 100;
         break;
 #endif
     default:
