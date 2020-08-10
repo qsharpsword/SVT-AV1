@@ -10846,79 +10846,8 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
-#if SUPER_FAST_PRED_ONLY_B_SLICE
-                                    if (pcs_ptr->slice_type == I_SLICE) {
-                                        s_depth = -1;
-                                        e_depth =  1;
-                                    }
-                                    else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) {
-                                        // Adaptively switch between Pred_Only and [-1,1] @ eack block of the sb_partitioning based on PD0 data:
-                                        s_depth = -1;
-                                        e_depth = 1;
-#if 0 // version_0
-                                        s_depth =  0;
-                                        e_depth =  0;
-#endif
-#if 0 // version_1
-                                        s_depth = -1;
-                                        e_depth =  0;
-#endif
-#if 1 // version_2
-                                        s_depth =  0;
-                                        e_depth =  1;
-#endif
-#if 0 // version_3
-                                        if (context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff) {
-                                            s_depth = -1;
-                                            e_depth = 1;
-                                        }
-                                        else {
-
-                                            s_depth = 0;
-                                            e_depth = 0;
-                                        }
-#endif 
-#if 0 // version_3
-                                        // 2x_faster
-                                        if (context_ptr->md_blk_arr_nsq[blk_index].prediction_mode_flag == INTRA_MODE) {
-                                            s_depth = -1;
-                                            e_depth = 1;
-                                        }
-                                        else {
-
-                                            s_depth = 0;
-                                            e_depth = 0;
-                                        }
-#endif
-#if 0 // version_5
-                                        // Get current_to_parent_deviation
-                                        uint32_t parent_depth_sqi_mds =
-                                            (blk_geom->sqi_mds -
-                                            (blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth]) -
-                                            parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
-                                        int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
-                                        if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
-                                            current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].default_cost;
-                                        }
-                                        if (current_to_parent_deviation <= 25/*context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th*/) {
-                                            s_depth =  0;
-                                        }
-                                        else {
-                                            s_depth = -1;                                       
-                                        }
-
-                                        e_depth = 1;
-#endif
-                                    }
-                                    else {
-                                        // Pred Only
-                                        s_depth = 0;
-                                        e_depth = 0;
-                                    }
-#else
                                     s_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
-#endif
                                 }
 #if !SHIFT_PRESETS
 #if ADD_M9
@@ -11374,7 +11303,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if BLOCK_BASED_DEPTH_REFINMENT_START
                     int64_t parent_to_current_deviation = MIN_SIGNED_VALUE;
 
-                    if (pcs_ptr->slice_type != I_SLICE && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index] && blk_geom->sq_size < ((scs_ptr->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
+                    if (s_depth == -1 && pcs_ptr->slice_type != I_SLICE && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index] && blk_geom->sq_size < ((scs_ptr->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
                         // Get the parent of the current block
                         uint32_t parent_depth_idx_mds =
                             (blk_geom->sqi_mds -
@@ -11449,18 +11378,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     // Add block indices of lower depth(s)
 #if BLOCK_BASED_DEPTH_REFINMENT_END
                     int64_t child_to_current_deviation = MIN_SIGNED_VALUE;
-                    if (pcs_ptr->slice_type != I_SLICE && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index]) {
+                    if (e_depth == 1  && pcs_ptr->slice_type != I_SLICE && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index]) {
 
                         uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
                         child_block_idx_1 = blk_index + d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
                         child_block_idx_2 = child_block_idx_1 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
                         child_block_idx_3 = child_block_idx_2 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
                         child_block_idx_4 = child_block_idx_3 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
-                        const BlockGeom *child1_blk_geom = get_blk_geom_mds(child_block_idx_1);
-                        const BlockGeom *child2_blk_geom = get_blk_geom_mds(child_block_idx_2);
-                        const BlockGeom *child3_blk_geom = get_blk_geom_mds(child_block_idx_3);
-                        const BlockGeom *child4_blk_geom = get_blk_geom_mds(child_block_idx_4);
-
 
                         uint64_t child_cost = 0;
                         uint8_t child_cnt = 0;
