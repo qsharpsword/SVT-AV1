@@ -3123,6 +3123,13 @@ void set_txt_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txt_c
         txt_cycle_red_ctrls->intra_th = 5;
         txt_cycle_red_ctrls->inter_th = 8;
         break;
+#if PROB_TXT
+    case 6:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 10000;
+        txt_cycle_red_ctrls->inter_th = 10000;
+        break;
+#endif
     default:
         assert(0);
         break;
@@ -4103,7 +4110,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             txt_cycles_reduction_level = 0;
         else
+#if PROB_TXT
+            txt_cycles_reduction_level = 6;
+#else
             txt_cycles_reduction_level = 5;
+#endif
 #else
         else if (enc_mode <= ENC_M2)
             txt_cycles_reduction_level = 0;
