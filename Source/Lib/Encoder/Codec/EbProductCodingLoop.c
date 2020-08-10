@@ -10001,6 +10001,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #else
         uint32_t y_has_coeff = y_count_non_zero_coeffs > 0;
 #endif
+#if EXIT_IF_NO_COEFF
+        if (y_has_coeff == 0 && tx_type != DCT_DCT) // a 2nd check for DCT_DCT will take place @ the end
+            break;
+#endif
         // tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
         if (y_has_coeff == 0 && tx_type != DCT_DCT) continue;
 
@@ -10232,6 +10236,10 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             best_cost_tx_search = cost;
             best_tx_type        = tx_type;
         }
+#if EXIT_IF_NO_COEFF
+        if (y_has_coeff == 0)
+            break;
+#endif
     }
 
 #if TXT_CONTROL
