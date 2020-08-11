@@ -376,7 +376,11 @@ typedef struct EbConfig {
     /****************************************
      * RDOQ
      * ****************************************/
+#if 1 // RDOQ_CLI
+    int rdoq_level;
+#else
     int enable_rdoq;
+#endif
 
     /****************************************
      * Filter intra prediction
