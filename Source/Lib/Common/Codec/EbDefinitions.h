@@ -655,7 +655,7 @@ extern "C" {
 #endif
 
 // PME
-#define PME_EARLY_EXIT 0
+#define PME_EARLY_EXIT 1
 #define PME_OPT 0
 
 //TXT
