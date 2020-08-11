@@ -1408,7 +1408,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         chroma_fast_distortion = 0;
     // Fast Cost
 #if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-    if (context_ptr->pd_pass == PD_PASS_0) {
+    if (context_ptr->coeff_split_flag_rate_only) {
         *(candidate_buffer->fast_cost_ptr) = luma_fast_distortion + chroma_fast_distortion;
         candidate_ptr->fast_luma_rate = 0;
         candidate_ptr->fast_chroma_rate = 0;

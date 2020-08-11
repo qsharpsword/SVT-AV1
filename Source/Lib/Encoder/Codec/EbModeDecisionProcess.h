@@ -773,7 +773,9 @@ typedef struct ModeDecisionContext {
 #endif
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+    uint8_t      coeff_split_flag_rate_only;
+#else
     uint8_t      full_cost_shut_fast_rate_flag;
 #endif
 #if !SWITCH_MODE_BASED_ON_SQ_COEFF
