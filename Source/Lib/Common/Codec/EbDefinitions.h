@@ -668,6 +668,8 @@ extern "C" {
 // Quant coeff rate estimation 
 #define FAST_RATE_ESTIMATION 0
 
+// PME, Adap_ME, ME
+#define SHUT_HP 1
 // Lossless opt
 #if 1
 #define OPT_0 1
