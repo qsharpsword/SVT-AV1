@@ -11849,11 +11849,15 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         candidate_ptr->txs_level = 0;
 #endif
 #if REFACTOR_SIGNALS
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_perform_inter_pred = EB_FALSE;
+#else
         context_ptr->md_staging_perform_inter_pred = EB_TRUE;
+#endif
 #else
         context_ptr->md_staging_skip_full_pred            = EB_FALSE;
 #endif
-#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
+#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1 || IFS_PUSH_BACK_STAGE_3
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
 #else
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
@@ -12125,7 +12129,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #else
         context_ptr->md_staging_skip_full_pred = context_ptr->md_staging_mode == MD_STAGING_MODE_0;
 #endif
-#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
+#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1 || IFS_PUSH_BACK_STAGE_3
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
         context_ptr->md_staging_skip_interpolation_search =

@@ -671,7 +671,7 @@ extern "C" {
 // PME, Adap_ME, ME
 #define SHUT_HP 1
 #define OPT_ADAPT_ME 1
-
+#define IFS_PUSH_BACK_STAGE_3 1
 // Lossless opt
 #if 1
 #define OPT_0 1
