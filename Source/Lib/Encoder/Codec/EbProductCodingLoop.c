@@ -6563,6 +6563,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
         }
     }
 #endif
+#if !OPT_3
 #if M8_CLEAN_UP
 #if ON_OFF_FEATURE_MRP
     if ((!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) ||
@@ -6574,7 +6575,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
 #endif
         return;
-
+#endif
     // Distortion measure
     EbBool use_ssd = EB_FALSE;
 
@@ -12707,7 +12708,11 @@ EbErrorType signal_derivation_block(
 #if INTER_COMP_REDESIGN
 #if SOFT_CYCLES_REDUCTION
     // Set inter_inter_distortion_based_reference_pruning
+#if OPT_3
+    if (pcs->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 1 || pcs->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try > 1) {
+#else
     if (pcs->slice_type != I_SLICE) {
+#endif
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
@@ -14244,6 +14249,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 #if MD_REFERENCE_MASKING
     // Perform md reference pruning
+#if OPT_3
+    if (context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled || context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+#endif
     perform_md_reference_pruning(
         pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);
 #endif

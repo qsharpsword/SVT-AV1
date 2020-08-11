@@ -941,6 +941,11 @@ EbBool is_valid_unipred_ref(
     struct ModeDecisionContext *context_ptr,
     uint8_t inter_cand_group,
     uint8_t list_idx, uint8_t ref_idx) {
+#if OPT_3
+    if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+        return EB_TRUE;
+#endif
+
     if (!context_ptr->ref_filtering_res[inter_cand_group][list_idx][ref_idx].do_ref && (ref_idx || !context_ptr->ref_pruning_ctrls.closest_refs[inter_cand_group])) {
         return EB_FALSE;
     }
@@ -955,6 +960,10 @@ EbBool is_valid_bipred_ref(
     uint8_t list_idx_0, uint8_t ref_idx_0,
     uint8_t list_idx_1, uint8_t ref_idx_1) {
 
+#if OPT_3
+    if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+        return EB_TRUE;
+#endif
     // Both ref should be 1 for bipred refs to be valid: if 1 is not best_refs then there is a chance to exit the injection
     if (!context_ptr->ref_filtering_res[inter_cand_group][list_idx_0][ref_idx_0].do_ref ||
         !context_ptr->ref_filtering_res[inter_cand_group][list_idx_1][ref_idx_1].do_ref )

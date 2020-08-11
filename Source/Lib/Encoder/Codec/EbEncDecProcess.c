@@ -3604,7 +3604,11 @@ EbErrorType signal_derivation_update(
     md_subpel_pme_controls(context_ptr, context_ptr->md_subpel_pme_level);
 
     // Set inter_inter_distortion_based_reference_pruning
+#if OPT_3
+    if (pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 1 ||  pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try > 1) {
+#else
     if (pcs_ptr->slice_type != I_SLICE) {
+#endif
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
@@ -7426,7 +7430,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
 #endif
     // Set inter_intra_distortion_based_reference_pruning
+#if OPT_3
+    if (pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 1 || pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try > 1) {
+#else
     if (pcs_ptr->slice_type != I_SLICE) {
+#endif
         if (pd_pass == PD_PASS_0)
             context_ptr->inter_intra_distortion_based_reference_pruning = 0;
         else if (pd_pass == PD_PASS_1)
