@@ -1978,6 +1978,36 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
             md_sq_me_ctrls->sprs_lev2_w = 3;
             md_sq_me_ctrls->sprs_lev2_h = 3;
             break;
+#if OPT_ADAPT_ME
+        case 4:
+            md_sq_me_ctrls->enabled = 1;
+            md_sq_me_ctrls->use_ssd = 0;
+
+            md_sq_me_ctrls->size_colocated_area = 2;
+            md_sq_me_ctrls->pame_distortion_th = 10;
+
+            md_sq_me_ctrls->sprs_lev0_enabled = 1;
+            md_sq_me_ctrls->sprs_lev0_step = 4;
+            md_sq_me_ctrls->sprs_lev0_w = 15;
+            md_sq_me_ctrls->sprs_lev0_h = 15;
+            md_sq_me_ctrls->max_sprs_lev0_w = 150;
+            md_sq_me_ctrls->max_sprs_lev0_h = 150;
+            md_sq_me_ctrls->sprs_lev0_multiplier = 100;
+
+            md_sq_me_ctrls->sprs_lev1_enabled = 1;
+            md_sq_me_ctrls->sprs_lev1_step = 2;
+            md_sq_me_ctrls->sprs_lev1_w = 4;
+            md_sq_me_ctrls->sprs_lev1_h = 4;
+            md_sq_me_ctrls->max_sprs_lev1_w = 50;
+            md_sq_me_ctrls->max_sprs_lev1_h = 50;
+            md_sq_me_ctrls->sprs_lev1_multiplier = 100;
+
+            md_sq_me_ctrls->sprs_lev2_enabled = 1;
+            md_sq_me_ctrls->sprs_lev2_step = 1;
+            md_sq_me_ctrls->sprs_lev2_w = 3;
+            md_sq_me_ctrls->sprs_lev2_h = 3;
+            break;
+#endif
         default:
             assert(0);
             break;
@@ -3563,6 +3593,9 @@ EbErrorType signal_derivation_update(
         context_ptr->md_sq_mv_search_level = 2;
     else
         context_ptr->md_sq_mv_search_level = 3;
+#if OPT_ADAPT_ME 1
+    context_ptr->md_sq_mv_search_level = 4;
+#endif
 
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 
@@ -7541,7 +7574,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_sq_mv_search_level = 2;
         else
             context_ptr->md_sq_mv_search_level = 3;
-
+#if OPT_ADAPT_ME 1
+    context_ptr->md_sq_mv_search_level = 4;
+#endif
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif
 #if ADD_MD_NSQ_SEARCH
