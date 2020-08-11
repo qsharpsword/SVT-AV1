@@ -667,6 +667,9 @@ extern "C" {
 
 // rate
 #define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
+#endif
 
 // PME, Adap_ME, ME
 #define SHUT_HP 1
