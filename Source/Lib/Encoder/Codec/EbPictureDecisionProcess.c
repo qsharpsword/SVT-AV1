@@ -3050,7 +3050,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (perform_filtering) {
         if (scs_ptr->static_config.tf_level == DEFAULT) {
 #if JUNE26_ADOPTIONS
+#if SHIFT_PRESETS
+            if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
 #if JUNE25_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M4) {
@@ -3063,18 +3067,39 @@ EbErrorType signal_derivation_multi_processes_oq(
                 else
                     context_ptr->tf_level = 0;
             }
+#if SHIFT_PRESETS
+            else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 2;
                 else
                     context_ptr->tf_level = 0;
             }
+#if FAST_M8_V1
+#if !SHIFT_PRESETS
+            else if (pcs_ptr->enc_mode <= ENC_M7) {
+                if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
+                    context_ptr->tf_level = 3;
+                else
+                    context_ptr->tf_level = 0;
+            }
+#endif
+            else {
+                if (pcs_ptr->temporal_layer_index == 0)
+                    context_ptr->tf_level = 3;
+                else
+                    context_ptr->tf_level = 0;
+            }
+#else
             else {
                 if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                     context_ptr->tf_level = 3;
                 else
                     context_ptr->tf_level = 0;
             }
+#endif
         }
         else {
             if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))

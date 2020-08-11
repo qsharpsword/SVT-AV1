@@ -621,7 +621,7 @@ extern "C" {
 #define REF_PRUNE_CAT_TUNE 1 // Tune the allowable references per category to improve trade-offs
 
 #define FIX_MV_BOUND       1 //Clip inherited ME MVs to stay within pic boundaries
-#define NEW_DELAY          1 //Change delay some sorts of I in PicDecision
+#define NEW_DELAY          0 //Change delay some sorts of I in PicDecision
 
 #define PR_1349 1 //Port fixes for SIMD kernels from AOM
 #define PR_1359 1 //Valgrind fix
