@@ -1358,7 +1358,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     frm_hdr->allow_high_precision_mv =
 #if SHUT_HP
-        pcs_ptr->enc_mode <= ENC_M6 &&
+        pcs_ptr->enc_mode <= ENC_M5 &&
 #endif
 #if !MAR2_M8_ADOPTIONS 
         pcs_ptr->enc_mode <= ENC_M7 &&
