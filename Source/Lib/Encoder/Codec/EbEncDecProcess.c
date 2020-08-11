@@ -3592,9 +3592,10 @@ EbErrorType signal_derivation_update(
     else if (enc_mode <= ENC_M5)
         context_ptr->md_sq_mv_search_level = 2;
     else
+#if OPT_ADAPT_ME
+        context_ptr->md_sq_mv_search_level = 4;
+#endif
         context_ptr->md_sq_mv_search_level = 3;
-#if OPT_ADAPT_ME 1
-    context_ptr->md_sq_mv_search_level = 4;
 #endif
 
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
@@ -7573,9 +7574,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->md_sq_mv_search_level = 2;
         else
+#if OPT_ADAPT_ME
+            context_ptr->md_sq_mv_search_level = 4;
+#else
             context_ptr->md_sq_mv_search_level = 3;
-#if OPT_ADAPT_ME 1
-    context_ptr->md_sq_mv_search_level = 4;
 #endif
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif
