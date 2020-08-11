@@ -1407,6 +1407,13 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     } else
         chroma_fast_distortion = 0;
     // Fast Cost
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+    if (context_ptr->pd_pass == PD_PASS_0) {
+        *(candidate_buffer->fast_cost_ptr) = luma_fast_distortion + chroma_fast_distortion;
+        candidate_ptr->fast_luma_rate = 0;
+        candidate_ptr->fast_chroma_rate = 0;
+    } else {
+#endif
     *(candidate_buffer->fast_cost_ptr) = av1_product_fast_cost_func_table[candidate_ptr->type](
         blk_ptr,
         candidate_buffer->candidate_ptr,
@@ -1442,7 +1449,9 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         1,
         context_ptr->intra_luma_left_mode,
         context_ptr->intra_luma_top_mode);
-
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+    }
+#endif
 #if R2R_FIX
     // Init full cost in case we by pass stage1/stage2
     if (context_ptr->md_staging_mode == MD_STAGING_MODE_0) {
