@@ -6454,7 +6454,7 @@ static AOM_INLINE int combine_prior_with_tpl_boost_org(double min_factor,
 
 #define MIN_BOOST_COMBINE_FACTOR 4.0
 #define MAX_BOOST_COMBINE_FACTOR 12.0
-void process_tpl_stats_frame_gfu_boost(PictureControlSet *pcs_ptr) {
+void process_tpl_stats_frame_kf_gfu_boost(PictureControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *const rc = &encode_context_ptr->rc;
@@ -6475,9 +6475,8 @@ void process_tpl_stats_frame_gfu_boost(PictureControlSet *pcs_ptr) {
                 rc->gfu_boost, gfu_boost, rc->frames_to_key);
     }
 #if USE_OLD_SETTING
-    rc->kf_boost = get_cqp_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, rc->frames_to_key, scs_ptr->input_resolution);
-    double min_boost_factor = sqrt(1 << pcs_ptr->parent_pcs_ptr->hierarchical_levels);
-    rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, rc->frames_to_key);
+    if(scs_ptr->static_config.rate_control_mode == 0)
+        rc->kf_boost = get_cqp_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, rc->frames_to_key, scs_ptr->input_resolution);
 #endif
 }
 
@@ -6552,7 +6551,7 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
             active_best_quality /= 3;
         }
         // Allow somewhat lower kf minq with small image formats.
-#if USE_OLD_SETTING //TPL_240P_IMP //anaghdin
+#if USE_OLD_SETTING
         if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
             q_adj_factor -= 0.15;
 #else
@@ -7631,7 +7630,7 @@ void *rate_control_kernel(void *input_ptr) {
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219795;
                                 }
 #endif
-                                process_tpl_stats_frame_gfu_boost(pcs_ptr);
+                                process_tpl_stats_frame_kf_gfu_boost(pcs_ptr);
                             }
                             // VBR Qindex calculating
                             new_qindex = rc_pick_q_and_bounds(pcs_ptr);
@@ -7692,7 +7691,7 @@ void *rate_control_kernel(void *input_ptr) {
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
 #endif
-                            process_tpl_stats_frame_gfu_boost(pcs_ptr);
+                            process_tpl_stats_frame_kf_gfu_boost(pcs_ptr);
                         }
                         // VBR Qindex calculating
                         new_qindex = rc_pick_q_and_bounds(pcs_ptr);
