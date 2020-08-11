@@ -672,6 +672,7 @@ extern "C" {
 #if 1
 #define OPT_0 1
 #define OPT_1 1 // no T-1 @ PD0 if context_ptr->skip_intra == 1
+#define OPT_2 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

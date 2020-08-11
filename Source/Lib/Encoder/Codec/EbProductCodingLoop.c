@@ -832,6 +832,9 @@ void init_sq_nsq_block(SequenceControlSet *scs_ptr, ModeDecisionContext *context
         context_ptr->md_local_blk_unit[blk_idx].left_neighbor_partition = INVALID_NEIGHBOR_DATA;
         context_ptr->md_local_blk_unit[blk_idx].above_neighbor_partition = INVALID_NEIGHBOR_DATA;
 #if SSE_BASED_SPLITTING
+#if OPT_2
+        if (context_ptr->md_disallow_nsq == EB_FALSE)
+#endif
         for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
             context_ptr->md_local_blk_unit[blk_idx].sse_gradian_band[shape_idx] = 1;
 #endif
@@ -14593,7 +14596,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #if SSE_BASED_SPLITTING
 #if FIX_WARNINGS
 #if OPT_0
-            if(pcs_ptr->parent_pcs_ptr->disallow_nsq == EB_FALSE)
+            if (context_ptr->md_disallow_nsq == EB_FALSE)
 #endif
             distortion_based_modulator(context_ptr,input_picture_ptr, input_origin_index,
 #else
