@@ -1433,7 +1433,9 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context,
 #endif
         context_ptr->md_inter_intra_level,
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
         context_ptr->full_cost_shut_fast_rate_flag,
+#endif
         1,
         context_ptr->intra_luma_left_mode,
         context_ptr->intra_luma_top_mode);
@@ -10202,11 +10204,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             candidate_buffer->residual_quant_coeff_ptr,
 #endif
 #if UNIFY_TXT
-#if FAST_RATE_ESTIMATION
-            MIN((uint32_t)((context_ptr->blk_geom->tx_width[context_ptr->tx_depth][0] / 4) * (context_ptr->blk_geom->tx_height[context_ptr->tx_depth][0] / 4)), y_count_non_zero_coeffs_txt[tx_type]),
-#else
             y_count_non_zero_coeffs_txt[tx_type],
-#endif
 #else
             y_count_non_zero_coeffs,
 #endif
@@ -13413,7 +13411,9 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context,
 #endif
                     context_ptr->md_inter_intra_level,
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
                     context_ptr->full_cost_shut_fast_rate_flag,
+#endif
                     1,
                     context_ptr->intra_luma_left_mode,
                     context_ptr->intra_luma_top_mode);
@@ -14144,6 +14144,10 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     if (is_block_allowed(pcs_ptr, context_ptr)) {
 #endif
     const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
+
+#if OPT_4
+    if(context_ptr->pd_pass == PD_PASS_2) // source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+#endif
     context_ptr->source_variance =
         eb_av1_get_sby_perpixel_variance(fn_ptr,
                                             (input_picture_ptr->buffer_y + input_origin_index),
@@ -14608,7 +14612,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #if SSE_BASED_SPLITTING
 #if FIX_WARNINGS
 #if OPT_0
-            if (context_ptr->md_disallow_nsq == EB_FALSE)
+            if (context_ptr->pd_pass == PD_PASS_0 && pcs_ptr->parent_pcs_ptr->disallow_nsq == EB_FALSE)
 #endif
             distortion_based_modulator(context_ptr,input_picture_ptr, input_origin_index,
 #else

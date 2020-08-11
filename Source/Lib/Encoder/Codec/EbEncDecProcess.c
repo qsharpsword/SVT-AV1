@@ -7806,7 +7806,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
     else
         context_ptr->disable_angle_z2_intra_flag = EB_FALSE;
-
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
     // Set full_cost_derivation_fast_rate_blind_flag
     if (pd_pass == PD_PASS_0)
         context_ptr->full_cost_shut_fast_rate_flag = EB_TRUE;
@@ -7814,6 +7814,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
     else
         context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
+#endif
 #if !PD0_INTER_CAND
     // Set best_me_cand_only_flag
     if (pd_pass == PD_PASS_0)

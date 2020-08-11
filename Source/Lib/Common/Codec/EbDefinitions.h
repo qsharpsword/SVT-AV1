@@ -665,8 +665,8 @@ extern "C" {
 #define EXIT_IF_NO_COEFF 0
 #define OFFLINE_DATA 0
 
-// Quant coeff rate estimation 
-#define FAST_RATE_ESTIMATION 0
+// rate
+#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 0
 
 // PME, Adap_ME, ME
 #define SHUT_HP 1
@@ -674,10 +674,11 @@ extern "C" {
 #define IFS_PUSH_BACK_STAGE_3 1
 // Lossless opt
 #if 1
-#define OPT_0 1
-#define OPT_1 1 // no T-1 @ PD0 if context_ptr->skip_intra == 1
+#define OPT_0 1 // bypass distortion_based_modulator() if no nsq
+#define OPT_1 1 // no T-1 @ PD0 and no recon samples update if context_ptr->skip_intra == 1
 #define OPT_2 1
 #define OPT_3 1
+#define OPT_4 1 // no variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
