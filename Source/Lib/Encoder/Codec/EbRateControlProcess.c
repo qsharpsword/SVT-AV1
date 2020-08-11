@@ -6370,7 +6370,7 @@ void av1_rc_init(SequenceControlSet *scs_ptr) {
   const RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
   const uint32_t width  = scs_ptr->seq_header.max_frame_width;
   const uint32_t height = scs_ptr->seq_header.max_frame_height;
-  int pass = 2;//kelvinhack
+  int pass = 2;//hack always pass2
   int i;
 
   if (pass == 0 && rc_cfg->mode == AOM_CBR) {
@@ -6427,9 +6427,9 @@ void av1_rc_init(SequenceControlSet *scs_ptr) {
     rc->max_gf_interval = av1_rc_get_default_max_gf_interval(
         scs_ptr->double_frame_rate /*oxcf->input_cfg.init_framerate*/, rc->min_gf_interval);
   rc->baseline_gf_interval = (rc->min_gf_interval + rc->max_gf_interval) / 2;
-//  rc->avg_frame_low_motion = 0;
+  //rc->avg_frame_low_motion = 0;
 #else
-  rc->baseline_gf_interval = 16; //kelvinhack
+  rc->baseline_gf_interval = 16; //hack
 #endif
 
   // Set absolute upper and lower quality limits
@@ -6599,13 +6599,6 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
 static int get_active_best_quality(PictureControlSet *pcs_ptr,
                                    const int active_worst_quality,
                                    const int cq_level) {
-    //const AV1_COMMON *const cm = &cpi->common;
-    //const int bit_depth = cm->seq_params.bit_depth;
-    //const RATE_CONTROL *const rc = &cpi->rc;
-    //const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-    //const RefreshFrameFlagsInfo *const refresh_frame_flags = &cpi->refresh_frame;
-    //const GF_GROUP *gf_group = &cpi->gf_group;
-    //const enum aom_rc_mode rc_mode = oxcf->rc_cfg.mode;
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
@@ -6686,7 +6679,6 @@ static int get_active_best_quality(PictureControlSet *pcs_ptr,
 
 static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr/*,
                                          int width, int height*/) {
-  //const RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -6716,7 +6708,6 @@ static double get_rate_correction_factor(PictureParentControlSet *ppcs_ptr/*,
 
 static void set_rate_correction_factor(PictureParentControlSet *ppcs_ptr, double factor/*,
                                        int width, int height*/) {
-  //RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -6749,7 +6740,6 @@ static void set_rate_correction_factor(PictureParentControlSet *ppcs_ptr, double
 // Calculate rate for the given 'q'.
 static int get_bits_per_mb(PictureControlSet *pcs_ptr, int use_cyclic_refresh,
                            double correction_factor, int q) {
-  //const AV1_COMMON *const cm = &cpi->common;
   SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
   return use_cyclic_refresh
              ? 0/*av1_cyclic_refresh_rc_bits_per_mb(cpi, q, correction_factor)*/
@@ -6834,8 +6824,6 @@ int av1_rc_regulate_q(PictureControlSet *pcs_ptr, int target_bits_per_frame,
 static int get_q(PictureControlSet *pcs_ptr,
                  const int active_worst_quality,
                  const int active_best_quality) {
-    //const AV1_COMMON *const cm = &cpi->common;
-  //const RATE_CONTROL *const rc = &cpi->rc;
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc                         = &encode_context_ptr->rc;
@@ -6948,7 +6936,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     clamp(q, active_best_quality, active_worst_quality);
 #endif
     if (gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == ARF_UPDATE) rc->arf_q = q;
-    printf("\nrc_pick_q_and_bounds return poc%d boost=%d, q=%d, bottom_index=%d top_index=%d, isintra=%d base_frame_target=%d, buffer_level=%d\n", pcs_ptr->picture_number, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), rc->base_frame_target, rc->buffer_level);
+    //printf("\nrc_pick_q_and_bounds return poc%d boost=%d, q=%d, bottom_index=%d top_index=%d, isintra=%d base_frame_target=%d, buffer_level=%d\n", pcs_ptr->picture_number, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr), rc->base_frame_target, rc->buffer_level);
 
     return q;
 }
@@ -6964,7 +6952,6 @@ int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs,
 
 static void av1_rc_update_rate_correction_factors(PictureParentControlSet *ppcs_ptr, int width,
                                            int height) {
-  //const AV1_COMMON *const cm = &cpi->common;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -7045,8 +7032,6 @@ static void av1_rc_update_rate_correction_factors(PictureParentControlSet *ppcs_
 
 // Update the buffer level: leaky bucket model.
 static void update_buffer_level(PictureParentControlSet *ppcs_ptr, int encoded_frame_size) {
-  //const AV1_COMMON *const cm = &cpi->common;
-  //RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -7066,7 +7051,6 @@ static void update_buffer_level(PictureParentControlSet *ppcs_ptr, int encoded_f
 
 static void update_alt_ref_frame_stats(PictureParentControlSet *ppcs_ptr) {
   // this frame refreshes means next frames don't unless specified by user
-  //RATE_CONTROL *const rc = &cpi->rc;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -7080,8 +7064,6 @@ static void update_alt_ref_frame_stats(PictureParentControlSet *ppcs_ptr) {
 }
 
 static void update_golden_frame_stats(PictureParentControlSet *ppcs_ptr) {
-  //RATE_CONTROL *const rc = &cpi->rc;
-  //const GF_GROUP *const gf_group = &cpi->gf_group;
   SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                  = &encode_context_ptr->rc;
@@ -7634,18 +7616,18 @@ void *rate_control_kernel(void *input_ptr) {
                                 (update_type == KF_UPDATE || update_type == GF_UPDATE || update_type == ARF_UPDATE)) {
 #if TWOPASS_RC_HACK_AS_AOM
                                 if (pcs_ptr->picture_number == 0) {
-                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.262381, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.262381;
                                 } else if (pcs_ptr->picture_number == 16) {
-                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219375, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219375, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219375;
                                 }
                                 if (pcs_ptr->picture_number == 32) {
-                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219069, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219069, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219069;
                                 }
                                 if (pcs_ptr->picture_number == 48) {
-                                    //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219795, pcs_ptr->parent_pcs_ptr->r0);
+                                    //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.219795, pcs_ptr->parent_pcs_ptr->r0);
                                     pcs_ptr->parent_pcs_ptr->r0 = 0.219795;
                                 }
 #endif
@@ -7703,10 +7685,10 @@ void *rate_control_kernel(void *input_ptr) {
                             (update_type == KF_UPDATE || update_type == GF_UPDATE || update_type == ARF_UPDATE)) {
 #if TWOPASS_RC_HACK_AS_AOM
                             if (pcs_ptr->picture_number == 0) {
-                                //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.303920, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.303920;
                             } else if (pcs_ptr->picture_number == 16) {
-                                //printf("kelvinhack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
+                                //printf("hack ---> POC%d force r0 to %f from %f\n", pcs_ptr->picture_number, 0.312342, pcs_ptr->parent_pcs_ptr->r0);
                                 pcs_ptr->parent_pcs_ptr->r0 = 0.312342;
                             }
 #endif
@@ -7780,7 +7762,7 @@ void *rate_control_kernel(void *input_ptr) {
                 if (scs_ptr->static_config.rate_control_mode == 1 &&
                     scs_ptr->use_input_stat_file &&
                     scs_ptr->static_config.look_ahead_distance != 0)
-                    ;//kelvinhack skip base_q_idx writeback for accuracy loss like 89 to 88
+                    ;//hack skip base_q_idx writeback for accuracy loss like 89 to 88
                 else
 #endif
                 frm_hdr->quantization_params.base_q_idx = quantizer_to_qindex[pcs_ptr->picture_qp];
@@ -7972,7 +7954,7 @@ void *rate_control_kernel(void *input_ptr) {
                     static int bytes_used[49] = {21757, 64, 257, 47, 3069, 36, 289, 51, 8705, 56, 379, 50, 3495, 51, 287, 57, 16798,
                                                         57, 313, 39, 4033, 46, 360, 56, 10219, 51, 416, 58, 3987, 65, 396, 63, 19916,
                                                         57, 332, 53, 3380, 58, 373, 66, 8668,  57, 441, 47, 3455, 51, 381, 61, 16211};
-                    printf("kelvinhack CQP set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
+                    printf("hack CQP set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
                     parentpicture_control_set_ptr->total_num_bits = bytes_used[parentpicture_control_set_ptr->picture_number]*8;
                 }
 #endif
@@ -8006,7 +7988,7 @@ void *rate_control_kernel(void *input_ptr) {
                         if (parentpicture_control_set_ptr->picture_number<=32) {
                             static int bytes_used[33] = {19969, 42, 155, 38, 1583, 26, 134, 34, 5554, 40, 173, 40, 1850, 27, 139, 47, 13135,
                                                                 30, 104, 28, 1061, 27, 132, 38, 4076, 34, 102, 26, 982, 38, 108, 31, 8770};
-                            //printf("kelvinhack set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
+                            //printf("hack set the same bytes_used as AOM ---> POC%d before av1_rc_postencode_update, forcing total_num_bits to %d bytes from %d bits\n", parentpicture_control_set_ptr->picture_number, bytes_used[parentpicture_control_set_ptr->picture_number], parentpicture_control_set_ptr->total_num_bits);
                             parentpicture_control_set_ptr->total_num_bits = bytes_used[parentpicture_control_set_ptr->picture_number]*8;
                         }
 #endif
