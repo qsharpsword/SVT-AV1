@@ -666,7 +666,7 @@ extern "C" {
 #define OFFLINE_DATA 0
 
 // rate
-#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 0
+#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
 
 // PME, Adap_ME, ME
 #define SHUT_HP 1
