@@ -581,7 +581,10 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                              uint32_t is_inter_ctx,
                              uint8_t skip_flag_context,
 #endif
-                             uint8_t enable_inter_intra, EbBool full_cost_shut_fast_rate_flag,
+                             uint8_t enable_inter_intra, 
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+                             EbBool full_cost_shut_fast_rate_flag,
+#endif
                              uint8_t md_pass, uint32_t left_neighbor_mode,
                              uint32_t top_neighbor_mode)
 
@@ -841,9 +844,13 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
         chroma_rate = (uint32_t)(intra_chroma_mode_bits_num + intra_chroma_ang_mode_bits_num);
 
         // Keep the Fast Luma and Chroma rate for future use
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+        candidate_ptr->fast_luma_rate = luma_rate;
+        candidate_ptr->fast_chroma_rate = chroma_rate;
+#else
         candidate_ptr->fast_luma_rate   = (full_cost_shut_fast_rate_flag) ? 0 : luma_rate;
         candidate_ptr->fast_chroma_rate = (full_cost_shut_fast_rate_flag) ? 0 : chroma_rate;
-
+#endif
         if (use_ssd) {
             int32_t         current_q_index = frm_hdr->quantization_params.base_q_idx;
             Dequants *const dequants = &pcs_ptr->parent_pcs_ptr->deq_bd;

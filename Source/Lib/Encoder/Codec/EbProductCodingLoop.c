@@ -372,7 +372,7 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
 #if OPT_1 // no T-1 @ PD0 
-    if (!context_ptr->skip_intra)
+    if (!context_ptr->skip_intra) {
 #endif
     if (!context_ptr->hbd_mode_decision) {
 #if !REMOVE_UNUSED_CODE_PH2
@@ -529,6 +529,9 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                              bwheight_uv);
         }
     }
+#if OPT_1 // no T-1 @ PD0 
+    }
+#endif
 
     return;
 }
