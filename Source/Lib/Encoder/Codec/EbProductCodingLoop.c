@@ -371,6 +371,9 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    bheight,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
+#if OPT_1 // no T-1 @ PD0 
+    if (!context_ptr->skip_intra)
+#endif
     if (!context_ptr->hbd_mode_decision) {
 #if !REMOVE_UNUSED_CODE_PH2
         if (intraMdOpenLoop == EB_FALSE) {
@@ -14534,6 +14537,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
     }
 #if REMOVE_UNUSED_CODE_PH2
+#if OPT_1 // no T-1 @ PD0 
+    if (!context_ptr->skip_intra)
+#endif
     av1_perform_inverse_transform_recon(
         context_ptr, candidate_buffer);
 #if !CLEAN_UP_SB_DATA_8
