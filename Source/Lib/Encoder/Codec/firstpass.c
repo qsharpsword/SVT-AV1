@@ -24,6 +24,8 @@
 #include "EbModeDecisionProcess.h"
 #include "EbCodingLoop.h"
 #include "dwt.h" // to move to firstpass.c
+#include "EbPictureDecisionProcess.h"
+#include "EbModeDecisionConfigurationProcess.h"
 #endif
 #if TWOPASS_RC
 #if 0
@@ -2029,7 +2031,6 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
   changed  at the block level
 ******************************************************/
 extern EbErrorType first_pass_signal_derivation_block(
-    PictureControlSet     *pcs,
     ModeDecisionContext   *context_ptr) {
 
     EbErrorType return_error = EB_ErrorNone;
@@ -2043,7 +2044,6 @@ extern EbErrorType first_pass_signal_derivation_block(
 
 
     // set compound_types_to_try
-    uint8_t compound_mode = pcs->parent_pcs_ptr->compound_mode;
     set_inter_comp_controls(context_ptr, 0);
 
     context_ptr->compound_types_to_try = MD_COMP_AVG;
@@ -2147,7 +2147,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
     BlkStruct *blk_ptr = context_ptr->blk_ptr;
     candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
     first_pass_signal_derivation_block(
-        pcs_ptr,
         context_ptr);
 
     blk_ptr->av1xd->tile.mi_col_start = context_ptr->sb_ptr->tile_info.mi_col_start;
@@ -2541,5 +2540,657 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].avail_blk_flag = EB_TRUE;
 
 }
+#endif
+
+#if FIRST_PASS_SETUP
+
+void set_tf_controls(PictureDecisionContext *context_ptr, uint8_t tf_level);
+/******************************************************
+* Derive Multi-Processes Settings for first pass
+Input   : encoder mode and tune
+Output  : Multi-Processes signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_multi_processes(
+    SequenceControlSet *scs_ptr,
+    PictureParentControlSet *pcs_ptr,
+    PictureDecisionContext *context_ptr) {
+
+    EbErrorType return_error = EB_ErrorNone;
+    FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
+    // If enabled here, the hme enable flags should also be enabled in ResourceCoordinationProcess
+    // to ensure that resources are allocated for the downsampled pictures used in HME
+    pcs_ptr->enable_hme_flag = 1;
+    pcs_ptr->enable_hme_level0_flag = 1;
+    pcs_ptr->enable_hme_level1_flag = 1;
+    pcs_ptr->enable_hme_level2_flag = 1;
+
+
+    pcs_ptr->tf_enable_hme_flag = 0;
+    pcs_ptr->tf_enable_hme_level0_flag = 0;
+    pcs_ptr->tf_enable_hme_level1_flag = 0;
+    pcs_ptr->tf_enable_hme_level2_flag = 0;
+
+    // Set the Multi-Pass PD level
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+
+    // Set disallow_nsq
+    pcs_ptr->disallow_nsq = EB_TRUE;
+
+    pcs_ptr->max_number_of_pus_per_sb = SQUARE_PU_COUNT;
+    pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
+
+    // Set disallow_all_nsq_blocks_below_16x16: 16x8, 8x16, 16x4, 4x16
+    pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
+
+    pcs_ptr->disallow_all_nsq_blocks_below_64x64 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_below_32x32 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_above_64x64 = EB_TRUE;
+    pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_TRUE;
+    // disallow_all_nsq_blocks_above_16x16
+    pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_TRUE;
+
+    pcs_ptr->disallow_HVA_HVB_HV4 = EB_TRUE;
+    pcs_ptr->disallow_HV4 = EB_TRUE;
+
+    // Set disallow_all_non_hv_nsq_blocks_below_16x16
+    pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16 = EB_TRUE;
+
+    // Set disallow_all_h4_v4_blocks_below_16x16
+    pcs_ptr->disallow_all_h4_v4_blocks_below_16x16 = EB_TRUE;
+
+    frm_hdr->allow_screen_content_tools = 0;
+    frm_hdr->allow_intrabc = 0;
+
+    // Palette Modes:
+    //    0:OFF
+    //    1:Slow    NIC=7/4/4
+    //    2:        NIC=7/2/2
+    //    3:        NIC=7/2/2 + No K means for non ref
+    //    4:        NIC=4/2/1
+    //    5:        NIC=4/2/1 + No K means for Inter frame
+    //    6:        Fastest NIC=4/2/1 + No K means for non base + step for non base for most dominent
+    pcs_ptr->palette_mode = 0;
+    // Loop filter Level                            Settings
+    // 0                                            OFF
+    // 1                                            CU-BASED
+    // 2                                            LIGHT FRAME-BASED
+    // 3                                            FULL FRAME-BASED
+    pcs_ptr->loop_filter_mode = 0;
+
+    // CDEF Level                                   Settings
+    // 0                                            OFF
+    // 1                                            1 step refinement
+    // 2                                            4 step refinement
+    // 3                                            8 step refinement
+    // 4                                            16 step refinement
+    // 5                                            64 step refinement
+    pcs_ptr->cdef_filter_mode = 0;
+
+    // SG Level                                    Settings
+    // 0                                            OFF
+    // 1                                            0 step refinement
+    // 2                                            1 step refinement
+    // 3                                            4 step refinement
+    // 4                                            16 step refinement
+    Av1Common *cm = pcs_ptr->av1_cm;
+    cm->sg_filter_mode = 0;
+
+    // WN Level                                     Settings
+    // 0                                            OFF
+    // 1                                            3-Tap luma/ 3-Tap chroma
+    // 2                                            5-Tap luma/ 5-Tap chroma
+    // 3                                            7-Tap luma/ 5-Tap chroma
+    cm->wn_filter_mode = 0;
+
+    // Intra prediction modes                       Settings
+    // 0                                            FULL
+    // 1                                            LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
+    // 2                                            OFF per block : disable_angle_prediction for 64/32/4
+    // 3                                            OFF : disable_angle_prediction
+    // 4                                            OIS based Intra
+    // 5                                            Light OIS based Intra
+    pcs_ptr->intra_pred_mode = 3;
+
+    // Set Tx Search     Settings
+    // 0                 OFF
+    // 1                 ON
+    pcs_ptr->tx_size_search_mode = 1;
+
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+    pcs_ptr->txs_in_inter_classes = 0;
+
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+    pcs_ptr->enable_inter_intra = 0;
+
+    // Set compound mode      Settings
+    // 0                      OFF: No compond mode search : AVG only
+    // 1                      ON: Full
+    // 2                      ON: Fast : similar based disable
+    // 3                      ON: Fast : MRP pruning/ similar based disable
+    pcs_ptr->compound_mode = 0;
+
+    // Set frame end cdf update mode      Settings
+    // 0                                  OFF
+    // 1                                  ON
+    if (scs_ptr->static_config.frame_end_cdf_update == DEFAULT)
+        pcs_ptr->frame_end_cdf_update_mode = 1;
+    else
+        pcs_ptr->frame_end_cdf_update_mode =
+        scs_ptr->static_config.frame_end_cdf_update;
+
+     pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
+
+    // Global motion level                        Settings
+    // GM_FULL                                    Exhaustive search mode.
+    // GM_DOWN                                    Downsampled resolution with a
+    // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
+    // using ME MV.
+    pcs_ptr->gm_level = GM_DOWN;
+
+    // Exit TX size search when all coefficients are zero
+    // 0: OFF
+    // 1: ON
+    pcs_ptr->tx_size_early_exit = 0;
+
+
+    context_ptr->tf_level = 0;
+    set_tf_controls(context_ptr, context_ptr->tf_level);
+    // MRP control
+    // 0: OFF (1,1)  ; override features
+    // 1: FULL (4,3) ; override features
+    // 2: (4,3) ; No-override features
+    // 3: (3,3) ; No-override features
+    // 4: (3,2) ; No-override features
+    // 5: (2,3) ; No-override features
+    // 6: (2,2) ; No-override features
+    // 7: (2,1) ; No-override features
+    // 8: (1,2) ; No-override features
+    // 9: (1,1) ; No-override features
+    // Level 0 , 1  : set ref_list0_count_try and ref_list1_count_try and Override MRP-related features
+    // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
+    pcs_ptr->mrp_level = 0;
+
+    pcs_ptr->tpl_opt_flag = 1;
+    return return_error;
+}
+#endif
+#if FIRST_PASS_SETUP
+void set_txt_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txt_cycles_red_mode);
+void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint16_t nsq_cycles_red_mode);
+void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode) ;
+void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode);
+void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) ;
+void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_cycles_red_mode);
+void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode);
+void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level);
+void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level);
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode);
+/******************************************************
+* Derive EncDec Settings for first pass
+Input   : encoder mode and pd pass
+Output  : EncDec Kernel signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_enc_dec_kernel(
+    PictureControlSet *pcs_ptr,
+    ModeDecisionContext *context_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
+
+    EbEncMode enc_mode = pcs_ptr->enc_mode;
+    uint8_t pd_pass = context_ptr->pd_pass;
+    // mrp level
+    context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->mrp_level;
+
+    // sb_classifier levels
+    // Level                Settings
+    // 0                    Off
+    // 1                    TH 80%
+    // 2                    TH 70%
+    // 3                    TH 60%
+    // 4                    TH 50%
+    // 5                    TH 40%
+    context_ptr->enable_area_based_cycles_allocation = 0;
+    // Tx_search Level                                Settings
+    // 0                                              OFF
+    // 1                                              Tx search at encdec
+    // 2                                              Tx search at inter-depth
+    // 3                                              Tx search at full loop
+    context_ptr->tx_search_level = TX_SEARCH_OFF;
+    // Set MD tx_level
+    // md_txt_search_level                            Settings
+    // 0                                              FULL
+    // 1                                              Tx_weight 1
+    // 2                                              Tx_weight 2
+    // 3                                              Tx_weight 1 + disabling rdoq and sssse
+    // 4                                              Tx_weight 1 + disabling rdoq and sssse + reduced set
+    context_ptr->md_txt_search_level = 1;// anaghdin??
+
+    uint8_t txt_cycles_reduction_level = 0;
+    set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
+    // Interpolation search Level                     Settings
+    // 0                                              OFF
+    // 1                                              Interpolation search at
+    // inter-depth 2                                              Interpolation
+    // search at full loop 3                                              Chroma
+    // blind interpolation search at fast loop 4 Interpolation search at fast loop
+    context_ptr->interpolation_search_level = IT_SEARCH_OFF;
+
+    // Set Chroma Mode
+    // Level                Settings
+    // CHROMA_MODE_0  0     Full chroma search @ MD
+    // CHROMA_MODE_1  1     Fast chroma search @ MD
+    // CHROMA_MODE_2  2     Chroma blind @ MD + CFL @ EP
+    // CHROMA_MODE_3  3     Chroma blind @ MD + no CFL @ EP
+    context_ptr->chroma_level = CHROMA_MODE_2; //anaghdin first_pass_opt // or CHROMA_MODE_3
+
+    // Chroma independent modes search
+    // Level                Settings
+    // 0                    post first md_stage
+    // 1                    post last md_stage
+    context_ptr->chroma_at_last_md_stage = 0;
+    context_ptr->chroma_at_last_md_stage_intra_th = (uint64_t)~0;
+    context_ptr->chroma_at_last_md_stage_cfl_th = (uint64_t)~0;
+
+    // Chroma independent modes nics
+    // Level                Settings
+    // 0                    All supported modes.
+    // 1                    All supported modes in  Intra picture and 4 in inter picture
+    context_ptr->independent_chroma_nics = 0;
+
+    // Cfl level
+    // Level                Settings
+    // 0                    Allow cfl
+    // 1                    Disable cfl
+
+    context_ptr->md_disable_cfl = EB_TRUE;
+
+    // libaom_short_cuts_ths
+    // 1                    faster than libaom
+    // 2                    libaom - default
+    context_ptr->libaom_short_cuts_ths = 2;
+
+    // 0                    inject all supprted chroma mode
+    // 1                    follow the luma injection
+    context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+
+    // Set disallow_4x4
+    context_ptr->disallow_4x4 = EB_FALSE;
+
+    context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+
+    // Set global MV injection
+    // Level                Settings
+    // 0                    Injection off
+    // 1                    On
+    context_ptr->global_mv_injection = 0;
+
+    context_ptr->new_nearest_injection = 0;
+    context_ptr->new_nearest_near_comb_injection = 0;
+
+    // Set warped motion injection
+    // Level                Settings
+    // 0                    OFF
+    // 1                    On
+    context_ptr->warped_motion_injection = 0;
+
+    // Set unipred3x3 injection
+    // Level                Settings
+    // 0                    OFF
+    // 1                    ON FULL
+    // 2                    Reduced set
+    context_ptr->unipred3x3_injection = 0;
+
+    // Set bipred3x3 injection
+    // Level                Settings
+    // 0                    OFF
+    // 1                    ON FULL
+    // 2                    Reduced set
+    context_ptr->bipred3x3_injection = 0;
+
+    // Level                Settings
+    // 0                    Level 0: OFF
+    // 1                    Level 1: sub-pel refinement off
+    // 2                    Level 2: (H + V) 1/2 & 1/4 refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 3                    Level 3: (H + V + D only ~ the best) 1/2 & 1/4 refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 4                    Level 4: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 5                    Level 5: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    // 6                    Level 6: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    context_ptr->predictive_me_level = 0;
+
+    // Level                    Settings
+    // FALSE                    Use SSD at PME
+    // TRUE                     Use SAD at PME
+    context_ptr->use_sad_at_pme = EB_FALSE;
+
+    // Derive md_staging_mode
+    //
+    // MD_STAGING_MODE_1
+    //  ____________________________________________________________________________________________________________________________________________________________
+    // |        | md_stage_0                  | md_stage_1                     | md_stage_2                              | md_stage_3                              |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_0 |Prediction for Luma & Chroma |Res, T, Q, Q-1 for Luma Only    |Bypassed                                 |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_6 |SAD                          |No RDOQ                         |                                         |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_7 |                             |No Tx Type Search               |                                         |Tx Type Search (f(Tx Type Search Level)) |
+    // |        |                             |No Tx Size Search               |                                         |Tx Size Search (f(Tx Size Search Level))|
+    // |        |                             |SSD @ Frequency Domain          |                                         |CFL vs. Independent                      |
+    // |        |                             |                                |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_1 |Prediction for Luma Only     |IFS (f(IFS))                    |Bypassed                                 |Prediction for Luma & Chroma  (Best IF)  |
+    // |CLASS_2 |Bilinear Only (IFS OFF)      |Res, T, Q, Q-1 for Luma Only    |                                         |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_3 |SAD                          |No RDOQ                         |                                         |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_4 |                             |No Tx Type Search               |                                         |Tx Type Search (f(Tx Type Search Level)) |
+    // |CLASS_5 |                             |No Tx Size Search               |                                         |Tx Size Search  (f(Tx Size Search Level))|
+    // |CLASS_8 |                             |SSD @ Frequency Domain          |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    //
+    // MD_STAGING_MODE_2
+    //  ____________________________________________________________________________________________________________________________________________________________
+    // |        | md_stage_0                  | md_stage_1                     | md_stage_2                              | md_stage_3                              |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_0 |Prediction for Luma & Chroma |Res, T, Q, Q-1 for Luma Only    |Res, T, Q, Q-1 for Luma Only             |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_6 |SAD                          |No RDOQ                         |RDOQ (f(RDOQ Level))                     |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_7 |                             |No Tx Type Search               |Tx Type Search (f(Tx Type Search Level)) |Tx Type Search (f(Tx Type Search Level)) |
+    // |        |                             |No Tx Size Search               |No Tx Size Search                        |Tx Size Search (f(Tx Size Search Level))|
+    // |        |                             |SSD @ Frequency Domain          |SSD @ Frequency Domain                   |CFL vs. Independent                      |
+    // |        |                             |                                |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_1 |Prediction for Luma Only     |IFS (f(IFS))                    |Res, T, Q, Q-1  for Luma Only            |Prediction for Luma & Chroma  (Best IF)  |
+    // |CLASS_2 |Bilinear Only (IFS OFF)      |Res, T, Q, Q-1 for Luma Only    |RDOQ (f(RDOQ Level))                     |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_3 |SAD                          |No RDOQ                         |Tx Type Search (f(Tx Type Search Level)) |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_4 |                             |No Tx Type Search               |No Tx Size Search                        |Tx Type Search (f(Tx Type Search Level)) |
+    // |CLASS_5 |                             |No Tx Size Search               |SSD @ Frequency Domain                   |Tx Size Search  (f(Tx Size Search Level))|
+    // |CLASS_8 |                             |SSD @ Frequency Domain          |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+
+    if (pd_pass == PD_PASS_0) {
+        context_ptr->md_staging_mode = MD_STAGING_MODE_0;
+    }
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->md_staging_mode = MD_STAGING_MODE_1;
+    }
+    else
+        context_ptr->md_staging_mode = MD_STAGING_MODE_1;
+
+
+    // Set md staging count level
+    // Level 0              minimum count = 1
+    // Level 1              set towards the best possible partitioning (to further optimize)
+    // Level 2              HG: breack down or look up-table(s) are required !
+    if (pd_pass == PD_PASS_0) {
+        context_ptr->md_staging_count_level = 0;
+    }
+    else if (pd_pass == PD_PASS_1) {
+        context_ptr->md_staging_count_level = 1;
+    }
+    else {
+        context_ptr->md_staging_count_level = 2;
+    }
+
+    // Set interpolation filter search blk size
+    // Level                Settings
+    // 0                    ON for 8x8 and above
+    // 1                    ON for 16x16 and above
+    // 2                    ON for 32x32 and above
+    context_ptr->interpolation_filter_search_blk_size = 0;
+
+    // Derive Spatial SSE Flag
+    context_ptr->spatial_sse_full_loop = EB_TRUE;
+
+    context_ptr->blk_skip_decision = EB_FALSE;
+
+    // Derive Trellis Quant Coeff Optimization Flag
+    context_ptr->enable_rdoq = EB_FALSE;
+
+    // Derive redundant block
+    context_ptr->redundant_blk = EB_FALSE;
+
+    // Set edge_skp_angle_intra
+    context_ptr->edge_based_skip_angle_intra = 0;
+
+    // Set prune_ref_frame_for_rec_partitions
+    context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level, 0, 0, 0);
+
+
+
+    // md_stage_1_cand_prune_th (for single candidate removal per class)
+    // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
+        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+
+    // md_stage_2_3_cand_prune_th (for single candidate removal per class)
+    // Remove candidate if deviation to the best is higher than
+    // md_stage_2_3_cand_prune_th
+        context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+
+    // md_stage_2_3_class_prune_th (for class removal)
+    // Remove class if deviation to the best is higher than
+    // md_stage_2_3_class_prune_th
+
+        context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
+
+    context_ptr->coeff_area_based_bypass_nsq_th = 0;
+
+    // NSQ cycles reduction level: TBD
+    uint8_t nsq_cycles_red_mode = 0;
+    set_nsq_cycle_redcution_controls(context_ptr, nsq_cycles_red_mode);
+
+    // NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
+    // Overwrite allcation action when nsq_cycles_reduction th is higher.
+        context_ptr->nsq_cycles_reduction_th = 0;
+
+    // Depth cycles reduction level: TBD
+    uint8_t depth_cycles_red_mode = 0;
+    set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
+
+    uint8_t adaptive_md_cycles_level = 0;
+    adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
+    // Weighting (expressed as a percentage) applied to
+    // square shape costs for determining if a and b
+    // shapes should be skipped. Namely:
+    // skip HA, HB, and H4 if h_cost > (weighted sq_cost)
+    // skip VA, VB, and V4 if v_cost > (weighted sq_cost)
+    context_ptr->sq_weight = (uint32_t)~0;
+    // nsq_hv_level  needs sq_weight to be ON
+    // 0: OFF
+    // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
+    // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+    context_ptr->nsq_hv_level = 0;
+
+    // Set pred ME full search area
+    context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
+    context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
+
+    // Set coeff_based_nsq_cand_reduction
+    context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+
+    // Set pic_obmc_level @ MD
+    context_ptr->md_pic_obmc_level = 0;
+    set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_level);
+
+    // Set enable_inter_intra @ MD
+    context_ptr->md_enable_inter_intra = 0;
+
+    // Set enable_paeth @ MD
+    context_ptr->md_enable_paeth = 0;
+
+    // Set enable_smooth @ MD
+    context_ptr->md_enable_smooth = 0;
+
+    // Set md_tx_size_search_mode @ MD
+    context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
+
+    uint8_t txs_cycles_reduction_level = 0;
+    set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
+
+    // Set md_filter_intra_mode @ MD
+    // md_filter_intra_level specifies whether filter intra would be active
+    // for a given prediction candidate in mode decision.
+    // md_filter_intra_level | Settings
+    // 0                      | OFF
+    // 1                      | ON
+    context_ptr->md_filter_intra_level = 0;
+
+    // Set md_allow_intrabc @ MD
+    context_ptr->md_allow_intrabc = 0;
+
+    // intra_similar_mode
+    // 0: OFF
+    // 1: If previous similar block is intra, do not inject any inter
+    context_ptr->intra_similar_mode = 0;
+
+    // Set inter_intra_distortion_based_reference_pruning
+    context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+    set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
+
+    context_ptr->block_based_depth_reduction_level = 0;
+    set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
+
+    context_ptr->md_nsq_mv_search_level = 0;
+    md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
+
+    context_ptr->md_subpel_search_level = 0;
+    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
+
+    // Set max_ref_count @ MD
+    context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level, 4, 4, 1);
+
+    // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
+    context_ptr->md_skip_mvp_generation = EB_FALSE;
+
+    // Set dc_cand_only_flag
+    context_ptr->dc_cand_only_flag = EB_TRUE;
+
+    // Set intra_angle_delta @ MD
+    context_ptr->md_intra_angle_delta = 0;
+
+    // Set disable_angle_z2_prediction_flag
+    context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
+
+    // Set full_cost_derivation_fast_rate_blind_flag
+    context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
+
+    context_ptr->skip_intra = 0;
+
+    return return_error;
+}
+#endif
+#if FIRST_PASS_SETUP
+
+/******************************************************
+* Derive Mode Decision Config Settings for first pass
+Input   : encoder mode and tune
+Output  : EncDec Kernel signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_mode_decision_config_kernel(
+    /*SequenceControlSet *scs_ptr, */PictureControlSet *pcs_ptr,
+    ModeDecisionConfigurationContext *context_ptr) {
+
+    EbErrorType return_error = EB_ErrorNone;
+
+    // ADP
+    context_ptr->adp_level = pcs_ptr->parent_pcs_ptr->enc_mode;
+
+    // CDF
+    pcs_ptr->update_cdf = 0;
+
+    // Filter INTRA
+    // pic_filter_intra_level specifies whether filter intra would be active
+    // for a given picture.
+    // pic_filter_intra_level | Settings
+    // 0                      | OFF
+    // 1                      | ON
+    pcs_ptr->pic_filter_intra_level = 0;
+
+    // High Precision
+    FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+    frm_hdr->allow_high_precision_mv = 0;
+
+    // Warped
+    frm_hdr->allow_warped_motion = 0;
+    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+
+    // pic_obmc_level - pic_obmc_level is used to define md_pic_obmc_level.
+    // The latter determines the OBMC settings in the function set_obmc_controls.
+    // Please check the definitions of the flags/variables in the function
+    // set_obmc_controls corresponding to the pic_obmc_level settings.
+    //  pic_obmc_level  |              Default Encoder Settings             |     Command Line Settings
+    //         0        | OFF subject to possible constraints               | OFF everywhere in encoder
+    //         1        | ON subject to possible constraints                | Fully ON in PD_PASS_2
+    //         2        | Faster level subject to possible constraints      | Level 2 everywhere in PD_PASS_2
+    //         3        | Even faster level subject to possible constraints | Level 3 everywhere in PD_PASS_3
+    pcs_ptr->parent_pcs_ptr->pic_obmc_level = 0;
+
+    // Switchable Motion Mode
+    frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+
+    // HBD Mode
+    pcs_ptr->hbd_mode_decision = EB_8_BIT_MD; //anaghdin to check for 10 bit
+
+    return return_error;
+}
+#endif
+#if FIRST_PASS_SETUP
+void* set_me_hme_params_oq(
+    MeContext                     *me_context_ptr,
+    PictureParentControlSet       *pcs_ptr,
+    SequenceControlSet            *scs_ptr,
+    EbInputResolution                 input_resolution);
+void *set_me_hme_params_from_config(SequenceControlSet *scs_ptr, MeContext *me_context_ptr) ;
+void set_me_hme_ref_prune_ctrls(MeContext* context_ptr, uint8_t prune_level) ;
+void set_me_sr_adjustment_ctrls(MeContext* context_ptr, uint8_t sr_adjustment_level);
+/******************************************************
+* Derive ME Settings for first pass
+  Input   : encoder mode and tune
+  Output  : ME Kernel signal(s)
+******************************************************/
+EbErrorType first_pass_signal_derivation_me_kernel(
+    SequenceControlSet        *scs_ptr,
+    PictureParentControlSet   *pcs_ptr,
+    MotionEstimationContext_t   *context_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
+
+    context_ptr->me_context_ptr->mrp_level = pcs_ptr->mrp_level;
+    // Set ME/HME search regions
+
+    if (scs_ptr->static_config.use_default_me_hme)
+        set_me_hme_params_oq(
+            context_ptr->me_context_ptr,
+            pcs_ptr,
+            scs_ptr,
+            scs_ptr->input_resolution);
+    else
+        set_me_hme_params_from_config(
+            scs_ptr,
+            context_ptr->me_context_ptr);
+
+
+    // Set HME flags
+    context_ptr->me_context_ptr->enable_hme_flag = pcs_ptr->enable_hme_flag;
+    context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->enable_hme_level0_flag;
+    context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->enable_hme_level1_flag;
+    context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
+
+    // HME Search Method
+    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH; //anaghdin first_pass_opt
+
+    // ME Search Method
+    context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
+
+    context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+
+    // Set hme/me based reference pruning level (0-4)
+    set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+
+    // Set hme-based me sr adjustment level
+    set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
+
+    return return_error;
+};
 #endif
 #endif  // TWOPASS_RC

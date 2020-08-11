@@ -2573,11 +2573,12 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncodePass pass[MAX_ENCODE
     if (check_two_pass_conflicts(argc, argv))
         return 0;
 
-    int preset = MAX_ENC_PRESET;
-    if (find_token(argc, argv, PRESET_TOKEN, config_string) == 0
-        || find_token(argc, argv, ENCMODE_TOKEN, config_string) == 0) {
-        preset = strtol(config_string, NULL, 0);
-    }
+    //anaghdin: to check
+    //int preset = MAX_ENC_PRESET;
+    //if (find_token(argc, argv, PRESET_TOKEN, config_string) == 0
+    //    || find_token(argc, argv, ENCMODE_TOKEN, config_string) == 0) {
+    //    preset = strtol(config_string, NULL, 0);
+    //}
     //anaghdin: to check
     //if (preset > 4) {
     //    fprintf(stderr,

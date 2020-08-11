@@ -1311,47 +1311,9 @@ EbErrorType signal_derivation_me_kernel_oq(
 EbErrorType first_pass_signal_derivation_me_kernel(
     SequenceControlSet        *scs_ptr,
     PictureParentControlSet   *pcs_ptr,
-    MotionEstimationContext_t   *context_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
-
-    context_ptr->me_context_ptr->mrp_level = pcs_ptr->mrp_level;
-    // Set ME/HME search regions
-
-    if (scs_ptr->static_config.use_default_me_hme)
-        set_me_hme_params_oq(
-            context_ptr->me_context_ptr,
-            pcs_ptr,
-            scs_ptr,
-            scs_ptr->input_resolution);
-    else
-        set_me_hme_params_from_config(
-            scs_ptr,
-            context_ptr->me_context_ptr);
-
-
-    // Set HME flags
-    context_ptr->me_context_ptr->enable_hme_flag = pcs_ptr->enable_hme_flag;
-    context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->enable_hme_level0_flag;
-    context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->enable_hme_level1_flag;
-    context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
-
-    // HME Search Method
-    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH; //anaghdin first_pass_opt
-
-    // ME Search Method
-    context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
-
-    context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
-
-    // Set hme/me based reference pruning level (0-4)
-    set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
-
-    // Set hme-based me sr adjustment level
-    set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
-
-    return return_error;
-};
+    MotionEstimationContext_t   *context_ptr) ;
 #endif
+
 /************************************************
  * Set ME/HME Params for Altref Temporal Filtering
  ************************************************/
