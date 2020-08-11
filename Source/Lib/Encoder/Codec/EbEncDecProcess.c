@@ -3594,7 +3594,7 @@ EbErrorType signal_derivation_update(
     else
 #if OPT_ADAPT_ME
         context_ptr->md_sq_mv_search_level = 4;
-#endif
+#else
         context_ptr->md_sq_mv_search_level = 3;
 #endif
 
