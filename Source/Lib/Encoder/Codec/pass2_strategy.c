@@ -1232,8 +1232,10 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
         ++i;
         // reaches next key frame, break here
         if (i >= rc->frames_to_key) {
-            cut_pos[count_cuts] = i - 1;
-            count_cuts++;
+            if (cut_pos[count_cuts - 1] != i - 1) {
+                cut_pos[count_cuts] = i - 1;
+                count_cuts++;
+            }
             break;
         }
 
@@ -3381,7 +3383,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
   // or group of frames.
   rc->vbr_bits_off_target += rc->base_frame_target - rc->projected_frame_size;
   twopass->bits_left = AOMMAX(twopass->bits_left - bits_used, 0);
- // printf("RC_FEEDBACK POC:%lld\n", ppcs_ptr->picture_number); //anaghdin_print
+  //printf("RC_FEEDBACK POC:%lld\n", ppcs_ptr->picture_number); //anaghdin_print
   // Target vs actual bits for this arf group.
   twopass->rolling_arf_group_target_bits += rc->this_frame_target;
   twopass->rolling_arf_group_actual_bits += rc->projected_frame_size;

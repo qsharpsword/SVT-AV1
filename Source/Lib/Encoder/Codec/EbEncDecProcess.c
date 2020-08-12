@@ -10461,10 +10461,6 @@ void *enc_dec_kernel(void *input_ptr) {
         memset( context_ptr->md_context->txt_cnt, 0, sizeof(uint32_t) * TXT_DEPTH_DELTA_NUM * TX_TYPES);
         generate_txt_prob(pcs_ptr, context_ptr->md_context);
 #endif
-#if FIRST_PASS_SETUP
-        if (scs_ptr->use_output_stat_file)
-            setup_firstpass_data(pcs_ptr->parent_pcs_ptr);
-#endif
         // Segment-loop
         while (assign_enc_dec_segments(segments_ptr,
                                        &segment_index,
@@ -10516,6 +10512,10 @@ void *enc_dec_kernel(void *input_ptr) {
                             .tile_group_sb_start_x;
                     sb_index = (uint16_t)((y_sb_index + tile_group_y_sb_start) * pic_width_in_sb +
                                           x_sb_index + tile_group_x_sb_start);
+#if FIRST_PASS_SETUP
+                    if (scs_ptr->use_output_stat_file && sb_index == 0)
+                        setup_firstpass_data(pcs_ptr->parent_pcs_ptr);
+#endif
 #if M8_4x4
                     sb_ptr = context_ptr->md_context->sb_ptr = pcs_ptr->sb_ptr_array[sb_index];
 #else
