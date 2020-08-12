@@ -1406,7 +1406,7 @@ ConfigEntry config_entry_specific[] = {
 #if 1 // ALTREF_CLI
      {SINGLE_INPUT,
       TF_LEVEL,
-      "Set altref level",
+      "Set altref level(0: OFF, 1: ON[default])",
       set_tf_level},
 #else
     {SINGLE_INPUT,

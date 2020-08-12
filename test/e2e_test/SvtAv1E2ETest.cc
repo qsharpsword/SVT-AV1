@@ -155,7 +155,7 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     // test enable_adaptive_quantization, default is 0
     {"AdapQTest1", {{"AdaptiveQuantization", "1"}}, default_test_vectors},
 
-#if ALTREF_CLI
+#if 1 // ALTREF_CLI
     // test tf_level, default is -1;
     {"AltrefTest1", {{"TfLevel", "0"}}, default_test_vectors},
 #else
