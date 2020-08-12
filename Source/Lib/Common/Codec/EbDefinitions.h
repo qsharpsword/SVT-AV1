@@ -650,7 +650,7 @@ extern "C" {
 
 
 #endif
-#if 0 // start 2x here
+#if 1 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
