@@ -9861,7 +9861,7 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
-#endif
+
 static uint64_t generate_best_part_cost(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
@@ -9890,6 +9890,7 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#endif
 #if ADAPTIVE_TXT_CR
 void generate_statistics_txt(
     SequenceControlSet  *scs_ptr,
