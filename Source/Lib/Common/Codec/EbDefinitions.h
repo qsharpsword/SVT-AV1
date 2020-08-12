@@ -653,8 +653,8 @@ extern "C" {
 #if 1 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
-#define BLOCK_BASED_DEPTH_REFINMENT_START 1
-#define BLOCK_BASED_DEPTH_REFINMENT_END 1
+//#define BLOCK_BASED_DEPTH_REFINMENT_START 1
+//#define BLOCK_BASED_DEPTH_REFINMENT_END 1
 // PME
 #define PME_EARLY_EXIT 0
 #define PME_OPT 0
