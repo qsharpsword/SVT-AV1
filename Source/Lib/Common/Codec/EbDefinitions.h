@@ -650,7 +650,7 @@ extern "C" {
 
 
 #endif
-#if 0 // start 2x here
+#if 1 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
@@ -685,10 +685,10 @@ extern "C" {
 
 #endif
 // rate
-//#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
-//#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-//#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
-//#endif
+#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
+#endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
 #if NEW_DELAY
