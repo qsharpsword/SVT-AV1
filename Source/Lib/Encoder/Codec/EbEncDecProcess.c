@@ -10657,9 +10657,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
     results_ptr->leaf_count = 0;
     blk_index               = 0;
-
+#if !OPT_5
     SuperBlock *sb_ptr = pcs_ptr->sb_ptr_array[sb_index];
-
+#endif
     uint32_t tot_d1_blocks, block_1d_idx;
     EbBool   split_flag;
 
