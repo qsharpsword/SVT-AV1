@@ -648,6 +648,7 @@ extern "C" {
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
+#if 0 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
@@ -686,6 +687,8 @@ extern "C" {
 #define OPT_3 1 // bypass ref pruning init if no mrp
 #define OPT_4 1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
 #define OPT_5 1 // shut useless pred depth refinement operations
+#endif
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
