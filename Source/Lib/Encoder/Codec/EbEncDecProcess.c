@@ -9650,6 +9650,7 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
     }
 }
 #endif
+#if !OPT_5
 uint64_t  pd_level_tab[2][9][2][3] =
 {
     {
@@ -9860,6 +9861,7 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
+#endif
 static uint64_t generate_best_part_cost(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
@@ -10681,6 +10683,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     int8_t e_depth = 0;
 
                     if (context_ptr->pd_pass == PD_PASS_0) {
+#if !OPT_5
                         uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
                             context_ptr->full_lambda_md[EB_10_BIT_MD] :
                             context_ptr->full_lambda_md[EB_8_BIT_MD];
@@ -10697,6 +10700,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             pcs_ptr,
                             context_ptr,
                             sb_index);
+#endif
 
 #if FIX_MR_PD1
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
@@ -10993,7 +10997,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
 #endif
 #endif
+#if OPT_5
+                        else {
+#else
                         else if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0) {
+#endif
 #else
                         if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0 && !MR_MODE_MULTI_PASS_PD) {
 #endif
@@ -11006,6 +11014,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = 0;
                             e_depth = 0;
                         }
+#if !OPT_5
                         else {
                         derive_start_end_depth(pcs_ptr,
                                                sb_ptr,
@@ -11015,6 +11024,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                                blk_geom);
 
                         }
+#endif
 #if SHUT_FEATURE_INTERACTIONS
                         s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
                         e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;

@@ -655,7 +655,7 @@ extern "C" {
 #endif
 
 // PME
-#define PME_EARLY_EXIT 1
+#define PME_EARLY_EXIT 0
 #define PME_OPT 0
 
 //TXT
@@ -682,6 +682,7 @@ extern "C" {
 #define OPT_2 1
 #define OPT_3 1
 #define OPT_4 1 // no variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+#define OPT_5 1 // shut useless pred depth refinement operations
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
