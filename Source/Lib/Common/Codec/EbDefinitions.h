@@ -666,7 +666,7 @@ extern "C" {
 #define OFFLINE_DATA 0
 
 // rate
-#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 0
+#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
 #if PD0_COEFF_RATE_SPLIT_RATE_ONLY
 #define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
 #endif
@@ -674,7 +674,7 @@ extern "C" {
 // PME, Adap_ME, ME
 #define SHUT_HP 0
 #define OPT_ADAPT_ME 1
-#define IFS_PUSH_BACK_STAGE_3 0
+#define IFS_PUSH_BACK_STAGE_3 1
 
 // INTRA
 #define FASTER_INTRA 1
