@@ -11802,8 +11802,12 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 
         //ALL PLANE
 #if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-        if (context_ptr->coeff_split_flag_rate_only) {
+        if(0) {
+        //if (context_ptr->coeff_split_flag_rate_only) {
             *(candidate_buffer->full_cost_ptr) = RDCOST(full_lambda, (y_coeff_bits + cb_coeff_bits + cr_coeff_bits), (y_full_distortion[0] + cb_full_distortion[0] + cr_full_distortion[0] ));
+            candidate_buffer->candidate_ptr->total_rate = (y_coeff_bits + cb_coeff_bits + cr_coeff_bits);
+            candidate_buffer->candidate_ptr->full_distortion = y_full_distortion[0] + cb_full_distortion[0] + cr_full_distortion[0];
+        
         } else {
 #endif
         av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
