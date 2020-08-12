@@ -1680,7 +1680,7 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
         stats->image_data_start_row = mb_row;
     }
 
-    if (pcs_ptr->parent_pcs_ptr->av1_cm->use_highbitdepth) {
+    if (context_ptr->hbd_mode_decision) {
         switch (pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth) {
         case AOM_BITS_8: break;
         case AOM_BITS_10: this_intra_error >>= 4; break;
@@ -1701,10 +1701,11 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
         stats->intra_factor += 1.0;
 
     int level_sample;
-    if (pcs_ptr->parent_pcs_ptr->av1_cm->use_highbitdepth)
-        level_sample = CONVERT_TO_SHORTPTR(input_picture_ptr->buffer_y)[input_origin_index];
+    if (context_ptr->hbd_mode_decision)
+        level_sample = ((uint16_t*)input_picture_ptr->buffer_y)[input_origin_index];
     else
         level_sample = input_picture_ptr->buffer_y[input_origin_index];
+
     if ((level_sample < DARK_THRESH) && (log_intra < 9.0))
         stats->brightness_factor += 1.0 + (0.01 * (DARK_THRESH - level_sample));
     else
@@ -1720,11 +1721,22 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
 
     const int hbd = context_ptr->hbd_mode_decision;
     const int stride = input_picture_ptr->stride_y;
-    uint8_t *buf = &input_picture_ptr->buffer_y[input_origin_index];
-    for (int r8 = 0; r8 < 2; ++r8) {
-        for (int c8 = 0; c8 < 2; ++c8) {
-            stats->frame_avg_wavelet_energy += av1_haar_ac_sad_8x8_uint8_input(
-                buf + c8 * 8 + r8 * 8 * stride, stride, hbd);
+    if (hbd) {
+        uint16_t* buf = &((uint16_t*)input_picture_ptr->buffer_y)[input_origin_index];
+        for (int r8 = 0; r8 < 2; ++r8) {
+            for (int c8 = 0; c8 < 2; ++c8) {
+                stats->frame_avg_wavelet_energy += av1_haar_ac_sad_8x8_uint8_input(
+                    CONVERT_TO_BYTEPTR(buf) + c8 * 8 + r8 * 8 * stride, stride, hbd);
+            }
+        }
+    }
+    else {
+        uint8_t* buf = &(input_picture_ptr->buffer_y)[input_origin_index];
+        for (int r8 = 0; r8 < 2; ++r8) {
+            for (int c8 = 0; c8 < 2; ++c8) {
+                stats->frame_avg_wavelet_energy += av1_haar_ac_sad_8x8_uint8_input(
+                    buf + c8 * 8 + r8 * 8 * stride, stride, hbd);
+            }
         }
     }
     // Accumulate the intra error.
@@ -1788,7 +1800,8 @@ static int firstpass_inter_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
     //    (fp_block_size_height >> MI_SIZE_LOG2),
     //    cpi->oxcf.border_in_pixels);
 
-    uint32_t full_lambda = context_ptr->full_lambda_md[EB_8_BIT_MD];
+    uint32_t full_lambda = context_ptr->hbd_mode_decision
+        ? context_ptr->full_lambda_md[EB_10_BIT_MD] : context_ptr->full_lambda_md[EB_8_BIT_MD];
     int errorperbit = full_lambda >> RD_EPB_SHIFT;
     errorperbit += (errorperbit == 0);
     EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
@@ -3087,7 +3100,7 @@ Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
 EbErrorType first_pass_signal_derivation_mode_decision_config_kernel(
-    /*SequenceControlSet *scs_ptr, */PictureControlSet *pcs_ptr,
+    SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     ModeDecisionConfigurationContext *context_ptr) {
 
     EbErrorType return_error = EB_ErrorNone;
@@ -3130,8 +3143,7 @@ EbErrorType first_pass_signal_derivation_mode_decision_config_kernel(
         pcs_ptr->parent_pcs_ptr->pic_obmc_level;
 
     // HBD Mode
-    pcs_ptr->hbd_mode_decision = EB_8_BIT_MD; //anaghdin to check for 10 bit
-
+    pcs_ptr->hbd_mode_decision = EB_8_BIT_MD; //first pass hard coded to 8bit
     return return_error;
 }
 #endif

@@ -1735,7 +1735,7 @@ Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
 EbErrorType first_pass_signal_derivation_mode_decision_config_kernel(
-    /*SequenceControlSet *scs_ptr, */PictureControlSet *pcs_ptr,
+    SequenceControlSet *scs_ptr,PictureControlSet *pcs_ptr,
     ModeDecisionConfigurationContext *context_ptr) ;
 #endif
 #if !DEPTH_PART_CLEAN_UP
@@ -2131,7 +2131,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         // Mode Decision Configuration Kernel Signal(s) derivation
 #if FIRST_PASS_SETUP
         if (scs_ptr->use_output_stat_file)
-            first_pass_signal_derivation_mode_decision_config_kernel(/*scs_ptr, */pcs_ptr, context_ptr);
+            first_pass_signal_derivation_mode_decision_config_kernel(scs_ptr, pcs_ptr, context_ptr);
         else
             signal_derivation_mode_decision_config_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
 #else
