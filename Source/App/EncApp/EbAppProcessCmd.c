@@ -1138,7 +1138,8 @@ AppExitConditionType process_output_stream_buffer(EbConfig *config, EbAppContext
     uint32_t *max_latency   = &config->performance_context.max_latency;
 
     // System performance variables
-    static int32_t frame_count = 0;
+    //static int32_t frame_count = 0;
+    int32_t frame_count = config->performance_context.frame_count;
 
     // Local variables
     uint64_t finish_s_time = 0;
