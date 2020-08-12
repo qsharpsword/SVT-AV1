@@ -11484,7 +11484,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 
-                    if (child_to_current_deviation > 20)
+                    if (child_to_current_deviation > 10)
                         e_depth = 0;
 #endif
                     if (e_depth != 0)
