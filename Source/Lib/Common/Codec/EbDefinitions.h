@@ -674,7 +674,7 @@ extern "C" {
 // PME, Adap_ME, ME
 #define SHUT_HP 0
 #define OPT_ADAPT_ME 1
-#define IFS_PUSH_BACK_STAGE_3 1
+#define IFS_PUSH_BACK_STAGE_3 0
 
 // INTRA
 #define FASTER_INTRA 1
