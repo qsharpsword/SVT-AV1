@@ -648,13 +648,13 @@ extern "C" {
 #define MOVE_TXT_TXS_STATS_TO_FUNCS     1 // Cleanup TXT/TXS stats code by creating functions for stats-based decisions
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 
+
+#endif
 #if 0 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
 #define BLOCK_BASED_DEPTH_REFINMENT_END 1
-#endif
-
 // PME
 #define PME_EARLY_EXIT 0
 #define PME_OPT 0
@@ -665,12 +665,6 @@ extern "C" {
 #define PROB_TXT 0
 #define EXIT_IF_NO_COEFF 0
 #define OFFLINE_DATA 0
-
-// rate
-#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
-#endif
 
 // PME, Adap_ME, ME
 #define SHUT_HP 0
@@ -689,6 +683,11 @@ extern "C" {
 #define OPT_5 1 // shut useless pred depth refinement operations
 #endif
 
+#endif
+// rate
+#define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
