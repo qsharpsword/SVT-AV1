@@ -675,6 +675,9 @@ extern "C" {
 #define SHUT_HP 0
 #define OPT_ADAPT_ME 1
 #define IFS_PUSH_BACK_STAGE_3 1
+
+// INTRA
+#define FASTER_INTRA 1
 // Lossless opt
 #if 1
 #define OPT_0 1 // bypass distortion_based_modulator() if no nsq

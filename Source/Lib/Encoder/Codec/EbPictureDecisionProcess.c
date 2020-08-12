@@ -2497,10 +2497,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if SHUT_LAYER_BASED_FEATURES
             pcs_ptr->intra_pred_mode = 1;
 #else
+#if FASTER_INTRA
+        pcs_ptr->intra_pred_mode = 3;
+#else
             if (pcs_ptr->temporal_layer_index == 0)
                 pcs_ptr->intra_pred_mode = 1;
             else
                 pcs_ptr->intra_pred_mode = 3;
+#endif
 #endif
 #endif
 #else
