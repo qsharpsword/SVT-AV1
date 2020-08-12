@@ -11801,15 +11801,6 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                 : EB_FALSE;
 
         //ALL PLANE
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-        if(0) {
-        //if (context_ptr->coeff_split_flag_rate_only) {
-            *(candidate_buffer->full_cost_ptr) = RDCOST(full_lambda, (y_coeff_bits + cb_coeff_bits + cr_coeff_bits), (y_full_distortion[0] + cb_full_distortion[0] + cr_full_distortion[0] ));
-            candidate_buffer->candidate_ptr->total_rate = (y_coeff_bits + cb_coeff_bits + cr_coeff_bits);
-            candidate_buffer->candidate_ptr->full_distortion = y_full_distortion[0] + cb_full_distortion[0] + cr_full_distortion[0];
-        
-        } else {
-#endif
         av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
                                                               context_ptr,
                                                               candidate_buffer,
@@ -11822,9 +11813,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                                               &cb_coeff_bits,
                                                               &cr_coeff_bits,
                                                               context_ptr->blk_geom->bsize);
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-        }
-#endif
+
 #if SB_CLASSIFIER
         uint16_t txb_count = context_ptr->blk_geom->txb_count[candidate_buffer->candidate_ptr->tx_depth];
         candidate_ptr->count_non_zero_coeffs = 0;
