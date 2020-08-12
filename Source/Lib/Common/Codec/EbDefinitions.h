@@ -650,7 +650,7 @@ extern "C" {
 
 
 #endif
-#if 1 // start 2x here
+#if 0 // start 2x here
 // #depth @ PD2: ~2.5 days
 #define ENABLE_INTRA_PD0 0
 #define BLOCK_BASED_DEPTH_REFINMENT_START 1
@@ -670,7 +670,7 @@ extern "C" {
 #define SHUT_HP 0
 #define OPT_ADAPT_ME 1
 #define IFS_PUSH_BACK_STAGE_3 1
-
+#endif
 // INTRA
 #define FASTER_INTRA 1
 // Lossless opt
@@ -683,7 +683,7 @@ extern "C" {
 #define OPT_5 1 // shut useless pred depth refinement operations
 #endif
 
-#endif
+
 // rate
 #define PD0_COEFF_RATE_SPLIT_RATE_ONLY 1
 #if PD0_COEFF_RATE_SPLIT_RATE_ONLY
