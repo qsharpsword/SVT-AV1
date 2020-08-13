@@ -1728,7 +1728,6 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 }
 
 #if FIRST_PASS_SETUP
-
 /******************************************************
 * Derive Mode Decision Config Settings for first pass
 Input   : encoder mode and tune

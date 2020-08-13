@@ -10,8 +10,6 @@
 #include "EbThreads.h"
 
 #if TWOPASS_STAT_BUF
-
-
 static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer,
     STATS_BUFFER_CTX *stats_buf_context,
     int num_lap_buffers) {

@@ -7932,9 +7932,6 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     PictureControlSet *pcs_ptr,
     ModeDecisionContext *context_ptr);
 #endif
-
-
-
 void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                            uint32_t src_idx, uint32_t dst_idx, uint32_t blk_mds, uint32_t sb_org_x,
                            uint32_t sb_org_y);
@@ -11045,7 +11042,6 @@ void *enc_dec_kernel(void *input_ptr) {
 #if FIRST_PASS_SETUP
             if (scs_ptr->use_output_stat_file) {
                 first_pass_frame_end(pcs_ptr->parent_pcs_ptr, pcs_ptr->parent_pcs_ptr->ts_duration);
-
                 if(pcs_ptr->parent_pcs_ptr->end_of_sequence_flag)
                     av1_end_first_pass(pcs_ptr->parent_pcs_ptr);
             }

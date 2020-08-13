@@ -7193,72 +7193,36 @@ static void av1_rc_postencode_update(PictureParentControlSet *ppcs_ptr, uint64_t
   cm->width, cm->height));
       */
 }
-#if TWOPASS_MOVE_TO_PD
-void store_rc_info(PictureParentControlSet *pcs_ptr) {
-    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
-    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-    RATE_CONTROL *rc = &encode_context_ptr->rc;
-    GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
-
-    pcs_ptr->update_type = gf_group->update_type[gf_group->index];
-    pcs_ptr->arf_src_offset = gf_group->arf_src_offset[gf_group->index];
-    pcs_ptr->cur_frame_idx = gf_group->cur_frame_idx[gf_group->index];
-    pcs_ptr->frame_disp_idx = gf_group->frame_disp_idx[gf_group->index];
-    pcs_ptr->layer_depth = gf_group->layer_depth[gf_group->index];
-    pcs_ptr->arf_boost = gf_group->arf_boost[gf_group->index];
-    pcs_ptr->max_layer_depth = gf_group->max_layer_depth;
-    pcs_ptr->max_layer_depth_allowed = gf_group->max_layer_depth_allowed;
-    pcs_ptr->bit_allocation = gf_group->bit_allocation[gf_group->index];
-    pcs_ptr->size = gf_group->size;
-}
-#endif
 void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
-  SequenceControlSet *scs_ptr       = ppcs_ptr->scs_ptr;
-  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-  RATE_CONTROL *rc                  = &encode_context_ptr->rc;
-  GF_GROUP *const gf_group          = &encode_context_ptr->gf_group;
-  //update_keyframe_counters(cpi);
-  if (ppcs_ptr->frm_hdr.showable_frame) {
-      //anaghdin: check this condition temp solution
-    if (1/* !ppcs_ptr->frm_hdr.show_existing_frame*/ || rc->is_src_frame_alt_ref ||
-        ppcs_ptr->frm_hdr.frame_type == KEY_FRAME) {
-      // If this is a show_existing_frame with a source other than altref,
-      // or if it is not a displayed forward keyframe, the keyframe update
-      // counters were incremented when it was originally encoded.
-      rc->frames_since_key++;
-      rc->frames_to_key--;
+    SequenceControlSet *scs_ptr            = ppcs_ptr->scs_ptr;
+    EncodeContext *     encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *      rc                 = &encode_context_ptr->rc;
+    GF_GROUP *const     gf_group           = &encode_context_ptr->gf_group;
+
+    if (ppcs_ptr->frm_hdr.showable_frame) {
+        // If this is a show_existing_frame with a source other than altref,
+        // or if it is not a displayed forward keyframe, the keyframe update
+        // counters were incremented when it was originally encoded.
+        rc->frames_since_key++;
+        rc->frames_to_key--;
     }
-  }
 
-  //update_frames_till_gf_update(cpi);
-  // TODO(weitinglin): Updating this counter for is_frame_droppable
-  // is a work-around to handle the condition when a frame is drop.
-  // We should fix the cpi->common.show_frame flag
-  // instead of checking the other condition to update the counter properly.
+    //update_frames_till_gf_update(cpi);
+    // TODO(weitinglin): Updating this counter for is_frame_droppable
+    // is a work-around to handle the condition when a frame is drop.
+    // We should fix the cpi->common.show_frame flag
+    // instead of checking the other condition to update the counter properly.
+    if (ppcs_ptr->frm_hdr.showable_frame && ppcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
+        // Decrement count down till next gf
+        if (rc->frames_till_gf_update_due > 0) rc->frames_till_gf_update_due--;
+    }
 
-#if TWOPASS_IMPOSE_PD_DECISIONS
-  // anaghdin: check the condition
-    if (ppcs_ptr->frm_hdr.showable_frame && ppcs_ptr->frm_hdr.frame_type != KEY_FRAME){
-#else
-      if (ppcs_ptr->frm_hdr.show_frame/* ||
-      is_frame_droppable(&cpi->svc, &cpi->ext_flags.refresh_frame)*/) {
-#endif
-    // Decrement count down till next gf
-    if (rc->frames_till_gf_update_due > 0)
-      rc->frames_till_gf_update_due--;
-  }
-
-  //update_gf_group_index(cpi);
-  // Increment the gf group index ready for the next frame. If this is
-  // a show_existing_frame with a source other than altref, or if it is not
-  // a displayed forward keyframe, the index was incremented when it was
-  // originally encoded.
-      //anaghdin: check this condition temp solution
-  if (1/*ppcs_ptr->frm_hdr.show_existing_frame || rc->is_src_frame_alt_ref ||
-      ppcs_ptr->frm_hdr.frame_type == KEY_FRAME*/) {
+    //update_gf_group_index(cpi);
+    // Increment the gf group index ready for the next frame. If this is
+    // a show_existing_frame with a source other than altref, or if it is not
+    // a displayed forward keyframe, the index was incremented when it was
+    // originally encoded.
     ++gf_group->index;
-  }
-
 }
 
 void av1_rc_set_frame_target(PictureControlSet *pcs_ptr, int target, int width, int height) {
@@ -7391,18 +7355,15 @@ void av1_configure_buffer_updates(
 }
 
 void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
-    SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
-    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-    RATE_CONTROL *rc = &encode_context_ptr->rc;
-    int target_rate = rc->base_frame_target;
-    const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
-
+    SequenceControlSet *        scs_ptr            = pcs_ptr->parent_pcs_ptr->scs_ptr;
+    EncodeContext *             encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *              rc                 = &encode_context_ptr->rc;
+    int                         target_rate        = rc->base_frame_target;
+    const RateControlCfg *const rc_cfg             = &encode_context_ptr->rc_cfg;
     // Correction to rate target based on prior over or under shoot.
-    //anaghdin fix the condition
     if (rc_cfg->mode == AOM_VBR || rc_cfg->mode == AOM_CQ)
         vbr_rate_correction(pcs_ptr, &target_rate);
     av1_rc_set_frame_target(pcs_ptr, target_rate, width, height);
-    //printf("\n%lld\t%lld\t%lld\n", pcs_ptr->picture_number, rc->base_frame_target, rc->this_frame_target);
 }
 #endif
 void *rate_control_kernel(void *input_ptr) {
@@ -7873,7 +7834,7 @@ void *rate_control_kernel(void *input_ptr) {
                 }
             }
 
-#if !TWOPASS_MOVE_TO_PD & TWOPASS_IMPOSE_PD_DECISIONS
+#if TWOPASS_IMPOSE_PD_DECISIONS
             if (scs_ptr->use_input_stat_file &&
                 scs_ptr->static_config.look_ahead_distance != 0)
             update_rc_counts(pcs_ptr->parent_pcs_ptr);
@@ -7955,7 +7916,7 @@ void *rate_control_kernel(void *input_ptr) {
 #endif
                 av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                 av1_twopass_postencode_update(parentpicture_control_set_ptr);
-#if !TWOPASS_MOVE_TO_PD & !TWOPASS_IMPOSE_PD_DECISIONS
+#if !TWOPASS_IMPOSE_PD_DECISIONS
                 update_rc_counts(parentpicture_control_set_ptr);
 #endif
             }
@@ -7989,7 +7950,7 @@ void *rate_control_kernel(void *input_ptr) {
 #endif
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
                         av1_twopass_postencode_update(parentpicture_control_set_ptr);
-#if !TWOPASS_MOVE_TO_PD & !TWOPASS_IMPOSE_PD_DECISIONS
+#if !TWOPASS_IMPOSE_PD_DECISIONS
                         update_rc_counts(parentpicture_control_set_ptr);
 #endif
                     } else

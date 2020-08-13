@@ -6876,21 +6876,7 @@ uint32_t product_full_mode_decision(
             lowest_cost_index = cand_index;
             lowest_cost = *(buffer_ptr_array[cand_index]->full_cost_ptr);
         }
-#if 0 // FIRST_PASS_SETUP
-        //if (candidate_total_count > 1)
-            printf("%d\t%lld\t%lld\t%lld\t\t",
-                cand_index,
-                *(buffer_ptr_array[cand_index]->full_cost_ptr),
-                buffer_ptr_array[lowest_cost_index]->candidate_ptr->full_distortion,
-                buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion
-                );
-#endif
-
     }
-#if 0 //FIRST_PASS_SETUP
-    //if (candidate_total_count > 1)
-        printf("\n");
-#endif
     candidate_ptr = buffer_ptr_array[lowest_cost_index]->candidate_ptr;
 #if TPL_LAMBDA_IMP
     if (context_ptr->blk_lambda_tuning){

@@ -683,9 +683,6 @@ typedef struct PictureParentControlSet {
     RefreshFrameFlagsInfo refresh_frame;
     int internal_altref_allowed;
     int64_t ts_duration;
-#if !TWOPASS_STAT_BUF
-    TWO_PASS      twopass;
-#endif
 #endif
 #if TPL_LA
     OisMbResults **ois_mb_results;
@@ -948,25 +945,6 @@ typedef struct PictureParentControlSet {
     void* tpl_group[MAX_TPL_GROUP_SIZE]; //stores pcs pictures needed for tpl algorithm
     uint32_t tpl_group_size;             //size of above buffer
     void* pd_window[PD_WINDOW_SIZE]; //stores previous, current, future pictures from pd-reord-queue. empty for first I.
-#endif
-#if TWOPASS_MOVE_TO_PD
-    /*frame_update_type*/int update_type;
-    unsigned char arf_src_offset;
-    // The number of frames displayed so far within the GOP at a given coding
-    // frame.
-    unsigned char cur_frame_idx;
-    unsigned char frame_disp_idx;
-
-    // TODO(jingning): Unify the data structure used here after the new control
-    // mechanism is in place.
-    int layer_depth;
-    int arf_boost;
-    int max_layer_depth;
-    int max_layer_depth_allowed;
-    // This is currently only populated for AOM_Q mode
-    unsigned char q_val;
-    int bit_allocation;
-    int size;
 #endif
 #if TWOPASS_IMPOSE_PD_DECISIONS
     unsigned char gf_group_index;

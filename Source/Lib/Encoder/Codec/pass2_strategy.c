@@ -1197,13 +1197,13 @@ void set_last_prev_low_err(int *cur_start_ptr, int *cur_last_ptr, int *cut_pos,
 // This function imposes the gf group length of future frames in batch based on the intra refresh
 //anaghdin MAX_NUM_GF_INTERVALS is limited. Also only supports for 5L
 static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals) {
-    SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
-    EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-    RATE_CONTROL *const rc = &encode_context_ptr->rc;
-    int i = 0;
-    max_intervals = scs_ptr->lap_enabled ? 1 : max_intervals;
-    int cut_pos[MAX_NUM_GF_INTERVALS + 1] = { 0 };
-    int count_cuts = 1;
+    SequenceControlSet *scs_ptr            = pcs_ptr->scs_ptr;
+    EncodeContext *     encode_context_ptr = scs_ptr->encode_context_ptr;
+    RATE_CONTROL *const rc                 = &encode_context_ptr->rc;
+    int                 i                  = 0;
+    max_intervals                          = scs_ptr->lap_enabled ? 1 : max_intervals;
+    int cut_pos[MAX_NUM_GF_INTERVALS + 1]  = {0};
+    int count_cuts                         = 1;
     int cur_last;
     int cut_here;
     while (count_cuts < max_intervals + 1) {
@@ -1216,12 +1216,13 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
             }
             break;
         }
-
         //anaghdin_GF to cut based on PD decisions
-        cut_here = ((i % 16 == 0) || ((rc->frames_to_key - cut_pos[count_cuts - 1]) < 16 && (i % 8 == 0))) ? 1 : 0;
-
+        cut_here =
+            ((i % 16 == 0) || ((rc->frames_to_key - cut_pos[count_cuts - 1]) < 16 && (i % 8 == 0)))
+                ? 1
+                : 0;
         if (cut_here) {
-            cur_last = i;  // the current last frame in the gf group
+            cur_last            = i; // the current last frame in the gf group
             cut_pos[count_cuts] = cur_last;
             count_cuts++;
         }
@@ -1675,14 +1676,6 @@ static int construct_multi_layer_gf_structure(
     set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
         &cur_frame_index, &frame_index, use_altref + 1);
 #endif
-
-    //// The end frame will be Overlay frame for an ARF GOP; otherwise set it to
-    //// be GF, for consistency, which will be updated in the next GOP.
-    //gf_group->update_type[frame_index] = use_altref ? OVERLAY_UPDATE : GF_UPDATE;
-    //gf_group->arf_src_offset[frame_index] = 0;
-    //anaghdin: the end frame will not be an overlay
-    //if (frame_index)
-    //    frame_index--;
     return frame_index;
 }
 
@@ -2911,7 +2904,6 @@ static void setup_target_rate(PictureParentControlSet *pcs_ptr) {
                             cpi->common.height);
   }
 #endif
-  // TWOPASS_MOVE_TO_PD store in PCS
   rc->base_frame_target = target_rate;
 }
 
@@ -3106,7 +3098,6 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(pcs_ptr);
-  //printf("setupTarget POC:%lld\n", pcs_ptr->picture_number);//anaghdin_print
   //printf("\n---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", pcs_ptr->gf_group_index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
@@ -3361,7 +3352,6 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
   // or group of frames.
   rc->vbr_bits_off_target += rc->base_frame_target - rc->projected_frame_size;
   twopass->bits_left = AOMMAX(twopass->bits_left - bits_used, 0);
-  //printf("RC_FEEDBACK POC:%lld\n", ppcs_ptr->picture_number); //anaghdin_print
   // Target vs actual bits for this arf group.
   twopass->rolling_arf_group_target_bits += rc->this_frame_target;
   twopass->rolling_arf_group_actual_bits += rc->projected_frame_size;

@@ -2314,7 +2314,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
     else
         scs_ptr->over_boundary_block_mode = scs_ptr->static_config.over_bndry_blk;
-#if FIRST_PASS_SETUP //anaghdin clean up
+#if FIRST_PASS_SETUP
     if (scs_ptr->use_output_stat_file)
         scs_ptr->over_boundary_block_mode = 0;
 #endif

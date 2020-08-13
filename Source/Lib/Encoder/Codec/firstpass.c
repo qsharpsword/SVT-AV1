@@ -28,38 +28,6 @@
 #include "EbModeDecisionConfigurationProcess.h"
 #endif
 #if TWOPASS_RC
-#if 0
-#include "config/aom_scale_rtcd.h"
-
-#include "aom_dsp/aom_dsp_common.h"
-#include "aom_dsp/variance.h"
-#include "aom_mem/aom_mem.h"
-#include "aom_ports/mem.h"
-#include "aom_ports/system_state.h"
-#include "aom_scale/aom_scale.h"
-#include "aom_scale/yv12config.h"
-
-#include "av1/common/entropymv.h"
-#include "av1/common/quant_common.h"
-#include "av1/common/reconinter.h"  // av1_setup_dst_planes()
-#include "av1/common/txb_common.h"
-#include "av1/encoder/aq_variance.h"
-#include "av1/encoder/av1_quantize.h"
-#include "av1/encoder/block.h"
-#include "av1/encoder/dwt.h"
-#include "av1/encoder/encodeframe.h"
-#include "av1/encoder/encodemb.h"
-#include "av1/encoder/encodemv.h"
-#include "av1/encoder/encoder.h"
-#include "av1/encoder/encode_strategy.h"
-#include "av1/encoder/ethread.h"
-#include "av1/encoder/extend.h"
-#include "av1/encoder/firstpass.h"
-#include "av1/encoder/mcomp.h"
-#include "av1/encoder/rd.h"
-#include "av1/encoder/reconinter_enc.h"
-#endif
-
 #define OUTPUT_FPF 0
 
 #define FIRST_PASS_Q 10.0
@@ -1223,18 +1191,12 @@ void av1_first_pass(PictureParentControlSet *pcs_ptr, const int64_t ts_duration)
                       (stats.image_data_start_row * mi_params->mb_cols * 2));
   }
 #endif
-//#if TWOPASS_STAT_BUF
-//  TWO_PASS *twopass = &scs_ptr->twopass;
-//#else
-//  TWO_PASS *twopass = &pcs_ptr->twopass;
-//#endif
   const int num_mbs = mb_rows * mb_cols;
                       /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
                           ? cpi->initial_mbs
                           : mi_params->MBs;*/
   stats.intra_factor = stats.intra_factor / (double)num_mbs;
   stats.brightness_factor = stats.brightness_factor / (double)num_mbs;
-  //FIRSTPASS_STATS *this_frame_stats = twopass->stats_buf_ctx->stats_in_end;
   update_firstpass_stats(pcs_ptr, &stats, raw_err_stdev,
                          (const int)pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
 
@@ -1293,8 +1255,6 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
         frame_is_intra_only(pcs_ptr) ? 0 : mb_rows * mb_cols;
     const double raw_err_stdev =
         raw_motion_error_stdev(raw_motion_err_list, total_raw_motion_err_count);
-   // free_firstpass_data(&cpi->firstpass_data);
-    // anaghdin check this
     // Clamp the image start to rows/2. This number of rows is discarded top
     // and bottom as dead data so rows / 2 means the frame is blank.
     if ((stats.image_data_start_row > (int)mb_rows / 2) ||
@@ -1307,21 +1267,14 @@ void first_pass_frame_end(PictureParentControlSet *pcs_ptr, const int64_t ts_dur
             AOMMAX(0, stats.intra_skip_count -
             (stats.image_data_start_row * (int)mb_cols * 2));
     }
-//#if TWOPASS_STAT_BUF
-//    TWO_PASS *twopass = &scs_ptr->twopass;
-//#else
-//    TWO_PASS *twopass = &pcs_ptr->twopass;
-//#endif
     const int num_mbs = mb_rows * mb_cols;
     /*(cpi->oxcf.resize_cfg.resize_mode != RESIZE_NONE)
         ? cpi->initial_mbs
         : mi_params->MBs;*/
     stats.intra_factor = stats.intra_factor / (double)num_mbs;
     stats.brightness_factor = stats.brightness_factor / (double)num_mbs;
-    //FIRSTPASS_STATS *this_frame_stats = twopass->stats_buf_ctx->stats_in_end;
     update_firstpass_stats(pcs_ptr, &stats, raw_err_stdev,
-        (const int)pcs_ptr->picture_number/*current_frame->frame_number*/, ts_duration);
-
+        (const int)pcs_ptr->picture_number, ts_duration);
 }
 #endif
 #if FIRST_PASS_SETUP
@@ -1353,9 +1306,7 @@ extern EbErrorType first_pass_signal_derivation_pre_analysis(SequenceControlSet 
 
     return return_error;
 }
-
 #endif
-
 #if FIRST_PASS_SETUP
 extern EbErrorType av1_intra_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                                        struct ModeDecisionCandidateBuffer *candidate_buffer_ptr,
@@ -1386,11 +1337,10 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
 #endif
                              uint64_t *y_full_distortion);
 
-extern void first_pass_loop_core(PictureControlSet *pcs_ptr, /*SuperBlock *sb_ptr, */BlkStruct *blk_ptr,
+extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
     ModeDecisionCandidate *candidate_ptr, EbPictureBufferDesc *input_picture_ptr,
-    uint32_t input_origin_index,// uint32_t input_cb_origin_in_index,
-    uint32_t blk_origin_index,// uint32_t blk_chroma_origin_index,
+    uint32_t input_origin_index, uint32_t blk_origin_index,
     uint64_t ref_fast_cost) {
     uint64_t y_full_distortion[DIST_CALC_TOTAL];
     uint32_t count_non_zero_coeffs[3][MAX_NUM_OF_TU_PER_CU];
@@ -1587,15 +1537,6 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, /*SuperBlock *sb_pt
         candidate_ptr->count_non_zero_coeffs += count_non_zero_coeffs[0][txb_itr];
 #endif
 }
-// anaghdin to move to firstpass.c and remove
-#define FIRST_PASS_Q 10.0
-#define INTRA_MODE_PENALTY 1024
-#define NEW_MV_MODE_PENALTY 32
-#define DARK_THRESH 64
-#define UL_INTRA_THRESH 50
-#define INVALID_ROW -1
-#define NCOUNT_INTRA_THRESH 8192
-#define NCOUNT_INTRA_FACTOR 3
 #define LOW_MOTION_ERROR_THRESH 25
 // Computes and returns the intra pred error of a block.
 // intra pred error: sum of squared error of the intra predicted residual.
@@ -2556,7 +2497,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 
 #if FIRST_PASS_SETUP
-
 void set_tf_controls(PictureDecisionContext *context_ptr, uint8_t tf_level);
 /******************************************************
 * Derive Multi-Processes Settings for first pass
@@ -3093,7 +3033,6 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 }
 #endif
 #if FIRST_PASS_SETUP
-
 /******************************************************
 * Derive Mode Decision Config Settings for first pass
 Input   : encoder mode and tune
@@ -3152,7 +3091,7 @@ void* set_me_hme_params_oq(
     MeContext                     *me_context_ptr,
     PictureParentControlSet       *pcs_ptr,
     SequenceControlSet            *scs_ptr,
-    EbInputResolution                 input_resolution);
+    EbInputResolution             input_resolution);
 void *set_me_hme_params_from_config(SequenceControlSet *scs_ptr, MeContext *me_context_ptr) ;
 void set_me_hme_ref_prune_ctrls(MeContext* context_ptr, uint8_t prune_level) ;
 void set_me_sr_adjustment_ctrls(MeContext* context_ptr, uint8_t sr_adjustment_level);
@@ -3189,7 +3128,7 @@ EbErrorType first_pass_signal_derivation_me_kernel(
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
 
     // HME Search Method
-    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH; //anaghdin first_pass_opt
+    context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 
     // ME Search Method
     context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;

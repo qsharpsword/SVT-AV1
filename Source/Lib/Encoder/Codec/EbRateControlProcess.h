@@ -55,20 +55,6 @@
 
 #define MAX_ARF_LAYERS 6
 
-//enum {
-//    KF_UPDATE            = 0,
-//    LF_UPDATE            = 1,
-//    GF_UPDATE            = 2,
-//    ARF_UPDATE           = 3,
-//    OVERLAY_UPDATE       = 4,
-//    BRF_UPDATE           = 5, // Backward Reference Frame
-//    LAST_BIPRED_UPDATE   = 6, // Last Bi-predictive Frame
-//    BIPRED_UPDATE        = 7, // Bi-predictive Frame, but not the last one
-//    INTNL_OVERLAY_UPDATE = 8, // Internal Overlay Frame
-//    INTNL_ARF_UPDATE     = 9, // Internal Altref Frame (candidate for ALTREF2)
-//    FRAME_UPDATE_TYPES   = 10
-//} frame_update_type;
-
 enum {
     KF_UPDATE,
     LF_UPDATE,
@@ -78,7 +64,7 @@ enum {
     INTNL_OVERLAY_UPDATE,  // Internal Overlay Frame
     INTNL_ARF_UPDATE,      // Internal Altref Frame
     FRAME_UPDATE_TYPES
-} UENUM1BYTE(FRAME_UPDATE_TYPE);//anaghdin: do we need both?
+} UENUM1BYTE(FRAME_UPDATE_TYPE);
 
 typedef enum rate_factor_level {
     INTER_NORMAL       = 0,
@@ -298,14 +284,6 @@ double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
 int av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
 int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
 double av1_get_gfu_boost_projection_factor(double min_factor, double max_factor, int frame_count);
-#if TWOPASS_MOVE_TO_PD
-struct SequenceControlSet;
-struct PictureParentControlSet;
-void set_rc_buffer_sizes(struct SequenceControlSet *scs_ptr);
-void av1_rc_init(struct SequenceControlSet *scs_ptr);
-void update_rc_counts(struct PictureParentControlSet *ppcs_ptr);
-void store_rc_info(struct PictureParentControlSet *pcs_ptr);
-#endif
 #endif
 
 EbErrorType rate_control_context_ctor(EbThreadContext *  thread_context_ptr,

@@ -785,7 +785,6 @@ void *picture_manager_kernel(void *input_ptr) {
             // Update the last decode order
             if(input_picture_demux_ptr->decode_order == decode_order)
                 decode_order++;
-           // printf("PM_FEEDBACK POC:%lld\tdecodeOrder:%lld\n", input_picture_demux_ptr->picture_number, decode_order); //anaghdin_print
 #endif
 
             //keep the release of SCS here because we still need the encodeContext structure here
