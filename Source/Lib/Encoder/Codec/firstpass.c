@@ -506,7 +506,6 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     y_coeff_bits                            = 0;
 
     candidate_ptr->full_distortion = 0;
-
     memset(candidate_ptr->eob[0], 0, sizeof(uint16_t));
     memset(candidate_ptr->eob[1], 0, sizeof(uint16_t));
     memset(candidate_ptr->eob[2], 0, sizeof(uint16_t));
@@ -569,7 +568,6 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     candidate_ptr->chroma_distortion             = 0;
 
     //CHROMA
-
     cb_full_distortion[DIST_CALC_RESIDUAL]   = 0;
     cr_full_distortion[DIST_CALC_RESIDUAL]   = 0;
     cb_full_distortion[DIST_CALC_PREDICTION] = 0;
@@ -583,6 +581,7 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
             : EB_FALSE;
 
     //ALL PLANE
+    // Omar: please check if removing this is lossless, if yes remove the call and the related ported code
     av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
                                                           context_ptr,
                                                           candidate_buffer,
@@ -747,30 +746,7 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
 // Computes and returns the inter prediction error from the last frame.
 // Computes inter prediction errors from the golden and alt ref frams and
 // Updates stats accordingly.
-// Inputs:
-//   cpi: the encoder setting. Only a few params in it will be used.
-//   last_frame: the frame buffer of the last frame.
-//   golden_frame: the frame buffer of the golden frame.
-//   alt_ref_frame: the frame buffer of the alt ref frame.
-//   mb_row: row index in the unit of first pass block size.
-//   mb_col: column index in the unit of first pass block size.
-//   recon_yoffset: the y offset of the reconstructed  frame buffer,
-//                  indicating the starting point of the current block.
-//   recont_uvoffset: the u/v offset of the reconstructed frame buffer,
-//                    indicating the starting point of the current block.
-//   src_yoffset: the y offset of the source frame buffer.
-//   alt_ref_frame_offset: the y offset of the alt ref frame buffer.
-//   fp_block_size: first pass block size.
-//   this_intra_error: the intra prediction error of this block.
-//   raw_motion_err_counts: the count of raw motion vectors.
-//   raw_motion_err_list: the array that records the raw motion error.
-//   best_ref_mv: best reference mv found so far.
-//   last_mv: last mv.
-//   stats: frame encoding stats.
-//  Modifies:
-//    raw_motion_err_list
-//    best_ref_mv
-//    last_mv
+// Modifies:
 //    stats: many member params in it.
 //  Returns:
 //    this_inter_error
@@ -848,23 +824,19 @@ static int firstpass_inter_prediction(
             &context_ptr->fast_candidate_array[cand_index];
         context_ptr->best_candidate_index_array[cand_index] = cand_index;
         // Initialize tx_depth
-        candidate_buffer->candidate_ptr->tx_depth =
-            (bsize == BLOCK_16X16 ? 2 : bsize == BLOCK_8X8 ? 1 : 0);
+        candidate_buffer->candidate_ptr->tx_depth = 0;
         candidate_buffer->candidate_ptr->fast_luma_rate   = 0;
         candidate_buffer->candidate_ptr->fast_chroma_rate = 0;
         candidate_buffer->candidate_ptr->interp_filters   = 0;
 
         first_pass_loop_core(pcs_ptr,
-                             //context_ptr->sb_ptr,
                              blk_ptr,
                              context_ptr,
                              candidate_buffer,
                              candidate_ptr,
                              input_picture_ptr,
                              input_origin_index,
-                             //input_cb_origin_in_index,
                              blk_origin_index,
-                             //blk_chroma_origin_index,
                              ref_fast_cost);
 
         // anaghdin to check the above logic
@@ -897,12 +869,6 @@ static int firstpass_inter_prediction(
 
         // Motion search in 2nd reference frame.
         int gf_motion_error = motion_error;
-        //    // Assume 0,0 motion with no mv overhead.
-        //    gf_motion_error =
-        //        get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
-        //            &x->plane[0].src, &xd->plane[0].pre[0]);
-        //    first_pass_motion_search(cpi, x, &kZeroMv, &tmp_mv, &gf_motion_error);
-        //}
         if (fast_candidate_total_count > 2) {
             cand_index++;
             candidate_buffer = candidate_buffer_ptr_array[cand_index];
@@ -910,24 +876,26 @@ static int firstpass_inter_prediction(
                 &context_ptr->fast_candidate_array[cand_index];
             context_ptr->best_candidate_index_array[cand_index] = cand_index;
             // Initialize tx_depth
-            candidate_buffer->candidate_ptr->tx_depth =
-                (bsize == BLOCK_16X16 ? 2 : bsize == BLOCK_8X8 ? 1 : 0);
+            candidate_buffer->candidate_ptr->tx_depth = 0;
+               // (bsize == BLOCK_16X16 ? 2 : bsize == BLOCK_8X8 ? 1 : 0);
             candidate_buffer->candidate_ptr->fast_luma_rate   = 0;
             candidate_buffer->candidate_ptr->fast_chroma_rate = 0;
             candidate_buffer->candidate_ptr->interp_filters   = 0;
             // anaghdin: no need to do everything, we just need the prediction
-            first_pass_loop_core(pcs_ptr,
-                                 //context_ptr->sb_ptr,
-                                 blk_ptr,
-                                 context_ptr,
-                                 candidate_buffer,
-                                 candidate_ptr,
-                                 input_picture_ptr,
-                                 input_origin_index,
-                                 //input_cb_origin_in_index,
-                                 blk_origin_index,
-                                 //blk_chroma_origin_index,
-                                 ref_fast_cost);
+            //first_pass_loop_core(pcs_ptr,
+            //                     //context_ptr->sb_ptr,
+            //                     blk_ptr,
+            //                     context_ptr,
+            //                     candidate_buffer,
+            //                     candidate_ptr,
+            //                     input_picture_ptr,
+            //                     input_origin_index,
+            //                     //input_cb_origin_in_index,
+            //                     blk_origin_index,
+            //                     //blk_chroma_origin_index,
+            //                     ref_fast_cost);
+            product_prediction_fun_table[candidate_ptr->type](
+                context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
             gf_motion_error =
                 (uint32_t)(spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
@@ -1109,9 +1077,7 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
     uint32_t blk_origin_index);
 void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                          EbPictureBufferDesc *input_picture_ptr, uint32_t blk_origin_index);
-void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
-                             EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
-                             uint32_t blk_origin_index);
+
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
                                      PictureControlSet *pcs_ptr);
@@ -1205,12 +1171,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
     // Perform md reference pruning
     perform_md_reference_pruning(pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);
 #endif
-    // Perform ME search around the best MVP
-    if (context_ptr->predictive_me_level)
-        predictive_me_search(
-            pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);
-    //for every CU, perform Luma DC/V/H/S intra prediction to be used later in inter-intra search
-
     context_ptr->inject_inter_candidates = 1; // anaghdin add signal_derivation_block
     // anaghdin create a new one
     generate_md_stage_0_cand(
@@ -1239,9 +1199,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
                                                       candidate_ptr,
                                                       input_picture_ptr,
                                                       input_origin_index,
-                                                      //input_cb_origin_in_index,
                                                       blk_origin_index,
-                                                      //blk_chroma_origin_index,
                                                       ref_fast_cost,
                                                       mb_stats);
 
@@ -1257,9 +1215,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
                                                       candidate_ptr,
                                                       input_picture_ptr,
                                                       input_origin_index,
-                                                      //input_cb_origin_in_index,
                                                       blk_origin_index,
-                                                      //blk_chroma_origin_index,
                                                       ref_fast_cost,
                                                       fast_candidate_total_count,
                                                       this_intra_error,
@@ -1304,7 +1260,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
         context_ptr,
         blk_ptr,
         candidate_buffer_ptr_array,
-        1, //fast_candidate_total_count,//context_ptr->md_stage_3_total_count,
+        1,
 #if M8_CLEAN_UP
         context_ptr->best_candidate_index_array,
 #else
