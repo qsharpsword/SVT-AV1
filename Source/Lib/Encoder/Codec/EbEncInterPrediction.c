@@ -5013,12 +5013,12 @@ EbErrorType av1_inter_prediction(
                 intra_stride = intra_pred_desc.stride_y;
 
                 if (pu_origin_y != 0)
-                    eb_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            luma_recon_neighbor_array->top_array + ((uint64_t)pu_origin_x << is16bit),
                            blk_geom->bwidth * 2 << is16bit);
 
                 if (pu_origin_x != 0)
-                    eb_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            luma_recon_neighbor_array->left_array + ((uint64_t)pu_origin_y << is16bit),
                            blk_geom->bheight * 2 << is16bit);
 
@@ -5038,12 +5038,12 @@ EbErrorType av1_inter_prediction(
                 intra_stride = intra_pred_desc.stride_cb;
 
                 if (blk_originy_uv != 0)
-                    eb_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            cb_recon_neighbor_array->top_array + ((uint64_t)blk_originx_uv << is16bit),
                            blk_geom->bwidth_uv * 2 << is16bit);
 
                 if (blk_originx_uv != 0)
-                    eb_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            cb_recon_neighbor_array->left_array + ((uint64_t)blk_originy_uv << is16bit),
                            blk_geom->bheight_uv * 2 << is16bit);
 
@@ -5061,12 +5061,12 @@ EbErrorType av1_inter_prediction(
                 intra_stride = intra_pred_desc.stride_cr;
 
                 if (blk_originy_uv != 0)
-                    eb_memcpy(topNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(topNeighArray + ((uint64_t)1 << is16bit),
                            cr_recon_neighbor_array->top_array + ((uint64_t)blk_originx_uv << is16bit),
                            blk_geom->bwidth_uv * 2 << is16bit);
 
                 if (blk_originx_uv != 0)
-                    eb_memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
+                    memcpy(leftNeighArray + ((uint64_t)1 << is16bit),
                            cr_recon_neighbor_array->left_array + ((uint64_t)blk_originy_uv << is16bit),
                            blk_geom->bheight_uv * 2 << is16bit);
 
@@ -5955,12 +5955,12 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                 intra_stride = intra_pred_desc.stride_y;
 
                 if (pu_origin_y != 0)
-                    eb_memcpy(topNeighArray + 1,
+                    memcpy(topNeighArray + 1,
                     (uint16_t *)luma_recon_neighbor_array->top_array + pu_origin_x,
                         blk_geom->bwidth * 2 * sizeof(uint16_t));
 
                 if (pu_origin_x != 0)
-                    eb_memcpy(leftNeighArray + 1,
+                    memcpy(leftNeighArray + 1,
                     (uint16_t *)luma_recon_neighbor_array->left_array + pu_origin_y,
                         blk_geom->bheight * 2 * sizeof(uint16_t));
 
@@ -5980,12 +5980,12 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                 intra_stride = intra_pred_desc.stride_cb;
 
                 if (blk_originy_uv != 0)
-                    eb_memcpy(topNeighArray + 1,
+                    memcpy(topNeighArray + 1,
                     (uint16_t *)cb_recon_neighbor_array->top_array + blk_originx_uv,
                         blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
 
                 if (blk_originx_uv != 0)
-                    eb_memcpy(leftNeighArray + 1,
+                    memcpy(leftNeighArray + 1,
                     (uint16_t *)cb_recon_neighbor_array->left_array + blk_originy_uv,
                         blk_geom->bheight_uv * 2 * sizeof(uint16_t));
 
@@ -6004,12 +6004,12 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
                 intra_stride = intra_pred_desc.stride_cr;
 
                 if (blk_originy_uv != 0)
-                    eb_memcpy(topNeighArray + 1,
+                    memcpy(topNeighArray + 1,
                     (uint16_t *)cr_recon_neighbor_array->top_array + blk_originx_uv,
                         blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
 
                 if (blk_originx_uv != 0)
-                    eb_memcpy(leftNeighArray + 1,
+                    memcpy(leftNeighArray + 1,
                     (uint16_t *)cr_recon_neighbor_array->left_array + blk_originy_uv,
                         blk_geom->bheight_uv * 2 * sizeof(uint16_t));
 

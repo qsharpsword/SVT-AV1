@@ -225,7 +225,7 @@ void eb_aom_upsampled_pred_c(MacroBlockD *                 xd,
     assert(filter!=NULL);
     if (!subpel_x_q3 && !subpel_y_q3) {
         for (int i = 0; i < height; i++) {
-            eb_memcpy(comp_pred, ref, width * sizeof(*comp_pred));
+            memcpy(comp_pred, ref, width * sizeof(*comp_pred));
             comp_pred += width;
             ref += ref_stride;
         }

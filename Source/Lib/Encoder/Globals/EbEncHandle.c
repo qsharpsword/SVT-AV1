@@ -3616,7 +3616,7 @@ static EbErrorType copy_frame_buffer(
         src = input_ptr->luma;
         dst = input_picture_ptr->buffer_y + luma_buffer_offset;
         for (unsigned i = 0; i < luma_height; i++) {
-            eb_memcpy(dst, src, source_luma_stride);
+            memcpy(dst, src, source_luma_stride);
             src += source_luma_stride;
             dst += luma_stride;
         }
@@ -3624,7 +3624,7 @@ static EbErrorType copy_frame_buffer(
         src = input_ptr->cb;
         dst = input_picture_ptr->buffer_cb + chroma_buffer_offset;
         for (unsigned i = 0; i < source_chroma_height; i++) {
-            eb_memcpy(dst, src, source_cb_stride);
+            memcpy(dst, src, source_cb_stride);
             src += source_cb_stride;
             dst += chroma_stride;
         }
@@ -3632,7 +3632,7 @@ static EbErrorType copy_frame_buffer(
         src = input_ptr->cr;
         dst = input_picture_ptr->buffer_cr + chroma_buffer_offset;
         for (unsigned i = 0; i < source_chroma_height; i++) {
-            eb_memcpy(dst, src, source_cr_stride);
+            memcpy(dst, src, source_cr_stride);
             src += source_cr_stride;
             dst += chroma_stride;
         }
@@ -3656,7 +3656,7 @@ static EbErrorType copy_frame_buffer(
             src = input_ptr->luma;
             dst = input_picture_ptr->buffer_y + luma_buffer_offset;
             for (unsigned i = 0; i < luma_height; i++) {
-                eb_memcpy(dst, src, source_luma_stride);
+                memcpy(dst, src, source_luma_stride);
                 src += source_luma_stride;
                 dst += luma_stride;
             }
@@ -3664,7 +3664,7 @@ static EbErrorType copy_frame_buffer(
             src = input_ptr->cb;
             dst = input_picture_ptr->buffer_cb + chroma_buffer_offset;
             for (unsigned i = 0; i < source_chroma_height; i++) {
-                eb_memcpy(dst, src, source_cb_stride);
+                memcpy(dst, src, source_cb_stride);
                 src += source_cb_stride;
                 dst += chroma_stride;
             }
@@ -3672,7 +3672,7 @@ static EbErrorType copy_frame_buffer(
             src = input_ptr->cr;
             dst = input_picture_ptr->buffer_cr + chroma_buffer_offset;
             for (unsigned i = 0; i < source_chroma_height; i++) {
-                eb_memcpy(dst, src, source_cr_stride);
+                memcpy(dst, src, source_cr_stride);
                 src += source_cr_stride;
                 dst += chroma_stride;
             }
@@ -3686,13 +3686,13 @@ static EbErrorType copy_frame_buffer(
                 uint16_t source_chroma_2bit_stride = source_luma_2bit_stride >> 1;
 
                 for (input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-                    eb_memcpy(input_picture_ptr->buffer_bit_inc_y + luma_2bit_width * input_row_index, input_ptr->luma_ext + source_luma_2bit_stride * input_row_index, luma_2bit_width);
+                    memcpy(input_picture_ptr->buffer_bit_inc_y + luma_2bit_width * input_row_index, input_ptr->luma_ext + source_luma_2bit_stride * input_row_index, luma_2bit_width);
                 }
                 for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                    eb_memcpy(input_picture_ptr->buffer_bit_inc_cb + (luma_2bit_width >> 1)*input_row_index, input_ptr->cb_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
+                    memcpy(input_picture_ptr->buffer_bit_inc_cb + (luma_2bit_width >> 1)*input_row_index, input_ptr->cb_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
                 }
                 for (input_row_index = 0; input_row_index < luma_height >> 1; input_row_index++) {
-                    eb_memcpy(input_picture_ptr->buffer_bit_inc_cr + (luma_2bit_width >> 1)*input_row_index, input_ptr->cr_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
+                    memcpy(input_picture_ptr->buffer_bit_inc_cr + (luma_2bit_width >> 1)*input_row_index, input_ptr->cr_ext + source_chroma_2bit_stride * input_row_index, luma_2bit_width >> 1);
                 }
             }
         }
@@ -3805,7 +3805,7 @@ static void copy_output_recon_buffer(
     dst->flags = src->flags;
     dst->pic_type = src->pic_type;
     if (src->p_buffer)
-        eb_memcpy(dst->p_buffer, src->p_buffer, src->n_filled_len);
+        memcpy(dst->p_buffer, src->p_buffer, src->n_filled_len);
 
     return;
 }

@@ -755,7 +755,7 @@ void *packetization_kernel(void *input_ptr) {
         update_rc_rate_tables(pcs_ptr, scs_ptr);
         queue_entry_ptr->frame_type = frm_hdr->frame_type;
         queue_entry_ptr->poc        = pcs_ptr->picture_number;
-        eb_memcpy(&queue_entry_ptr->av1_ref_signal,
+        memcpy(&queue_entry_ptr->av1_ref_signal,
                &pcs_ptr->parent_pcs_ptr->av1_ref_signal,
                sizeof(Av1RpsNode));
 
@@ -763,7 +763,7 @@ void *packetization_kernel(void *input_ptr) {
 #if DETAILED_FRAME_OUTPUT
         queue_entry_ptr->ref_poc_list0 = pcs_ptr->parent_pcs_ptr->ref_pic_poc_array[REF_LIST_0][0];
         queue_entry_ptr->ref_poc_list1 = pcs_ptr->parent_pcs_ptr->ref_pic_poc_array[REF_LIST_1][0];
-        eb_memcpy(queue_entry_ptr->ref_poc_array,
+        memcpy(queue_entry_ptr->ref_poc_array,
                pcs_ptr->parent_pcs_ptr->av1_ref_signal.ref_poc_array,
                7 * sizeof(uint64_t));
 #endif

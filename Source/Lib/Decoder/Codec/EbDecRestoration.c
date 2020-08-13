@@ -62,11 +62,11 @@ void lr_generate_padding(
     for (vertical_idx = LR_PAD_SIDE; vertical_idx > 0; --vertical_idx) {
         // top part data copy
         temp_src_pic2 -= src_stride;
-        eb_memcpy(
+        memcpy(
             temp_src_pic2, temp_src_pic0, sizeof(uint8_t) * (original_src_width + LR_PAD_MAX));
         // bottom part data copy
         temp_src_pic3 += src_stride;
-        eb_memcpy(
+        memcpy(
            temp_src_pic3, temp_src_pic1, sizeof(uint8_t) * (original_src_width + LR_PAD_MAX));
     }
     return;
@@ -107,12 +107,12 @@ void lr_generate_padding16_bit(
     for (vertical_idx = LR_PAD_SIDE; vertical_idx > 0; --vertical_idx) {
         // top part data copy
         temp_src_pic2 -= src_stride;
-        eb_memcpy(temp_src_pic2,
+        memcpy(temp_src_pic2,
                  temp_src_pic0,
                   sizeof(uint8_t) * (original_src_width + (LR_PAD_MAX << use_highbd)));
         // bottom part data copy
         temp_src_pic3 += src_stride;
-        eb_memcpy(temp_src_pic3,
+        memcpy(temp_src_pic3,
                  temp_src_pic1,
                   sizeof(uint8_t) * (original_src_width + (LR_PAD_MAX << use_highbd)));
     }
@@ -404,7 +404,7 @@ void dec_av1_loop_restoration_filter_row(EbDecHandle *dec_handle, int32_t sb_row
             {
                 /* save cdef_data of current block to temp
                 _buf before LR processing */
-                eb_memcpy(bdry_cdef_ptr, src_ptr, width);
+                memcpy(bdry_cdef_ptr, src_ptr, width);
                 src_ptr += stride;
                 bdry_cdef_ptr += width;
             }
@@ -426,7 +426,7 @@ void dec_av1_loop_restoration_filter_row(EbDecHandle *dec_handle, int32_t sb_row
             // restore LR_data of previous block
             if (col)
                 for (int proc = 0; proc < height; proc++) {
-                    eb_memcpy(src_ptr, bdry_lr_ptr, width);
+                    memcpy(src_ptr, bdry_lr_ptr, width);
                     src_ptr += stride;
                     bdry_lr_ptr += width;
                 }
@@ -434,9 +434,9 @@ void dec_av1_loop_restoration_filter_row(EbDecHandle *dec_handle, int32_t sb_row
             if ((col + block_w) < plane_tile_w)
                 for (int proc = 0; proc < height; proc++) {
                     // save lr_data of current block to temp_buf
-                    eb_memcpy(bdry_lr, src_proc, width);
+                    memcpy(bdry_lr, src_proc, width);
                     // save cdef_data of current block to src
-                    eb_memcpy(src_proc, bdry_cdef, width);
+                    memcpy(src_proc, bdry_cdef, width);
 
                     src_proc += stride;
                     bdry_cdef += width;

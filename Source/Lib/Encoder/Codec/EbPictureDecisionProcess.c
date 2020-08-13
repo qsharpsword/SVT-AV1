@@ -5437,7 +5437,7 @@ void perform_simple_picture_analysis_for_overlay(PictureParentControlSet     *pc
         uint8_t *in = input_picture_ptr->buffer_y + input_picture_ptr->origin_x +
                       input_picture_ptr->origin_y * input_picture_ptr->stride_y;
         for (uint32_t row = 0; row < input_picture_ptr->height; row++)
-            eb_memcpy(pa + row * input_padded_picture_ptr->stride_y, in + row * input_picture_ptr->stride_y, sizeof(uint8_t) * input_picture_ptr->width);
+            memcpy(pa + row * input_padded_picture_ptr->stride_y, in + row * input_picture_ptr->stride_y, sizeof(uint8_t) * input_picture_ptr->width);
     }
 
     // Pad input picture to complete border SBs

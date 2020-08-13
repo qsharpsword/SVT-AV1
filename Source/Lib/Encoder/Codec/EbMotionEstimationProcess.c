@@ -2029,7 +2029,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                         context_ptr->me_context_ptr->hme_search_type = HME_RECTANGULAR;
 #endif
                         for (sb_row = 0; sb_row < BLOCK_SIZE_64; sb_row++) {
-                            eb_memcpy(
+                            memcpy(
                                 (&(context_ptr->me_context_ptr->sb_buffer[sb_row * BLOCK_SIZE_64])),
                                 (&(input_picture_ptr
                                        ->buffer_y[buffer_index +
@@ -2068,7 +2068,7 @@ void *motion_estimation_kernel(void *input_ptr) {
 #else
                             for (sb_row = 0; sb_row < (sb_height >> 1); sb_row++) {
 #endif
-                                eb_memcpy(
+                                memcpy(
                                     (&(context_ptr->me_context_ptr
                                            ->quarter_sb_buffer[sb_row *
                                                                context_ptr->me_context_ptr
@@ -2097,7 +2097,7 @@ void *motion_estimation_kernel(void *input_ptr) {
 #else
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 1) {
 #endif
-                                        eb_memcpy(local_ptr,
+                                        memcpy(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
                                         local_ptr += 16;
@@ -2113,7 +2113,7 @@ void *motion_estimation_kernel(void *input_ptr) {
 #else
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
 #endif
-                                        eb_memcpy(local_ptr,
+                                        memcpy(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
                                         local_ptr += 16;

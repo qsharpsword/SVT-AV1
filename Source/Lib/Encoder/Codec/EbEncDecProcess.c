@@ -1787,7 +1787,7 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
             ->frame_type = pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type;
         ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
             ->order_hint = pcs_ptr->parent_pcs_ptr->cur_order_hint;
-        eb_memcpy(((EbReferenceObject *)
+        memcpy(((EbReferenceObject *)
                     pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                    ->ref_order_hint,
                pcs_ptr->parent_pcs_ptr->ref_order_hint,
@@ -10945,13 +10945,13 @@ void *enc_dec_kernel(void *input_ptr) {
                     ((EbReferenceObject *)
                          pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                         ->global_motion[frame] = pcs_ptr->parent_pcs_ptr->global_motion[frame];
-            eb_memcpy(pcs_ptr->parent_pcs_ptr->av1x->sgrproj_restore_cost,
+            memcpy(pcs_ptr->parent_pcs_ptr->av1x->sgrproj_restore_cost,
                       context_ptr->md_rate_estimation_ptr->sgrproj_restore_fac_bits,
                       2 * sizeof(int32_t));
-            eb_memcpy(pcs_ptr->parent_pcs_ptr->av1x->switchable_restore_cost,
+            memcpy(pcs_ptr->parent_pcs_ptr->av1x->switchable_restore_cost,
                       context_ptr->md_rate_estimation_ptr->switchable_restore_fac_bits,
                       3 * sizeof(int32_t));
-            eb_memcpy(pcs_ptr->parent_pcs_ptr->av1x->wiener_restore_cost,
+            memcpy(pcs_ptr->parent_pcs_ptr->av1x->wiener_restore_cost,
                       context_ptr->md_rate_estimation_ptr->wiener_restore_fac_bits,
                       2 * sizeof(int32_t));
 #if QP2QINDEX

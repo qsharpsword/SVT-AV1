@@ -596,7 +596,7 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
                 src_pred_ptr = pred_samples->buffer_cb + pred_cb_offset;
                 dst_pred_ptr = &(candidate_buffer->prediction_ptr->buffer_cb[scratch_cb_offset]);
                 for (int i = 0; i < context_ptr->blk_geom->bheight_uv; i++) {
-                    eb_memcpy(dst_pred_ptr, src_pred_ptr, context_ptr->blk_geom->bwidth_uv);
+                    memcpy(dst_pred_ptr, src_pred_ptr, context_ptr->blk_geom->bwidth_uv);
                     src_pred_ptr += pred_samples->stride_cb;
                     dst_pred_ptr += candidate_buffer->prediction_ptr->stride_cb;
                 }
@@ -605,7 +605,7 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
                 src_pred_ptr = pred_samples->buffer_cr + pred_cr_offset;
                 dst_pred_ptr = &(candidate_buffer->prediction_ptr->buffer_cr[scratch_cr_offset]);
                 for (int i = 0; i < context_ptr->blk_geom->bheight_uv; i++) {
-                    eb_memcpy(dst_pred_ptr, src_pred_ptr, context_ptr->blk_geom->bwidth_uv);
+                    memcpy(dst_pred_ptr, src_pred_ptr, context_ptr->blk_geom->bwidth_uv);
                     src_pred_ptr += pred_samples->stride_cr;
                     dst_pred_ptr += candidate_buffer->prediction_ptr->stride_cr;
                 }
@@ -1554,7 +1554,7 @@ void store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer, Picture
              (sb_y + pcs_ptr->input_frame16bit->origin_y) * pcs_ptr->input_frame16bit->stride_y;
 
     for (row_it = 0; row_it < sb_h; row_it++)
-        eb_memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_y,
+        memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_y,
                from_ptr + row_it * input_sample16bit_buffer->stride_y,
                sb_w * 2);
 
@@ -1570,7 +1570,7 @@ void store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer, Picture
         (sb_y + pcs_ptr->input_frame16bit->origin_y / 2) * pcs_ptr->input_frame16bit->stride_cb;
 
     for (row_it = 0; row_it < sb_h; row_it++)
-        eb_memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_cb,
+        memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_cb,
                from_ptr + row_it * input_sample16bit_buffer->stride_cb,
                sb_w * 2);
 
@@ -1581,7 +1581,7 @@ void store16bit_input_src(EbPictureBufferDesc *input_sample16bit_buffer, Picture
         (sb_y + pcs_ptr->input_frame16bit->origin_y / 2) * pcs_ptr->input_frame16bit->stride_cb;
 
     for (row_it = 0; row_it < sb_h; row_it++)
-        eb_memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_cr,
+        memcpy(to_ptr + row_it * pcs_ptr->input_frame16bit->stride_cr,
                from_ptr + row_it * input_sample16bit_buffer->stride_cr,
                sb_w * 2);
 }
@@ -1672,12 +1672,12 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             TxSize tx_size = context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr];
 
             if (txb_origin_y != 0)
-                eb_memcpy(top_neigh_array + 1,
+                memcpy(top_neigh_array + 1,
                        (uint16_t *)(ep_luma_recon_neighbor_array->top_array) + txb_origin_x,
                        context_ptr->blk_geom->tx_width[blk_ptr->tx_depth][context_ptr->txb_itr] *
                            2 * sizeof(uint16_t));
             if (txb_origin_x != 0)
-                eb_memcpy(left_neigh_array + 1,
+                memcpy(left_neigh_array + 1,
                        (uint16_t *)(ep_luma_recon_neighbor_array->left_array) + txb_origin_y,
                        context_ptr->blk_geom->tx_height[blk_ptr->tx_depth][context_ptr->txb_itr] *
                            2 * sizeof(uint16_t));
@@ -1729,13 +1729,13 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             TxSize tx_size = context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr];
 
             if (txb_origin_y != 0)
-                eb_memcpy(
+                memcpy(
                     top_neigh_array + 1,
                     ep_luma_recon_neighbor_array->top_array + txb_origin_x,
                     context_ptr->blk_geom->tx_width[blk_ptr->tx_depth][context_ptr->txb_itr] * 2);
 
             if (txb_origin_x != 0)
-                eb_memcpy(
+                memcpy(
                     left_neigh_array + 1,
                     ep_luma_recon_neighbor_array->left_array + txb_origin_y,
                     context_ptr->blk_geom->tx_height[blk_ptr->tx_depth][context_ptr->txb_itr] * 2);
@@ -1957,11 +1957,11 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 
                 if (plane == 1) {
                     if (blk_originy_uv != 0)
-                        eb_memcpy(top_neigh_array + 1,
+                        memcpy(top_neigh_array + 1,
                                (uint16_t *)(ep_cb_recon_neighbor_array->top_array) + blk_originx_uv,
                                context_ptr->blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
                     if (blk_originx_uv != 0)
-                        eb_memcpy(left_neigh_array + 1,
+                        memcpy(left_neigh_array + 1,
                                (uint16_t *)(ep_cb_recon_neighbor_array->left_array) + blk_originy_uv,
                                context_ptr->blk_geom->bheight_uv * 2 * sizeof(uint16_t));
                     if (blk_originy_uv != 0 && blk_originx_uv != 0)
@@ -1970,11 +1970,11 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                              MAX_PICTURE_HEIGHT_SIZE / 2 + blk_originx_uv - blk_originy_uv)[0];
                 } else if (plane == 2) {
                     if (blk_originy_uv != 0)
-                        eb_memcpy(top_neigh_array + 1,
+                        memcpy(top_neigh_array + 1,
                                (uint16_t *)(ep_cr_recon_neighbor_array->top_array) + blk_originx_uv,
                                context_ptr->blk_geom->bwidth_uv * 2 * sizeof(uint16_t));
                     if (blk_originx_uv != 0)
-                        eb_memcpy(left_neigh_array + 1,
+                        memcpy(left_neigh_array + 1,
                                (uint16_t *)(ep_cr_recon_neighbor_array->left_array) + blk_originy_uv,
                                context_ptr->blk_geom->bheight_uv * 2 * sizeof(uint16_t));
                     if (blk_originy_uv != 0 && blk_originx_uv != 0)
@@ -2041,12 +2041,12 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 
                 if (plane == 1) {
                     if (blk_originy_uv != 0)
-                        eb_memcpy(top_neigh_array + 1,
+                        memcpy(top_neigh_array + 1,
                                ep_cb_recon_neighbor_array->top_array + blk_originx_uv,
                                context_ptr->blk_geom->bwidth_uv * 2);
 
                     if (blk_originx_uv != 0)
-                        eb_memcpy(left_neigh_array + 1,
+                        memcpy(left_neigh_array + 1,
                                ep_cb_recon_neighbor_array->left_array + blk_originy_uv,
                                context_ptr->blk_geom->bheight_uv * 2);
 
@@ -2057,12 +2057,12 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                                                  blk_originy_uv];
                 } else {
                     if (blk_originy_uv != 0)
-                        eb_memcpy(top_neigh_array + 1,
+                        memcpy(top_neigh_array + 1,
                                ep_cr_recon_neighbor_array->top_array + blk_originx_uv,
                                context_ptr->blk_geom->bwidth_uv * 2);
 
                     if (blk_originx_uv != 0)
-                        eb_memcpy(left_neigh_array + 1,
+                        memcpy(left_neigh_array + 1,
                                ep_cr_recon_neighbor_array->left_array + blk_originy_uv,
                                context_ptr->blk_geom->bheight_uv * 2);
 
@@ -2806,7 +2806,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 blk_ptr->predmv[0] = dv_ref;
 
                                 //keep final usefull mvp for entropy
-                                eb_memcpy(blk_ptr->av1xd->final_ref_mv_stack,
+                                memcpy(blk_ptr->av1xd->final_ref_mv_stack,
 #if MEM_OPT_MV_STACK
                                     context_ptr->md_context
                                     ->ed_ref_mv_stack[blk_ptr->prediction_unit_array[0]
@@ -3236,7 +3236,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                     //out2:   blk_ptr->inter_mode_ctx[ blk_ptr->prediction_unit_array[0].ref_frame_type ]
 
                     //keep final usefull mvp for entropy
-                    eb_memcpy(blk_ptr->av1xd->final_ref_mv_stack,
+                    memcpy(blk_ptr->av1xd->final_ref_mv_stack,
 #if MEM_OPT_MV_STACK
                             context_ptr->md_context
                             ->ed_ref_mv_stack[blk_ptr->prediction_unit_array[0].ref_frame_type],
@@ -4558,7 +4558,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                     uint32_t j;
                     for (j = 0; j < bheight; j++)
-                        eb_memcpy(
+                        memcpy(
                             dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
                     if (context_ptr->blk_geom->has_uv) {
                         // Cb
@@ -4572,7 +4572,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                          ->buffer_cb)[context_ptr->coded_area_sb_uv]);
 
                         for (j = 0; j < bheight; j++)
-                            eb_memcpy(dst_ptr + j * bwidth,
+                            memcpy(dst_ptr + j * bwidth,
                                    src_ptr + j * bwidth,
                                    bwidth * sizeof(int32_t));
                         //Cr
@@ -4583,7 +4583,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                          ->buffer_cr)[context_ptr->coded_area_sb_uv]);
 
                         for (j = 0; j < bheight; j++)
-                            eb_memcpy(dst_ptr + j * bwidth,
+                            memcpy(dst_ptr + j * bwidth,
                                    src_ptr + j * bwidth,
                                    bwidth * sizeof(int32_t));
                     }
@@ -4627,7 +4627,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                     uint32_t j;
                     for (j = 0; j < bheight; j++)
-                        eb_memcpy(dst_ptr + j * ref_pic->stride_y,
+                        memcpy(dst_ptr + j * ref_pic->stride_y,
                                src_ptr + j * 128,
                                bwidth * sizeof(uint8_t));
                     if (context_ptr->blk_geom->has_uv) {
@@ -4643,7 +4643,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 ref_pic->stride_cb;
 
                         for (j = 0; j < bheight; j++)
-                            eb_memcpy(dst_ptr + j * ref_pic->stride_cb,
+                            memcpy(dst_ptr + j * ref_pic->stride_cb,
                                    src_ptr + j * 64,
                                    bwidth * sizeof(uint8_t));
                         src_ptr = &(((uint8_t *)context_ptr->blk_ptr->recon_tmp->buffer_cr)[0]);
@@ -4655,7 +4655,7 @@ EB_EXTERN void no_enc_dec_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                                 ref_pic->stride_cr;
 
                         for (j = 0; j < bheight; j++)
-                            eb_memcpy(dst_ptr + j * ref_pic->stride_cr,
+                            memcpy(dst_ptr + j * ref_pic->stride_cr,
                                    src_ptr + j * 64,
                                    bwidth * sizeof(uint8_t));
                     }

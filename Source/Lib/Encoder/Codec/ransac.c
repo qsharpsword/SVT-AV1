@@ -477,14 +477,9 @@ static int ransac(const int *matched_points, int npoints, int *num_inliers_by_mo
                 // will be recomputed later using only the inliers.
                 worst_kept_motion->num_inliers = current_motion.num_inliers;
                 worst_kept_motion->variance    = current_motion.variance;
-                if (eb_memcpy != NULL)
-                    eb_memcpy(worst_kept_motion->inlier_indices,
-                        current_motion.inlier_indices,
-                        sizeof(*current_motion.inlier_indices) * npoints);
-                else
-                    eb_memcpy_c(worst_kept_motion->inlier_indices,
-                        current_motion.inlier_indices,
-                        sizeof(*current_motion.inlier_indices) * npoints);
+                memcpy(worst_kept_motion->inlier_indices,
+                    current_motion.inlier_indices,
+                    sizeof(*current_motion.inlier_indices) * npoints);
                 assert(npoints > 0);
                 // Determine the new worst kept motion and its num_inliers and variance.
                 for (int i = 0; i < num_desired_motions; ++i) {
@@ -512,14 +507,9 @@ static int ransac(const int *matched_points, int npoints, int *num_inliers_by_mo
                 motions[i].num_inliers, points1, points2, params_by_motion[i].params);
 
             params_by_motion[i].num_inliers = motions[i].num_inliers;
-            if (eb_memcpy != NULL)
-                eb_memcpy(params_by_motion[i].inliers,
-                    motions[i].inlier_indices,
-                    sizeof(*motions[i].inlier_indices) * npoints);
-            else
-                eb_memcpy_c(params_by_motion[i].inliers,
-                    motions[i].inlier_indices,
-                    sizeof(*motions[i].inlier_indices) * npoints);
+            memcpy(params_by_motion[i].inliers,
+                motions[i].inlier_indices,
+                sizeof(*motions[i].inlier_indices) * npoints);
         }
         num_inliers_by_motion[i] = motions[i].num_inliers;
     }
@@ -664,14 +654,9 @@ static int ransac_double_prec(const double *matched_points, int npoints, int *nu
                 // will be recomputed later using only the inliers.
                 worst_kept_motion->num_inliers = current_motion.num_inliers;
                 worst_kept_motion->variance    = current_motion.variance;
-                if (eb_memcpy != NULL)
-                    eb_memcpy(worst_kept_motion->inlier_indices,
-                        current_motion.inlier_indices,
-                        sizeof(*current_motion.inlier_indices) * npoints);
-                else
-                    eb_memcpy_c(worst_kept_motion->inlier_indices,
-                        current_motion.inlier_indices,
-                        sizeof(*current_motion.inlier_indices) * npoints);
+                memcpy(worst_kept_motion->inlier_indices,
+                    current_motion.inlier_indices,
+                    sizeof(*current_motion.inlier_indices) * npoints);
                 assert(npoints > 0);
                 // Determine the new worst kept motion and its num_inliers and variance.
                 for (int i = 0; i < num_desired_motions; ++i) {
@@ -697,14 +682,10 @@ static int ransac_double_prec(const double *matched_points, int npoints, int *nu
 
             find_transformation(
                 motions[i].num_inliers, points1, points2, params_by_motion[i].params);
-            if (eb_memcpy != NULL)
-                eb_memcpy(params_by_motion[i].inliers,
-                       motions[i].inlier_indices,
-                       sizeof(*motions[i].inlier_indices) * npoints);
-            else
-                eb_memcpy_c(params_by_motion[i].inliers,
-                    motions[i].inlier_indices,
-                    sizeof(*motions[i].inlier_indices) * npoints);
+
+             memcpy(params_by_motion[i].inliers,
+                 motions[i].inlier_indices,
+                   sizeof(*motions[i].inlier_indices) * npoints);
         }
         num_inliers_by_motion[i] = motions[i].num_inliers;
     }

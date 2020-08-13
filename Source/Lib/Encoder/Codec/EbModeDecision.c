@@ -6258,8 +6258,8 @@ void  inject_palette_candidates(
 #if MEM_OPT_PALETTE
         cand_array[can_total_cnt].palette_info = &palette_cand_array[cand_i];
 #else
-        eb_memcpy(cand_array[can_total_cnt].palette_info.color_idx_map, palette_cand_array[cand_i].color_idx_map, 64 * 64);
-        eb_memcpy(&cand_array[can_total_cnt].palette_info.pmi, &palette_cand_array[cand_i].pmi, sizeof(PaletteModeInfo));
+        memcpy(cand_array[can_total_cnt].palette_info.color_idx_map, palette_cand_array[cand_i].color_idx_map, 64 * 64);
+        memcpy(&cand_array[can_total_cnt].palette_info.pmi, &palette_cand_array[cand_i].pmi, sizeof(PaletteModeInfo));
 #endif
         assert(palette_cand_array[cand_i].pmi.palette_size[0] < 9);
         //to re check these fields
@@ -6766,7 +6766,7 @@ uint32_t product_full_mode_decision(
             else
                 memset(&blk_ptr->palette_info.pmi, 0, sizeof(PaletteModeInfo));
 #else
-            eb_memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info.pmi, sizeof(PaletteModeInfo));
+            memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info.pmi, sizeof(PaletteModeInfo));
 #endif
 #if SHUT_PALETTE_BC_PD_PASS_0_1
             if (svt_av1_allow_palette(context_ptr->md_palette_mode, context_ptr->blk_geom->bsize))
@@ -6781,7 +6781,7 @@ uint32_t product_full_mode_decision(
                    memset(blk_ptr->palette_info.color_idx_map, 0, MAX_PALETTE_SQUARE);
             }
 #else
-               eb_memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info.color_idx_map, MAX_PALETTE_SQUARE);
+               memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info.color_idx_map, MAX_PALETTE_SQUARE);
 #endif
         }
         else {
@@ -6817,21 +6817,21 @@ uint32_t product_full_mode_decision(
         context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_frame_index_l1 = candidate_ptr->ref_frame_index_l1;
         if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_0)
         {
-            //eb_memcpy(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs_l0,4);
+            //memcpy(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs_l0,4);
             pu_ptr->mv[REF_LIST_0].x = candidate_ptr->motion_vector_xl0;
             pu_ptr->mv[REF_LIST_0].y = candidate_ptr->motion_vector_yl0;
         }
 
         if (pu_ptr->inter_pred_direction_index == UNI_PRED_LIST_1)
         {
-            //eb_memcpy(&pu_ptr->mv[REF_LIST_1].x,&candidate_ptr->mvs_l1,4);
+            //memcpy(&pu_ptr->mv[REF_LIST_1].x,&candidate_ptr->mvs_l1,4);
             pu_ptr->mv[REF_LIST_1].x = candidate_ptr->motion_vector_xl1;
             pu_ptr->mv[REF_LIST_1].y = candidate_ptr->motion_vector_yl1;
         }
 
         if (pu_ptr->inter_pred_direction_index == BI_PRED)
         {
-            //eb_memcpy(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs,8);
+            //memcpy(&pu_ptr->mv[REF_LIST_0].x,&candidate_ptr->mvs,8);
             pu_ptr->mv[REF_LIST_0].x = candidate_ptr->motion_vector_xl0;
             pu_ptr->mv[REF_LIST_0].y = candidate_ptr->motion_vector_yl0;
             pu_ptr->mv[REF_LIST_1].x = candidate_ptr->motion_vector_xl1;
@@ -6856,8 +6856,8 @@ uint32_t product_full_mode_decision(
         pu_ptr->motion_mode = candidate_ptr->motion_mode;
         pu_ptr->num_proj_ref = candidate_ptr->num_proj_ref;
         if (pu_ptr->motion_mode == WARPED_CAUSAL) {
-            eb_memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l0, &candidate_ptr->wm_params_l0, sizeof(EbWarpedMotionParams));
-            eb_memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1, &candidate_ptr->wm_params_l1, sizeof(EbWarpedMotionParams));
+            memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l0, &candidate_ptr->wm_params_l0, sizeof(EbWarpedMotionParams));
+            memcpy(&context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].wm_params_l1, &candidate_ptr->wm_params_l1, sizeof(EbWarpedMotionParams));
         }
     }
 
@@ -6931,7 +6931,7 @@ uint32_t product_full_mode_decision(
             uint32_t j;
 
             for (j = 0; j < bheight; j++)
-                eb_memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
+                memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
             if (context_ptr->blk_geom->has_uv)
             {
                 // Cb
@@ -6942,12 +6942,12 @@ uint32_t product_full_mode_decision(
                 dst_ptr = &(((int32_t*)context_ptr->blk_ptr->coeff_tmp->buffer_cb)[txb_1d_offset_uv]);
 
                 for (j = 0; j < bheight; j++)
-                    eb_memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
+                    memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
                 src_ptr = &(((int32_t*)buffer_ptr_array[lowest_cost_index]->residual_quant_coeff_ptr->buffer_cr)[txb_1d_offset_uv]);
                 dst_ptr = &(((int32_t*)context_ptr->blk_ptr->coeff_tmp->buffer_cr)[txb_1d_offset_uv]);
 
                 for (j = 0; j < bheight; j++)
-                    eb_memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
+                    memcpy(dst_ptr + j * bwidth, src_ptr + j * bwidth, bwidth * sizeof(int32_t));
             }
 
             txb_1d_offset += context_ptr->blk_geom->tx_width[txb_itr] * context_ptr->blk_geom->tx_height[txb_itr];

@@ -135,18 +135,9 @@ static void equation_system_clear(AomEquationSystem *eqns) {
 
 static void equation_system_copy(AomEquationSystem *dst, const AomEquationSystem *src) {
     const int32_t n = dst->n;
-    if (eb_memcpy != NULL)
-    {
-        eb_memcpy(dst->A, src->A, sizeof(*dst->A) * n * n);
-        eb_memcpy(dst->x, src->x, sizeof(*dst->x) * n);
-        eb_memcpy(dst->b, src->b, sizeof(*dst->b) * n);
-    }
-    else
-    {
-        eb_memcpy_c(dst->A, src->A, sizeof(*dst->A) * n * n);
-        eb_memcpy_c(dst->x, src->x, sizeof(*dst->x) * n);
-        eb_memcpy_c(dst->b, src->b, sizeof(*dst->b) * n);
-    }
+    memcpy(dst->A, src->A, sizeof(*dst->A) * n * n);
+    memcpy(dst->x, src->x, sizeof(*dst->x) * n);
+    memcpy(dst->b, src->b, sizeof(*dst->b) * n);
 }
 
 static int32_t equation_system_init(AomEquationSystem *eqns, int32_t n) {
@@ -174,16 +165,8 @@ static int32_t equation_system_solve(AomEquationSystem *eqns) {
         free(A);
         return 0;
     }
-    if (eb_memcpy != NULL)
-    {
-        eb_memcpy(A, eqns->A, sizeof(*eqns->A) * n * n);
-        eb_memcpy(b, eqns->b, sizeof(*eqns->b) * n);
-    }
-    else
-    {
-        eb_memcpy_c(A, eqns->A, sizeof(*eqns->A) * n * n);
-        eb_memcpy_c(b, eqns->b, sizeof(*eqns->b) * n);
-    }
+    memcpy(A, eqns->A, sizeof(*eqns->A) * n * n);
+    memcpy(b, eqns->b, sizeof(*eqns->b) * n);
     ret = linsolve(n, A, eqns->n, b, eqns->x);
     free(b);
     free(A);
@@ -317,11 +300,7 @@ int32_t eb_aom_noise_strength_solver_solve(AomNoiseStrengthSolver *solver) {
         SVT_ERROR("Unable to allocate copy of A\n");
         return 0;
     }
-    if (eb_memcpy != NULL)
-        eb_memcpy(A, old_a, sizeof(*A) * n * n);
-    else
-        eb_memcpy_c(A, old_a, sizeof(*A) * n * n);
-
+    memcpy(A, old_a, sizeof(*A) * n * n);
     for (int32_t i = 0; i < n; ++i) {
         const int32_t i_lo = AOMMAX(0, i - 1);
         const int32_t i_hi = AOMMIN(n - 1, i + 1);
@@ -686,10 +665,7 @@ int32_t eb_aom_noise_model_init(AomNoiseModel *model, const AomNoiseModelParams 
         SVT_ERROR("Invalid noise param: lag = %d must be <= %d\n", params.lag, k_max_lag);
         return 0;
     }
-    if (eb_memcpy != NULL)
-        eb_memcpy(&model->params, &params, sizeof(params));
-    else
-        eb_memcpy_c(&model->params, &params, sizeof(params));
+    memcpy(&model->params, &params, sizeof(params));
 
     for (c = 0; c < 3; ++c) {
         if (!noise_state_init(&model->combined_state[c], n + (c > 0), bit_depth)) {
@@ -1714,26 +1690,13 @@ int32_t eb_aom_denoise_and_model_run(struct AomDenoiseAndModel *ctx, EbPictureBu
         film_grain->apply_grain = 1;
 
         if (!use_highbd) {
-            if (eb_memcpy != NULL)
-            {
-                eb_memcpy(raw_data[0], ctx->denoised[0], (strides[0] * sd->height) << use_highbd);
-                eb_memcpy(raw_data[1],
-                    ctx->denoised[1],
-                    (strides[1] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
-                eb_memcpy(raw_data[2],
-                    ctx->denoised[2],
-                    (strides[2] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
-            }
-            else
-            {
-                eb_memcpy_c(raw_data[0], ctx->denoised[0], (strides[0] * sd->height) << use_highbd);
-                eb_memcpy_c(raw_data[1],
-                    ctx->denoised[1],
-                    (strides[1] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
-                eb_memcpy_c(raw_data[2],
-                    ctx->denoised[2],
-                    (strides[2] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
-            }
+            memcpy(raw_data[0], ctx->denoised[0], (strides[0] * sd->height) << use_highbd);
+            memcpy(raw_data[1],
+                ctx->denoised[1],
+                   (strides[1] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
+            memcpy(raw_data[2],
+                ctx->denoised[2],
+                   (strides[2] * (sd->height >> chroma_sub_log2[0])) << use_highbd);
         } else
             unpack_2d_pic(ctx->denoised, sd);
     }

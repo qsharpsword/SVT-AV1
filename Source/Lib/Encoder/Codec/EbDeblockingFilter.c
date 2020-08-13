@@ -757,7 +757,7 @@ void eb_copy_buffer(EbPictureBufferDesc *srcBuffer, EbPictureBufferDesc *dstBuff
         dstBuffer->stride_bit_inc_y = srcBuffer->stride_bit_inc_y;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height; input_row_index++) {
-            eb_memcpy((dstBuffer->buffer_y + luma_buffer_offset + stride_y * input_row_index),
+            memcpy((dstBuffer->buffer_y + luma_buffer_offset + stride_y * input_row_index),
                       (srcBuffer->buffer_y + luma_buffer_offset + stride_y * input_row_index),
                       luma_width);
         }
@@ -770,7 +770,7 @@ void eb_copy_buffer(EbPictureBufferDesc *srcBuffer, EbPictureBufferDesc *dstBuff
             (srcBuffer->origin_x / 2 + srcBuffer->origin_y / 2 * srcBuffer->stride_cb) << is_16bit;
 
         for (int32_t input_row_index = 0; input_row_index < luma_height / 2; input_row_index++) {
-            eb_memcpy((dstBuffer->buffer_cb + chroma_buffer_offset + stride_cb * input_row_index),
+            memcpy((dstBuffer->buffer_cb + chroma_buffer_offset + stride_cb * input_row_index),
                       (srcBuffer->buffer_cb + chroma_buffer_offset + stride_cb * input_row_index),
                       chroma_width);
         }
@@ -784,7 +784,7 @@ void eb_copy_buffer(EbPictureBufferDesc *srcBuffer, EbPictureBufferDesc *dstBuff
             (srcBuffer->origin_x / 2 + srcBuffer->origin_y / 2 * srcBuffer->stride_cr) << is_16bit;
 
         for (int32_t input_row_index = 0; input_row_index< luma_height/2; input_row_index++) {
-            eb_memcpy((dstBuffer->buffer_cr + chroma_buffer_offset + stride_cr * input_row_index),
+            memcpy((dstBuffer->buffer_cr + chroma_buffer_offset + stride_cr * input_row_index),
                       (srcBuffer->buffer_cr + chroma_buffer_offset + stride_cr * input_row_index),
                       chroma_width);
         }

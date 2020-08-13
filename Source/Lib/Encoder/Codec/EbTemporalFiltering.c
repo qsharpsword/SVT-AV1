@@ -401,7 +401,7 @@ static void create_me_context_and_picture_control(
 
     // populate src block buffers: sb_buffer, quarter_sb_buffer and sixteenth_sb_buffer
     for (sb_row = 0; sb_row < BLOCK_SIZE_64; sb_row++) {
-        eb_memcpy((&(context_ptr->me_context_ptr->sb_buffer[sb_row * BLOCK_SIZE_64])),
+        memcpy((&(context_ptr->me_context_ptr->sb_buffer[sb_row * BLOCK_SIZE_64])),
                   (&(input_picture_ptr_central
                          ->buffer_y[buffer_index + sb_row * input_picture_ptr_central->stride_y])),
                   BLOCK_SIZE_64 * sizeof(uint8_t));
@@ -429,7 +429,7 @@ static void create_me_context_and_picture_control(
                    quarter_pic_ptr->origin_x + (sb_origin_x >> ss_x);
 
     for (sb_row = 0; sb_row < (sb_height >> ss_y); sb_row++) {
-        eb_memcpy((&(context_ptr->me_context_ptr->quarter_sb_buffer
+        memcpy((&(context_ptr->me_context_ptr->quarter_sb_buffer
                          [sb_row * context_ptr->me_context_ptr->quarter_sb_buffer_stride])),
                   (&(quarter_pic_ptr->buffer_y[buffer_index + sb_row * quarter_pic_ptr->stride_y])),
                   (sb_width >> ss_x) * sizeof(uint8_t));
@@ -446,13 +446,13 @@ static void create_me_context_and_picture_control(
 
         if (context_ptr->me_context_ptr->hme_search_method == FULL_SAD_SEARCH) {
             for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 1) {
-                eb_memcpy(local_ptr, frame_ptr, (sb_width >> 2) * sizeof(uint8_t));
+                memcpy(local_ptr, frame_ptr, (sb_width >> 2) * sizeof(uint8_t));
                 local_ptr += 16;
                 frame_ptr += sixteenth_pic_ptr->stride_y;
             }
         } else {
             for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
-                eb_memcpy(local_ptr, frame_ptr, (sb_width >> 2) * sizeof(uint8_t));
+                memcpy(local_ptr, frame_ptr, (sb_width >> 2) * sizeof(uint8_t));
                 local_ptr += 16;
                 frame_ptr += sixteenth_pic_ptr->stride_y << 1;
             }
@@ -3131,7 +3131,7 @@ void pad_and_decimate_filtered_pic(
                          input_picture_ptr->origin_x,
                          input_picture_ptr->origin_y);
         for (uint32_t row = 0; row < input_picture_ptr->height; row++)
-            eb_memcpy(pa + row * padded_pic_ptr->stride_y,
+            memcpy(pa + row * padded_pic_ptr->stride_y,
                       in + row * input_picture_ptr->stride_y,
                       sizeof(uint8_t) * input_picture_ptr->width);
     }

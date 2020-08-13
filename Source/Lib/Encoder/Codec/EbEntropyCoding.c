@@ -1647,7 +1647,7 @@ int bitstream_get_bytes_count(const Bitstream* bitstream_ptr) {
 
 void bitstream_copy(const Bitstream* bitstream_ptr, void* dest, int size) {
     const OutputBitstreamUnit* unit = bitstream_ptr->output_bitstream_ptr;
-    eb_memcpy(dest, unit->buffer_begin_av1, size);
+    memcpy(dest, unit->buffer_begin_av1, size);
 }
 
 static void entropy_coder_dctor(EbPtr p) {
@@ -2969,7 +2969,7 @@ static void encode_loopfilter(PictureParentControlSet *pcs_ptr, struct AomWriteB
         if (prime_idx == PRIMARY_REF_NONE || buf_idx < 0) {
         av1_set_default_ref_deltas(last_ref_deltas);
         } else {
-        eb_memcpy(last_ref_deltas, cm->buffer_pool->frame_bufs[buf_idx].ref_deltas,
+        memcpy(last_ref_deltas, cm->buffer_pool->frame_bufs[buf_idx].ref_deltas,
         TOTAL_REFS_PER_FRAME);
         }
         for (i = 0; i < TOTAL_REFS_PER_FRAME; i++) {
@@ -2982,7 +2982,7 @@ static void encode_loopfilter(PictureParentControlSet *pcs_ptr, struct AomWriteB
         if (prime_idx == PRIMARY_REF_NONE || buf_idx < 0) {
         av1_set_default_mode_deltas(last_mode_deltas);
         } else {
-        eb_memcpy(last_mode_deltas,
+        memcpy(last_mode_deltas,
         cm->buffer_pool->frame_bufs[buf_idx].mode_deltas,
         MAX_MODE_LF_DELTAS);
         }
@@ -4388,7 +4388,7 @@ EbErrorType write_frame_header_av1(Bitstream *bitstream_ptr, SequenceControlSet 
             OutputBitstreamUnit *ec_output_bitstream_ptr =
                 (OutputBitstreamUnit *)pcs_ptr->entropy_coding_info[tile_idx]
                     ->entropy_coder_ptr->ec_output_bitstream_ptr;
-            eb_memcpy(data + curr_data_size + tile_size_bytes,
+            memcpy(data + curr_data_size + tile_size_bytes,
                    ec_output_bitstream_ptr->buffer_begin_av1,
                    tile_size);
             curr_data_size += (tile_size + tile_size_bytes);
@@ -4559,7 +4559,7 @@ static void write_wiener_filter(int32_t wiener_win, const WienerInfo *wiener_inf
                                         WIENER_FILT_TAP2_SUBEXP_K,
                                         ref_wiener_info->hfilter[2] - WIENER_FILT_TAP2_MINV,
                                         wiener_info->hfilter[2] - WIENER_FILT_TAP2_MINV);
-    eb_memcpy(ref_wiener_info, wiener_info, sizeof(*wiener_info));
+    memcpy(ref_wiener_info, wiener_info, sizeof(*wiener_info));
 }
 
 static void write_sgrproj_filter(const SgrprojInfo *sgrproj_info, SgrprojInfo *ref_sgrproj_info,
@@ -4593,7 +4593,7 @@ static void write_sgrproj_filter(const SgrprojInfo *sgrproj_info, SgrprojInfo *r
                                             (uint16_t)(sgrproj_info->xqd[1] - SGRPROJ_PRJ_MIN1));
     }
 
-    eb_memcpy(ref_sgrproj_info, sgrproj_info, sizeof(*sgrproj_info));
+    memcpy(ref_sgrproj_info, sgrproj_info, sizeof(*sgrproj_info));
 }
 static void loop_restoration_write_sb_coeffs(PictureControlSet     *piCSetPtr, FRAME_CONTEXT           *frame_context, const Av1Common *const cm,
     uint16_t tile_idx,
