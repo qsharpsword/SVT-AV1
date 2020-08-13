@@ -346,26 +346,6 @@ void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv,
 #endif
 /*!\endcond */
 
-/*!\brief AV1 first pass encoding.
- *
- * \ingroup rate_control
- * This function is the first encoding pass for the two pass encoding mode.
- * It encodes the whole video and collect essential information.
- * Two pass encoding is an encoding mode in the reference software (libaom)
- * of AV1 for high performance encoding. The first pass is a fast encoding
- * process to collect essential information to help the second pass make
- * encoding decisions and improve coding quality. The collected stats is used
- * in rate control, for example, to determine frame cut, the position of
- * alternative reference frame (ARF), etc.
- *
- * \param[in]    cpi            Top-level encoder structure
- * \param[in]    ts_duration    Duration of the frame / collection of frames
- *
- * \return Nothing is returned. Instead, the "TWO_PASS" structure inside "cpi"
- * is modified to store information computed in this function.
- */
-//void av1_first_pass(struct AV1_COMP *cpi, const int64_t ts_duration);
-
 #ifdef __cplusplus
 }  // extern "C"
 #endif
