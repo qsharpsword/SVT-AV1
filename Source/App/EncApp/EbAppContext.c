@@ -113,11 +113,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.disable_dlf_flag     = (EbBool)config->disable_dlf_flag;
     callback_data->eb_enc_parameters.enable_warped_motion = config->enable_warped_motion;
     callback_data->eb_enc_parameters.enable_global_motion = (EbBool)config->enable_global_motion;
-#if 1 // CDEF_CLI
     callback_data->eb_enc_parameters.cdef_level               = config->cdef_level;
-#else
-    callback_data->eb_enc_parameters.cdef_mode                = config->cdef_mode;
-#endif
     callback_data->eb_enc_parameters.enable_restoration_filtering = config->enable_restoration_filtering;
     callback_data->eb_enc_parameters.sg_filter_mode           = config->sg_filter_mode;
     callback_data->eb_enc_parameters.wn_filter_mode           = config->wn_filter_mode;
@@ -134,11 +130,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 #endif
     callback_data->eb_enc_parameters.enable_mfmv              = config->enable_mfmv;
     callback_data->eb_enc_parameters.enable_redundant_blk     = config->enable_redundant_blk;
-#if 1 // SSSE_CLI
     callback_data->eb_enc_parameters.spatial_sse_full_loop_level = config->spatial_sse_full_loop_level;
-#else
-    callback_data->eb_enc_parameters.spatial_sse_fl           = config->spatial_sse_fl;
-#endif
 #if 0//!REMOVE_ME_SUBPEL_CODE
     callback_data->eb_enc_parameters.enable_subpel            = config->enable_subpel;
 #endif
@@ -155,11 +147,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 #else
     callback_data->eb_enc_parameters.enable_obmc              = (EbBool)config->enable_obmc;
 #endif
-#if 1 // RDOQ_CLI
     callback_data->eb_enc_parameters.rdoq_level               = config->rdoq_level;
-#else
-    callback_data->eb_enc_parameters.enable_rdoq              = config->enable_rdoq;
-#endif
     callback_data->eb_enc_parameters.pred_me                  = config->pred_me;
     callback_data->eb_enc_parameters.bipred_3x3_inject        = config->bipred_3x3_inject;
     callback_data->eb_enc_parameters.compound_level           = config->compound_level;
@@ -198,11 +186,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 #else
         (EbBool)config->enable_hbd_mode_decision;
 #endif
-#if 1 // PALETTE_CLI
     callback_data->eb_enc_parameters.palette_level            = config->palette_level;
-#else
-    callback_data->eb_enc_parameters.enable_palette           = config->enable_palette;
-#endif
     callback_data->eb_enc_parameters.channel_id               = config->channel_id;
     callback_data->eb_enc_parameters.active_channel_count     = config->active_channel_count;
     callback_data->eb_enc_parameters.high_dynamic_range_input = config->high_dynamic_range_input;
@@ -224,11 +208,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
         config->unrestricted_motion_vector;
     callback_data->eb_enc_parameters.recon_enabled = config->recon_file ? EB_TRUE : EB_FALSE;
     // --- start: ALTREF_FILTERING_SUPPORT
-#if 1 // ALTREF_CLI
     callback_data->eb_enc_parameters.tf_level = (int8_t)config->tf_level;
-#else
-    callback_data->eb_enc_parameters.enable_altrefs  = (EbBool)config->enable_altrefs;
-#endif
     callback_data->eb_enc_parameters.altref_strength = config->altref_strength;
     callback_data->eb_enc_parameters.altref_nframes  = config->altref_nframes;
     callback_data->eb_enc_parameters.enable_overlays = (EbBool)config->enable_overlays;

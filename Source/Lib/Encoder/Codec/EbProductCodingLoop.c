@@ -8509,10 +8509,10 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
     EbPictureBufferDesc *input_picture_ptr = context_ptr->hbd_mode_decision
         ? pcs_ptr->input_frame16bit
         : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
-#if SSSE_CLI
+
     SequenceControlSet *scs_ptr;
     scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
+
     int32_t seg_qp = pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params.segmentation_enabled
         ? pcs_ptr->parent_pcs_ptr->frm_hdr.segmentation_params
               .feature_data[context_ptr->blk_ptr->segment_id][SEG_LVL_ALT_Q]
@@ -8594,7 +8594,6 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
     uint8_t default_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
     if (context_ptr->txt_rdoq)
         context_ptr->md_staging_skip_rdoq = EB_TRUE;
-#if SSSE_CLI
     uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop_level;
     if (scs_ptr->static_config.spatial_sse_full_loop_level == 1 && context_ptr->pd_pass == PD_PASS_2)
         context_ptr->md_staging_spatial_sse_full_loop_level = scs_ptr->static_config.spatial_sse_full_loop_level;
@@ -8602,11 +8601,6 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
         if (context_ptr->txt_ssse)
             context_ptr->md_staging_spatial_sse_full_loop_level = 0;
     }
-#else
-    uint8_t default_md_staging_spatial_sse_full_loop = context_ptr->md_staging_spatial_sse_full_loop;
-    if (context_ptr->txt_ssse)
-        context_ptr->md_staging_spatial_sse_full_loop = 0;
-#endif
 #endif
 #if UNIFY_TXT
     // local variables for all TX types
@@ -8842,11 +8836,7 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
         if (y_has_coeff == 0 && tx_type != DCT_DCT)
             continue;
 
-#if SSSE_CLI
         if (context_ptr->md_staging_spatial_sse_full_loop_level) {
-#else
-        if (context_ptr->md_staging_spatial_sse_full_loop) {
-#endif
             if (y_has_coeff)
                 inv_transform_recon_wrapper(
                     candidate_buffer->prediction_ptr->buffer_y,
@@ -9063,11 +9053,7 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
     }
 #if TXT_CONTROL
     context_ptr->md_staging_skip_rdoq = default_md_staging_skip_rdoq;
-#if SSSE_CLI
     context_ptr->md_staging_spatial_sse_full_loop_level = default_md_staging_spatial_sse_full_loop;
-#else
-    context_ptr->md_staging_spatial_sse_full_loop = default_md_staging_spatial_sse_full_loop;
-#endif
 #endif
     //  Best Tx Type Pass
     candidate_buffer->candidate_ptr->transform_type[context_ptr->txb_itr] = best_tx_type;
@@ -10537,24 +10523,20 @@ static void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
     ModeDecisionCandidateBuffer **candidate_buffer_ptr_array = &(
         candidate_buffer_ptr_array_base[0]);
 
-#if SSSE_CLI
     SequenceControlSet *scs_ptr;
     scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
 
     // Set MD Staging full_loop_core settings
     context_ptr->md_staging_tx_size_mode          = 0;
     context_ptr->md_staging_tx_search             = 0;
     context_ptr->md_staging_skip_full_chroma      = EB_TRUE;
     context_ptr->md_staging_skip_rdoq             = EB_TRUE;
-#if SSSE_CLI
+
     if (scs_ptr->static_config.spatial_sse_full_loop_level != DEFAULT && context_ptr->pd_pass == PD_PASS_2)
         context_ptr->md_staging_spatial_sse_full_loop_level = scs_ptr->static_config.spatial_sse_full_loop_level;
     else
         context_ptr->md_staging_spatial_sse_full_loop_level = EB_FALSE;
-#else
-    context_ptr->md_staging_spatial_sse_full_loop = EB_FALSE;
-#endif
+
     for (uint32_t full_loop_candidate_index = 0;
          full_loop_candidate_index < context_ptr->md_stage_1_count[context_ptr->target_class];
          ++full_loop_candidate_index) {
@@ -10592,10 +10574,8 @@ static void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
     ModeDecisionCandidateBuffer **candidate_buffer_ptr_array = &(
         candidate_buffer_ptr_array_base[0]);
 
-#if SSSE_CLI
     SequenceControlSet *scs_ptr;
     scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
 
     // Set MD Staging full_loop_core settings
     for (uint32_t fullLoopCandidateIndex = 0;
@@ -10617,14 +10597,12 @@ static void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
         context_ptr->md_staging_perform_inter_pred        = EB_FALSE;
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
         context_ptr->md_staging_skip_chroma_pred          = EB_TRUE;
-#if SSSE_CLI
+
         if (scs_ptr->static_config.spatial_sse_full_loop_level != DEFAULT && context_ptr->pd_pass == PD_PASS_2)
             context_ptr->md_staging_spatial_sse_full_loop_level = scs_ptr->static_config.spatial_sse_full_loop_level;
         else
             context_ptr->md_staging_spatial_sse_full_loop_level = EB_FALSE;
-#else
-        context_ptr->md_staging_spatial_sse_full_loop     = EB_FALSE;
-#endif
+
         context_ptr->md_staging_perform_intra_chroma_pred = EB_FALSE;
 #else
         context_ptr->md_staging_perform_intra_chroma_pred = 0;
@@ -10768,10 +10746,8 @@ static void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
     ModeDecisionCandidateBuffer **candidate_buffer_ptr_array = &(
         candidate_buffer_ptr_array_base[0]);
 
-#if SSSE_CLI
     SequenceControlSet *scs_ptr;
     scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
 
     for (uint32_t full_loop_candidate_index = 0;
          full_loop_candidate_index < fullCandidateTotalCount;
@@ -10800,14 +10776,12 @@ static void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
             : 1;
         context_ptr->md_staging_skip_full_chroma          = EB_FALSE;
         context_ptr->md_staging_skip_rdoq                 = EB_FALSE;
-#if SSSE_CLI
+
         if (scs_ptr->static_config.spatial_sse_full_loop_level != DEFAULT && context_ptr->pd_pass == PD_PASS_2)
             context_ptr->md_staging_spatial_sse_full_loop_level = scs_ptr->static_config.spatial_sse_full_loop_level;
         else
             context_ptr->md_staging_spatial_sse_full_loop_level = context_ptr->spatial_sse_full_loop_level;
-#else
-        context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
-#endif
+
         context_ptr->md_staging_perform_intra_chroma_pred = EB_TRUE;
         if (context_ptr->chroma_at_last_md_stage)
             update_intra_chroma_mode(context_ptr, candidate_ptr, pcs_ptr);
@@ -10829,11 +10803,7 @@ static void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
 void move_blk_data(PictureControlSet *pcs, EncDecContext *context_ptr, BlkStruct *src_cu,
                    BlkStruct *dst_cu) {
     eb_memcpy(&dst_cu->palette_info.pmi, &src_cu->palette_info.pmi, sizeof(PaletteModeInfo));
-#if PALETTE_CLI
     if (svt_av1_allow_palette(pcs->parent_pcs_ptr->palette_level, context_ptr->blk_geom->bsize)) {
-#else
-    if (svt_av1_allow_palette(pcs->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize)) {
-#endif
         dst_cu->palette_info.color_idx_map = (uint8_t *)malloc(MAX_PALETTE_SQUARE);
         assert(dst_cu->palette_info.color_idx_map != NULL && "palette:Not-Enough-Memory");
         if (dst_cu->palette_info.color_idx_map != NULL)
@@ -10932,11 +10902,7 @@ void move_blk_data_redund(PictureControlSet *pcs, ModeDecisionContext *context_p
     dst_cu->segment_id       = src_cu->segment_id;
     dst_cu->seg_id_predicted = src_cu->seg_id_predicted;
     eb_memcpy(&dst_cu->palette_info.pmi, &src_cu->palette_info.pmi, sizeof(PaletteModeInfo));
-#if PALETTE_CLI
     if (svt_av1_allow_palette(pcs->parent_pcs_ptr->palette_level, context_ptr->blk_geom->bsize))
-#else
-    if (svt_av1_allow_palette(pcs->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize))
-#endif
         eb_memcpy(dst_cu->palette_info.color_idx_map,
                src_cu->palette_info.color_idx_map,
                MAX_PALETTE_SQUARE);

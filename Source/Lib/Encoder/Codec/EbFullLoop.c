@@ -1649,9 +1649,9 @@ int32_t av1_quantize_inv_quantize(
     (void)is_encode_pass;
     (void)coeff_stride;
     (void)is_intra_bc;
-#if RDOQ_CLI
+
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
+
     MacroblockPlane candidate_plane;
     const QmVal *   q_matrix  = pcs_ptr->parent_pcs_ptr->gqmatrix[NUM_QM_LEVELS - 1][0][txsize];
     const QmVal *   iq_matrix = pcs_ptr->parent_pcs_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][txsize];
@@ -1746,7 +1746,6 @@ int32_t av1_quantize_inv_quantize(
     qparam.iqmatrix  = iq_matrix;
 
     EbBool is_inter     = (pred_mode >= NEARESTMV);
-#if RDOQ_CLI
     EbBool perform_rdoq;
 
     // If rdoq_level is specified in the command line instruction, set perform_rdoq accordingly.
@@ -1756,11 +1755,6 @@ int32_t av1_quantize_inv_quantize(
         perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
             md_context->rdoq_level);
     }
-#else
-    EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
-        md_context->enable_rdoq);
-    SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
-#endif
 
     if (perform_rdoq) {
         if ((bit_depth > EB_8BIT) || (is_encode_pass && scs_ptr->static_config.is_16bit_pipeline)) {
@@ -1949,11 +1943,7 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
          full_lambda,
         EB_FALSE);
 
-#if SSSE_CLI
     if (context_ptr->md_staging_spatial_sse_full_loop_level) {
-#else
-    if (context_ptr->md_staging_spatial_sse_full_loop) {
-#endif
         uint32_t input_txb_origin_index =
             (context_ptr->sb_origin_x + tx_org_x + input_picture_ptr->origin_x) +
             ((context_ptr->sb_origin_y + tx_org_y + input_picture_ptr->origin_y) *
@@ -2769,11 +2759,7 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 full_lambda,
                 EB_FALSE);
 
-#if SSSE_CLI
             if (context_ptr->md_staging_spatial_sse_full_loop_level) {
-#else
-            if (context_ptr->md_staging_spatial_sse_full_loop) {
-#endif
                 uint32_t cb_has_coeff = cb_count_non_zero_coeffs[txb_itr] > 0;
 
                 if (cb_has_coeff)
@@ -2869,11 +2855,7 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 full_lambda,
                 EB_FALSE);
 
-#if SSSE_CLI
             if (context_ptr->md_staging_spatial_sse_full_loop_level) {
-#else
-            if (context_ptr->md_staging_spatial_sse_full_loop) {
-#endif
                 uint32_t cr_has_coeff = cr_count_non_zero_coeffs[txb_itr] > 0;
 
                 if (cr_has_coeff)
@@ -2979,11 +2961,7 @@ void cu_full_distortion_fast_txb_mode_r(
             count_nonzero_coeffs_all[1] = count_non_zero_coeffs[1][current_txb_index];
             count_nonzero_coeffs_all[2] = count_non_zero_coeffs[2][current_txb_index];
 
-#if SSSE_CLI
             if (is_full_loop && context_ptr->md_staging_spatial_sse_full_loop_level) {
-#else
-            if (is_full_loop && context_ptr->md_staging_spatial_sse_full_loop) {
-#endif
                 uint32_t input_chroma_txb_origin_index =
                     (((context_ptr->sb_origin_y + ((txb_origin_y >> 3) << 3)) >> 1) +
                      (input_picture_ptr->origin_y >> 1)) *

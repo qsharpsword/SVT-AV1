@@ -634,11 +634,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->film_grain_denoise_strength = FALSE;
   svt_config->enable_warped_motion = FALSE;
   svt_config->enable_global_motion = TRUE;
-#if 1 // CDEF_CLI
   svt_config->cdef_level = -1;
-#else
-  svt_config->cdef_mode = -1;
-#endif
   svt_config->enable_restoration_filtering = -1;
   svt_config->sg_filter_mode = -1;
   svt_config->wn_filter_mode = -1;
@@ -649,11 +645,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->enable_smooth = -1;
   svt_config->enable_mfmv = -1;
   svt_config->enable_redundant_blk = -1;
-#if 1 // SSSE_CLI
   svt_config->spatial_sse_full_loop_level = -1;
-#else
-  svt_config->spatial_sse_fl = -1;
-#endif
   svt_config->over_bndry_blk = -1;
   svt_config->new_nearest_comb_inject = -1;
   svt_config->prune_ref_rec_part = -1;
@@ -665,11 +657,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->set_chroma_mode = -1;
   svt_config->disable_cfl_flag = -1;
   svt_config->obmc_level = 1;
-#if 1 // RDOQ_CLI
   svt_config->rdoq_level = -1;
-#else
-  svt_config->enable_rdoq = -1;
-#endif
   svt_config->filter_intra_level = 1;
   svt_config->enable_intra_edge_filter = -1;
   svt_config->pic_based_rate_est = -1;
@@ -683,11 +671,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->search_area_width = 16;
   svt_config->search_area_height = 7;
   svt_config->enable_hbd_mode_decision = 1;
-#if 1 // PALETTE_CLI
   svt_config->palette_level = -1;
-#else
-  svt_config->enable_palette = -1;
-#endif
   // HME parameters
   svt_config->number_hme_search_region_in_width = 2;
   svt_config->number_hme_search_region_in_height = 2;
@@ -720,11 +704,7 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->unrestricted_motion_vector = 1;
 
   // alt-ref
-#if 1 // ALTREF_CLI
   svt_config->tf_level = 1;
-#else
-  svt_config->enable_altrefs = TRUE;
-#endif
   svt_config->altref_strength = 5;
   svt_config->altref_nframes = 7;
   svt_config->enable_overlays = FALSE;

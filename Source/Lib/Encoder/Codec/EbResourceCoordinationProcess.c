@@ -231,17 +231,10 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
         scs_ptr->seq_header.enable_restoration =
             (uint8_t)scs_ptr->static_config.enable_restoration_filtering;
 
-#if CDEF_CLI
     if (scs_ptr->static_config.cdef_level == DEFAULT)
         scs_ptr->seq_header.cdef_level = 1;
     else
         scs_ptr->seq_header.cdef_level = (uint8_t)(scs_ptr->static_config.cdef_level > 0);
-#else
-    if (scs_ptr->static_config.cdef_mode == DEFAULT)
-        scs_ptr->seq_header.enable_cdef = 1;
-    else
-        scs_ptr->seq_header.enable_cdef = (uint8_t)(scs_ptr->static_config.cdef_mode>0);
-#endif
 
 #if !M8_CDF
 #if MAR2_M7_ADOPTIONS
@@ -867,11 +860,7 @@ void *resource_coordination_kernel(void *input_ptr) {
 
             sb_params_init(scs_ptr);
             sb_geom_init(scs_ptr);
-#if ALTREF_CLI
             scs_ptr->tf_level = scs_ptr->static_config.tf_level ? 1 : 0;
-#else
-            scs_ptr->enable_altrefs = scs_ptr->static_config.enable_altrefs ? EB_TRUE : EB_FALSE;
-#endif
 
             // initialize sequence level enable_superres
             scs_ptr->seq_header.enable_superres = 0;

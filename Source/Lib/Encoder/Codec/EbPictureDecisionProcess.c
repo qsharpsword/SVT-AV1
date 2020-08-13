@@ -1649,7 +1649,6 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->ibc_mode = 0; // OFF
     }
 
-#if PALETTE_CLI
     /* Palette Levels:
     The levels below apply to the default configuration and maybe subject to some constraints
     When specified in the command line the levels would apply only to PD_PASS_2
@@ -1751,107 +1750,6 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->palette_level = 0;
 
     assert(pcs_ptr->palette_level < 7);
-#else
-   /*Palette Modes:
-        0:OFF
-        1:Slow    NIC=7/4/4
-        2:        NIC=7/2/2
-        3:        NIC=7/2/2 + No K means for non ref
-        4:        NIC=4/2/1
-        5:        NIC=4/2/1 + No K means for Inter frame
-        6:Fastest NIC=4/2/1 + No K means for non base + step for non base for most dominent
-
-    */
-    if (frm_hdr->allow_screen_content_tools)
-        if (scs_ptr->static_config.enable_palette == -1)//auto mode; if not set by cfg
-#if PALETTE_SYNCH
-            pcs_ptr->palette_mode =
-            (frm_hdr->allow_screen_content_tools) &&
-#if MAR4_M3_ADOPTIONS
-#if MAR10_ADOPTIONS
-#if M8_PALETTE
-#if UPGRADE_M6_M7_M8
-#if M1_SC_ADOPTION
-#if REVERT_WHITE // palette_mode
-#if MAY19_ADOPTIONS
-#if JUNE23_ADOPTIONS
-            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M8))
-#else
-#if NEW_M8
-            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
-            (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M8))
-#else
-#if UNIFY_SC_NSC
-            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
-            (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M7))
-#else
-#if JUNE17_ADOPTIONS
-           ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
-           (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M6))
-#else
-#if JUNE15_ADOPTIONS
-           ((pcs_ptr->enc_mode <= ENC_M0) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
-#else
-#if PRESET_SHIFITNG
-           (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
-#else
-           (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#if !JUNE17_ADOPTIONS
-#if PRESET_SHIFITNG
-            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M5))
-#else
-            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
-#endif
-#endif
-#else
-#if MAY16_7PM_ADOPTIONS
-           ((pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
-            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
-#else
-#if APR25_3AM_ADOPTIONS
-           (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
-            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
-#else
-           (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M7))
-#endif
-#endif
-#endif
-#else
-           (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->is_used_as_reference_flag)
-#endif
-#else
-           (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->is_used_as_reference_flag)
-#endif
-#else
-            pcs_ptr->enc_mode <= ENC_M5
-#endif
-#else
-            pcs_ptr->enc_mode <= ENC_M8
-#endif
-#else
-            pcs_ptr->enc_mode <= ENC_M3
-#endif
-#else
-            pcs_ptr->enc_mode <= ENC_M1
-#endif
-
-            ? 6 : 0;
-#else
-            pcs_ptr->palette_mode = pcs_ptr->enc_mode <= ENC_M1 ? 6 : 0;
-#endif
-        else
-            pcs_ptr->palette_mode = scs_ptr->static_config.enable_palette;
-    else
-        pcs_ptr->palette_mode = 0;
-
-    assert(pcs_ptr->palette_mode<7);
-#endif
 
     if (!pcs_ptr->scs_ptr->static_config.disable_dlf_flag && frm_hdr->allow_intrabc == 0) {
 #if MAR2_M8_ADOPTIONS
@@ -1890,7 +1788,6 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->loop_filter_mode = 0;
 
-#if CDEF_CLI
     // CDEF Level                                   Settings
     // 0                                            OFF
     // 1                                            16 step refinement
@@ -1958,74 +1855,6 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else
         pcs_ptr->cdef_level = 0;
-#else
-    // CDEF Level                                   Settings
-    // 0                                            OFF
-    // 1                                            1 step refinement
-    // 2                                            4 step refinement
-    // 3                                            8 step refinement
-    // 4                                            16 step refinement
-    // 5                                            64 step refinement
-    if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
-        if (scs_ptr->static_config.cdef_mode == DEFAULT) {
-#if MAR17_ADOPTIONS
-#if M8_CDEF
-#if !UNIFY_SC_NSC
-        if (pcs_ptr->sc_content_detected)
-#if UPGRADE_M6_M7_M8
-#if PRESET_SHIFITNG
-            if (pcs_ptr->enc_mode <= ENC_M5)
-#else
-            if (pcs_ptr->enc_mode <= ENC_M7)
-#endif
-                pcs_ptr->cdef_filter_mode = 5;
-            else
-#if M5_I_CDEF
-                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type == I_SLICE ? 5 : 2;
-#else
-                pcs_ptr->cdef_filter_mode = 2;
-#endif
-#else
-            pcs_ptr->cdef_filter_mode = 5;
-#endif
-        else
-#endif
-#if UPGRADE_M6_M7_M8
-#if PRESET_SHIFITNG
-            if (pcs_ptr->enc_mode <= ENC_M5)
-#else
-            if (pcs_ptr->enc_mode <= ENC_M7)
-#endif
-#else
-            if (pcs_ptr->enc_mode <= ENC_M5)
-#endif
-                pcs_ptr->cdef_filter_mode = 5;
-            else
-#if M5_I_CDEF
-                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type == I_SLICE ? 5 : 2;
-#else
-                pcs_ptr->cdef_filter_mode = 2;
-#endif
-#else
-        pcs_ptr->cdef_filter_mode = 5;
-#endif
-#else
-#if MAR10_ADOPTIONS
-        if (pcs_ptr->sc_content_detected)
-            pcs_ptr->cdef_filter_mode = 5;
-        else
-#endif
-                if (pcs_ptr->enc_mode <= ENC_M7)
-                    pcs_ptr->cdef_filter_mode = 5;
-                else
-                    pcs_ptr->cdef_filter_mode = 2;
-#endif
-        } else
-            pcs_ptr->cdef_filter_mode = (int8_t)(scs_ptr->static_config.cdef_mode);
-    }
-    else
-        pcs_ptr->cdef_filter_mode = 0;
-#endif
 
     // SG Level                                    Settings
     // 0                                            OFF
@@ -2786,15 +2615,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if TF_LEVELS
 #if UNIFY_SC_NSC
-#if ALTREF_CLI
         uint8_t perform_filtering =
             (scs_ptr->tf_level && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && scs_ptr->static_config.hierarchical_levels >= 1)
             ? 1 : 0;
-#else
-    uint8_t perform_filtering =
-        (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && scs_ptr->static_config.hierarchical_levels >= 1)
-        ? 1 : 0;
-#endif
 #else
 #if UPGRADE_M6_M7_M8
     uint8_t perform_filtering =
@@ -2808,7 +2631,6 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 
-#if ALTREF_CLI
 // tf_level is used to indicate whether temporal filtering is to be used,
 // and if so, what level of the feature to consider.
 
@@ -2912,86 +2734,6 @@ EbErrorType signal_derivation_multi_processes_oq(
         context_ptr->tf_level = 3;
 #endif
     set_tf_controls(context_ptr, context_ptr->tf_level);
-#else
-#if IMPROVED_TF_LEVELS
-    if (perform_filtering) {
-#if JUNE26_ADOPTIONS
-        if (pcs_ptr->enc_mode <= ENC_M5) {
-#else
-#if JUNE25_ADOPTIONS
-        if (pcs_ptr->enc_mode <= ENC_M4) {
-#else
-        if (pcs_ptr->enc_mode <= ENC_M5) {
-#endif
-#endif
-            if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
-                context_ptr->tf_level = 1;
-            else
-                context_ptr->tf_level = 0;
-        }
-        else if (pcs_ptr->enc_mode <= ENC_M6) {
-            if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
-                context_ptr->tf_level = 2;
-            else
-                context_ptr->tf_level = 0;
-        }
-        else {
-            if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
-                context_ptr->tf_level = 3;
-            else
-                context_ptr->tf_level = 0;
-        }
-    }
-    else
-        context_ptr->tf_level = 0;
-#else
-    if (perform_filtering) {
-#if UPGRADE_M6_M7_M8
-#if PRESET_SHIFITNG
-        if (pcs_ptr->enc_mode <= ENC_M5) {
-#else
-        if (pcs_ptr->enc_mode <= ENC_M7) {
-#endif
-            if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
-                context_ptr->tf_level = 0;
-            else
-                context_ptr->tf_level = 3;
-        }
-        else {
-#if ADD_SKIP_INTRA_SIGNAL
-            if (pcs_ptr->enc_mode <= ENC_M6) {
-                if (pcs_ptr->temporal_layer_index == 0)
-                    context_ptr->tf_level = 0;
-                else
-                    context_ptr->tf_level = 3;
-            }
-            else
-                context_ptr->tf_level = 3;
-#else
-            if (pcs_ptr->temporal_layer_index == 0)
-                context_ptr->tf_level = 0;
-            else
-                context_ptr->tf_level = 3;
-#endif
-        }
-#else
-#if UPGRADE_M8
-        if (pcs_ptr->enc_mode <= ENC_M8) {
-#else
-        if (pcs_ptr->enc_mode <= ENC_M5) {
-#endif
-            context_ptr->tf_level = 0;
-        }
-        else {
-            context_ptr->tf_level = 2;
-        }
-#endif
-    }
-    else
-        context_ptr->tf_level = 3;
-#endif
-    set_tf_controls(context_ptr, context_ptr->tf_level);
-#endif
 #endif
 
 #if ON_OFF_FEATURE_MRP

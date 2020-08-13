@@ -245,7 +245,6 @@ typedef struct EbConfig {
      ****************************************/
     EbBool enable_global_motion;
 
-#if 1 // CDEF_CLI
     /****************************************
      * CDEF Level
      * 0         OFF
@@ -256,18 +255,6 @@ typedef struct EbConfig {
      * 5         1 step refinement
     ****************************************/
     int cdef_level;
-#else
-    /****************************************
-     * CDEF Mode
-     * 0         OFF
-     * 1         1 step refinement
-     * 2         4 step refinement
-     * 3         8 step refinement
-     * 4         16 step refinement
-     * 5         64 step refinement
-    ****************************************/
-    int cdef_mode;
-#endif
 
     /****************************************
      * Restoration filtering
@@ -314,11 +301,7 @@ typedef struct EbConfig {
     /****************************************
       * spatial sse in full loop
      ****************************************/
-#if 1 // SSSE_CLI
     int spatial_sse_full_loop_level;
-#else
-    int spatial_sse_fl;
-#endif
 #if 0//!REMOVE_ME_SUBPEL_CODE
     /****************************************
       * subpel
@@ -393,11 +376,7 @@ typedef struct EbConfig {
     /****************************************
      * RDOQ
      * ****************************************/
-#if 1 // RDOQ_CLI
     int rdoq_level;
-#else
-    int enable_rdoq;
-#endif
 
     /****************************************
      * Filter intra prediction
@@ -458,11 +437,7 @@ typedef struct EbConfig {
      * MD Parameters
      ****************************************/
     int8_t  enable_hbd_mode_decision;
-#if 1 // PALETTE_CLI
     int32_t palette_level;
-#else
-    int32_t enable_palette;
-#endif
     int32_t tile_columns;
     int32_t tile_rows;
 
@@ -533,11 +508,7 @@ typedef struct EbConfig {
     /****************************************
      * ALT-REF related Parameters
      ****************************************/
-#if 1 // ALTREF_CLI
     int8_t tf_level;
-#else
-    EbBool  enable_altrefs;
-#endif
     uint8_t altref_strength;
     uint8_t altref_nframes;
     EbBool  enable_overlays;

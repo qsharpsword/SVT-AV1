@@ -4949,7 +4949,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->interpolation_filter_search_blk_size = 1;
 #endif
 
-#if SSSE_CLI
     // spatial_sse_full_loop_level | Default Encoder Settings            | Command Line Settings
     //             0               | OFF subject to possible constraints | OFF in PD_PASS_2
     //             1               | ON subject to possible constraints  | ON in PD_PASS_2
@@ -4986,49 +4985,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->spatial_sse_full_loop_level =
         sequence_control_set_ptr->static_config.spatial_sse_full_loop_level;
-#else
-    // Derive Spatial SSE Flag
-    if (pd_pass == PD_PASS_0)
-        context_ptr->spatial_sse_full_loop = EB_FALSE;
-    else if (pd_pass == PD_PASS_1)
-        context_ptr->spatial_sse_full_loop = EB_FALSE;
-    else if (sequence_control_set_ptr->static_config.spatial_sse_fl == DEFAULT)
-#if !UNIFY_SC_NSC
-        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-#if MAR10_ADOPTIONS
-            if (enc_mode <= ENC_M8)
-#else
-            if (enc_mode <= ENC_M6)
-#endif
-                context_ptr->spatial_sse_full_loop = EB_TRUE;
-            else
-                context_ptr->spatial_sse_full_loop = EB_FALSE;
-#if MAR4_M6_ADOPTIONS
-#if MAR10_ADOPTIONS
-        else if (enc_mode <= ENC_M8)
-#else
-        else if (enc_mode <= ENC_M5)
-#endif
-#else
-        else if (enc_mode <= ENC_M4)
-#endif
-#else
-        if (enc_mode <= ENC_M8)
-#endif
-            context_ptr->spatial_sse_full_loop = EB_TRUE;
-        else
-            context_ptr->spatial_sse_full_loop = EB_FALSE;
-    else
-        context_ptr->spatial_sse_full_loop =
-        sequence_control_set_ptr->static_config.spatial_sse_fl;
-#endif
 
     if (context_ptr->chroma_level <= CHROMA_MODE_1)
         context_ptr->blk_skip_decision = EB_TRUE;
     else
         context_ptr->blk_skip_decision = EB_FALSE;
 
-#if RDOQ_CLI
     if (pd_pass == PD_PASS_0)
         context_ptr->rdoq_level = EB_FALSE;
     else if (pd_pass == PD_PASS_1)
@@ -5087,67 +5049,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->rdoq_level =
             sequence_control_set_ptr->static_config.rdoq_level;
-#else
-    // Derive Trellis Quant Coeff Optimization Flag
-    if (pd_pass == PD_PASS_0)
-        context_ptr->enable_rdoq = EB_FALSE;
-    else if (pd_pass == PD_PASS_1)
-        context_ptr->enable_rdoq = EB_FALSE;
-    else
-        if (sequence_control_set_ptr->static_config.enable_rdoq == DEFAULT)
-#if !UNIFY_SC_NSC
-            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-#if MAR17_ADOPTIONS
-#if M8_RDOQ
-#if UPGRADE_M6_M7_M8
-#if JUNE17_ADOPTIONS
-                if (enc_mode <= ENC_M6)
-#else
-#if PRESET_SHIFITNG
-                if (enc_mode <= ENC_M4)
-#else
-                if (enc_mode <= ENC_M6)
-#endif
-#endif
-#else
-                if (enc_mode <= ENC_M5)
-#endif
-#else
-                if (enc_mode <= ENC_M8)
-#endif
-#else
-#if MAR4_M6_ADOPTIONS
-                if (enc_mode <= ENC_M5)
-#else
-                if (enc_mode <= ENC_M3)
-#endif
-#endif
-                    context_ptr->enable_rdoq = EB_TRUE;
-                else
-#if M5_I_RDOQ
-                    context_ptr->enable_rdoq = pcs_ptr->slice_type == I_SLICE ? EB_TRUE : EB_FALSE;
-#else
-                    context_ptr->enable_rdoq = EB_FALSE;
-#endif
-#if MAR4_M6_ADOPTIONS
-#if MAR10_ADOPTIONS
-            else if (enc_mode <= ENC_M8)
-#else
-            else if (enc_mode <= ENC_M5)
-#endif
-#else
-            else if (enc_mode <= ENC_M3)
-#endif
-#else
-            if (enc_mode <= ENC_M8)
-#endif
-                context_ptr->enable_rdoq = EB_TRUE;
-            else
-                context_ptr->enable_rdoq = EB_FALSE;
-        else
-            context_ptr->enable_rdoq =
-            sequence_control_set_ptr->static_config.enable_rdoq;
-#endif
 
     // Derive redundant block
     if (pd_pass == PD_PASS_0)
@@ -6473,7 +6374,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_allow_intrabc = pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc;
 
-#if PALETTE_CLI
     // Set md_palette_level @ MD
     if (pd_pass == PD_PASS_0)
         context_ptr->md_palette_level = 0;
@@ -6481,15 +6381,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_palette_level = 0;
     else
         context_ptr->md_palette_level = pcs_ptr->parent_pcs_ptr->palette_level;
-#else
-    // Set md_palette_mode @ MD
-    if (pd_pass == PD_PASS_0)
-        context_ptr->md_palette_mode = 0;
-    else if (pd_pass == PD_PASS_1)
-        context_ptr->md_palette_mode = 0;
-    else
-        context_ptr->md_palette_mode = pcs_ptr->parent_pcs_ptr->palette_mode;
-#endif
 #endif
     // intra_similar_mode
     // 0: OFF

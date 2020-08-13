@@ -248,17 +248,10 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is 1. */
     EbBool enable_global_motion;
 
-#if 1 // CDEF_CLI
     /* CDEF Level
     *
     * Default is -1. */
     int cdef_level;
-#else
-    /* CDEF mode
-    *
-    * Default is -1. */
-    int cdef_mode;
-#endif
 
     /* Restoration filtering
     *  enable/disable
@@ -316,17 +309,10 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is -1. */
     int enable_redundant_blk;
 
-#if 1 // SSSE_CLI
     /* spatial sse in full loop
     *
     * -1: Default, 0: OFF in PD_PASS_2, 1: Fully ON in PD_PASS_2. */
     int spatial_sse_full_loop_level;
-#else
-    /* spatial sse in full loop
-    *
-    * Default is -1. */
-    int spatial_sse_fl;
-#endif
 
 #if 0//!REMOVE_ME_SUBPEL_CODE
     /* subpel
@@ -415,17 +401,10 @@ typedef struct EbSvtAv1EncConfiguration {
     EbBool enable_obmc;
 #endif
 
-#if 1 // RDOQ_CLI
     /* RDOQ
     *
     * -1: Default, 0: OFF in PD_PASS_2, 1: Fully ON in PD_PASS_2. */
     int rdoq_level;
-#else
-    /* RDOQ
-    *
-    * Default is -1. */
-    int enable_rdoq;
-#endif
 
 #if 1 // FILTER_INTRA_CLI
     /* Filter intra prediction
@@ -498,18 +477,11 @@ typedef struct EbSvtAv1EncConfiguration {
 
 #endif
 
-#if 1 // PALETTE_CLI
     /* Palette Mode
     *
     * -1: Default, 0: OFF, 1: Fully ON, 2 ... 6: Faster levels
     * Levels 0 - 6 apply only to PD_PASS_2 */
     int32_t palette_level;
-#else
-    /* Palette Mode
-    *
-    * Default is -1. */
-    int32_t enable_palette;
-#endif
 
     // Rate Control
 
@@ -719,13 +691,8 @@ typedef struct EbSvtAv1EncConfiguration {
 
     /* Variables to control the use of ALT-REF (temporally filtered frames)
     */
-#if 1 // ALTREF_CLI
-    /*
-    * -1: Default; 0: OFF; 1: ON; 2 and 3: Faster levels */
+    // -1: Default; 0: OFF; 1: ON; 2 and 3: Faster levels
     int8_t  tf_level;
-#else
-    EbBool  enable_altrefs;
-#endif
     uint8_t altref_strength;
     uint8_t altref_nframes;
     EbBool  enable_overlays;

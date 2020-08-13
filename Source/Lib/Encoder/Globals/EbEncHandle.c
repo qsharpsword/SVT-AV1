@@ -499,11 +499,7 @@ EbErrorType load_default_buffer_configuration_settings(
                                                                           (2 << scs_ptr->static_config.hierarchical_levels) + SCD_LAD : 1;
     //Future frames window in Scene Change Detection (SCD) / TemporalFiltering
     scs_ptr->scd_delay =
-#if ALTREF_CLI
         scs_ptr->static_config.tf_level || scs_ptr->static_config.scene_change_detection ? SCD_LAD : 0;
-#else
-        scs_ptr->static_config.enable_altrefs || scs_ptr->static_config.scene_change_detection ? SCD_LAD : 0;
-#endif
 
     // bistream buffer will be allocated at run time. app will free the buffer once written to file.
     scs_ptr->output_stream_buffer_fifo_init_count = PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH;
@@ -2096,11 +2092,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     scs_ptr->top_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->right_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->bot_padding = scs_ptr->static_config.super_block_size + 4;
-#if ALTREF_CLI
     scs_ptr->static_config.enable_overlays = scs_ptr->static_config.tf_level == 0 ||
-#else
-    scs_ptr->static_config.enable_overlays = scs_ptr->static_config.enable_altrefs == EB_FALSE ||
-#endif
         (scs_ptr->static_config.altref_nframes <= 1) ||
         (scs_ptr->static_config.rate_control_mode > 0) ||
         scs_ptr->static_config.encoder_bit_depth != EB_8BIT ?
@@ -2260,11 +2252,7 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_global_motion = ((EbSvtAv1EncConfiguration*)config_struct)->enable_global_motion;
 
     // CDEF
-#if CDEF_CLI
     scs_ptr->static_config.cdef_level = ((EbSvtAv1EncConfiguration*)config_struct)->cdef_level;
-#else
-    scs_ptr->static_config.cdef_mode = ((EbSvtAv1EncConfiguration*)config_struct)->cdef_mode;
-#endif
 
     // Restoration filtering
     scs_ptr->static_config.enable_restoration_filtering = ((EbSvtAv1EncConfiguration*)config_struct)->enable_restoration_filtering;
@@ -2284,11 +2272,7 @@ void copy_api_from_app(
     // redundant block
     scs_ptr->static_config.enable_redundant_blk         = ((EbSvtAv1EncConfiguration*)config_struct)->enable_redundant_blk;
     // spatial sse in full loop
-#if SSSE_CLI
     scs_ptr->static_config.spatial_sse_full_loop_level  = ((EbSvtAv1EncConfiguration*)config_struct)->spatial_sse_full_loop_level;
-#else
-    scs_ptr->static_config.spatial_sse_fl               = ((EbSvtAv1EncConfiguration*)config_struct)->spatial_sse_fl;
-#endif
 #if !REMOVE_ME_SUBPEL_CODE
     // subpel
     scs_ptr->static_config.enable_subpel                = ((EbSvtAv1EncConfiguration*)config_struct)->enable_subpel;
@@ -2327,11 +2311,7 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_obmc = ((EbSvtAv1EncConfiguration*)config_struct)->enable_obmc;
 #endif
     // RDOQ
-#if RDOQ_CLI
     scs_ptr->static_config.rdoq_level = ((EbSvtAv1EncConfiguration*)config_struct)->rdoq_level;
-#else
-    scs_ptr->static_config.enable_rdoq = ((EbSvtAv1EncConfiguration*)config_struct)->enable_rdoq;
-#endif
 
     // Predictive ME
     scs_ptr->static_config.pred_me  = ((EbSvtAv1EncConfiguration*)config_struct)->pred_me;
@@ -2392,11 +2372,7 @@ void copy_api_from_app(
 
     // MD Parameters
     scs_ptr->static_config.enable_hbd_mode_decision = ((EbSvtAv1EncConfiguration*)config_struct)->encoder_bit_depth > 8 ? ((EbSvtAv1EncConfiguration*)config_struct)->enable_hbd_mode_decision : 0;
-#if PALETTE_CLI
     scs_ptr->static_config.palette_level = ((EbSvtAv1EncConfiguration*)config_struct)->palette_level;
-#else
-    scs_ptr->static_config.enable_palette = ((EbSvtAv1EncConfiguration*)config_struct)->enable_palette;
-#endif
     // Adaptive Loop Filter
     scs_ptr->static_config.tile_rows = ((EbSvtAv1EncConfiguration*)config_struct)->tile_rows;
     scs_ptr->static_config.tile_columns = ((EbSvtAv1EncConfiguration*)config_struct)->tile_columns;
@@ -2496,11 +2472,7 @@ void copy_api_from_app(
     }
 #endif
 
-#if ALTREF_CLI
     scs_ptr->static_config.tf_level = config_struct->tf_level;
-#else
-    scs_ptr->static_config.enable_altrefs = config_struct->enable_altrefs;
-#endif
     scs_ptr->static_config.altref_strength = config_struct->altref_strength;
     scs_ptr->static_config.altref_nframes = config_struct->altref_nframes;
     scs_ptr->static_config.enable_overlays = config_struct->enable_overlays;
@@ -2948,30 +2920,16 @@ static EbErrorType verify_settings(
     }
 
     // palette
-#if PALETTE_CLI
     if (config->palette_level < (int32_t)(-1) || config->palette_level > 6) {
         SVT_LOG("Error instance %u: Invalid Palette Mode [0 .. 6], your input: %i\n", channel_number + 1, config->palette_level);
         return_error = EB_ErrorBadParameter;
     }
-#else
-    if (config->enable_palette < (int32_t)(-1) || config->enable_palette >6) {
-        SVT_LOG( "Error instance %u: Invalid Palette Mode [0 .. 6], your input: %i\n", channel_number + 1, config->enable_palette);
-        return_error = EB_ErrorBadParameter;
-    }
-#endif
 
     // RDOQ
-#if RDOQ_CLI
     if (config->rdoq_level != 0 && config->rdoq_level != 1 && config->rdoq_level != -1) {
         SVT_LOG("Error instance %u: Invalid RDOQ parameter [-1, 0, 1], your input: %i\n", channel_number + 1, config->rdoq_level);
         return_error = EB_ErrorBadParameter;
     }
-#else
-    if (config->enable_rdoq != 0 && config->enable_rdoq != 1 && config->enable_rdoq != -1) {
-        SVT_LOG( "Error instance %u: Invalid RDOQ parameter [-1, 0, 1], your input: %i\n", channel_number + 1, config->enable_rdoq);
-        return_error = EB_ErrorBadParameter;
-    }
-#endif
 
     // Chroma Level
     if (config->set_chroma_mode > 3 || config->set_chroma_mode < -1) {
@@ -2986,17 +2944,10 @@ static EbErrorType verify_settings(
     }
 
     // CDEF
-#if CDEF_CLI
     if (config->cdef_level > 5 || config->cdef_level < -1) {
         SVT_LOG("Error instance %u: Invalid CDEF level [0 - 5, -1 for auto], your input: %d\n", channel_number + 1, config->cdef_level);
         return_error = EB_ErrorBadParameter;
     }
-#else
-    if (config->cdef_mode > 5 || config->cdef_mode < -1) {
-        SVT_LOG("Error instance %u: Invalid CDEF mode [0 - 5, -1 for auto], your input: %d\n", channel_number + 1, config->cdef_mode);
-        return_error = EB_ErrorBadParameter;
-    }
-#endif
 
     // Restoration Filtering
     if (config->enable_restoration_filtering != 0 && config->enable_restoration_filtering != 1 && config->enable_restoration_filtering != -1) {
@@ -3075,17 +3026,10 @@ static EbErrorType verify_settings(
       return_error = EB_ErrorBadParameter;
     }
 
-#if SSSE_CLI
     if (config->spatial_sse_full_loop_level != 0 && config->spatial_sse_full_loop_level != 1 && config->spatial_sse_full_loop_level != -1) {
         SVT_LOG("Error instance %u: Invalid spatial_sse_fl flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->spatial_sse_full_loop_level);
         return_error = EB_ErrorBadParameter;
     }
-#else
-    if (config->spatial_sse_fl != 0 && config->spatial_sse_fl != 1 && config->spatial_sse_fl != -1) {
-      SVT_LOG("Error instance %u: Invalid spatial_sse_fl flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->spatial_sse_fl);
-      return_error = EB_ErrorBadParameter;
-    }
-#endif
 #if !REMOVE_ME_SUBPEL_CODE
     if (config->enable_subpel != 0 && config->enable_subpel != 1 && config->enable_subpel != -1) {
       SVT_LOG("Error instance %u: Invalid enable_subpel flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->enable_subpel);
@@ -3239,11 +3183,7 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->disable_dlf_flag = EB_FALSE;
     config_ptr->enable_warped_motion = DEFAULT;
     config_ptr->enable_global_motion = EB_TRUE;
-#if CDEF_CLI
     config_ptr->cdef_level = DEFAULT;
-#else
-    config_ptr->cdef_mode = DEFAULT;
-#endif
     config_ptr->enable_restoration_filtering = DEFAULT;
     config_ptr->sg_filter_mode = DEFAULT;
     config_ptr->wn_filter_mode = DEFAULT;
@@ -3260,11 +3200,7 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->mrp_level = DEFAULT;
 #endif
     config_ptr->enable_redundant_blk = DEFAULT;
-#if SSSE_CLI
     config_ptr->spatial_sse_full_loop_level = DEFAULT;
-#else
-    config_ptr->spatial_sse_fl = DEFAULT;
-#endif
 #if !REMOVE_ME_SUBPEL_CODE
     config_ptr->enable_subpel = DEFAULT;
 #endif
@@ -3283,11 +3219,7 @@ EbErrorType eb_svt_enc_init_parameter(
 #else
     config_ptr->enable_obmc = EB_TRUE;
 #endif
-#if RDOQ_CLI
     config_ptr->rdoq_level = DEFAULT;
-#else
-    config_ptr->enable_rdoq = DEFAULT;
-#endif
     config_ptr->pred_me = DEFAULT;
     config_ptr->bipred_3x3_inject = DEFAULT;
     config_ptr->compound_level = DEFAULT;
@@ -3327,11 +3259,7 @@ EbErrorType eb_svt_enc_init_parameter(
 #else
     config_ptr->enable_hbd_mode_decision = 1;
 #endif
-#if PALETTE_CLI
     config_ptr->palette_level = DEFAULT;
-#else
-    config_ptr->enable_palette = -1;
-#endif
     config_ptr->enable_manual_pred_struct = EB_FALSE;
     config_ptr->encoder_color_format = EB_YUV420;
     // Bitstream options
@@ -3374,11 +3302,7 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->recon_enabled = 0;
 
     // Alt-Ref default values
-#if ALTREF_CLI
     config_ptr->tf_level = DEFAULT;
-#else
-    config_ptr->enable_altrefs = EB_TRUE;
-#endif
 #if NOISE_BASED_TF_FRAMES
     config_ptr->altref_nframes = ALTREF_MAX_NFRAMES;
 #else
