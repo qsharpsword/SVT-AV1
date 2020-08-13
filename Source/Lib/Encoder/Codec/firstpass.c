@@ -786,33 +786,10 @@ static int firstpass_inter_prediction(
                                                            : spatial_full_distortion_kernel;
 
     int motion_error = 0;
-    // get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
-    //     &x->plane[0].src, &xd->plane[0].pre[0]);
-    // Compute the motion error of the 0,0 motion using the last source
-    // frame as the reference. Skip the further motion search on
-    // reconstructed frame if this error is small.
-    //const int raw_motion_error = raw_motion_err_list[0];
-
     // TODO(pengchong): Replace the hard-coded threshold
     // anaghdin to check
     if (1) //(raw_motion_error > LOW_MOTION_ERROR_THRESH)
     {
-        //// Test last reference frame using the previous best mv as the
-        //// starting point (best reference) for the search.
-        //first_pass_motion_search(cpi, x, best_ref_mv, &mv, &motion_error);
-
-        //// If the current best reference mv is not centered on 0,0 then do a
-        //// 0,0 based search as well.
-        //if (!is_zero_mv(best_ref_mv)) {
-        //    int tmp_err = INT_MAX;
-        //    first_pass_motion_search(cpi, x, &kZeroMv, &tmp_mv, &tmp_err);
-
-        //    if (tmp_err < motion_error) {
-        //        motion_error = tmp_err;
-        //        mv = tmp_mv;
-        //    }
-        //}
-
         uint32_t                      cand_index = 1;
         ModeDecisionCandidateBuffer **candidate_buffer_ptr_array_base =
             context_ptr->candidate_buffer_ptr_array;
@@ -839,7 +816,6 @@ static int firstpass_inter_prediction(
                              blk_origin_index,
                              ref_fast_cost);
 
-        // anaghdin to check the above logic
         mv.col = candidate_buffer->candidate_ptr->motion_vector_xl0 >> 3;
         mv.row = candidate_buffer->candidate_ptr->motion_vector_yl0 >> 3;
 
@@ -877,23 +853,7 @@ static int firstpass_inter_prediction(
             context_ptr->best_candidate_index_array[cand_index] = cand_index;
             // Initialize tx_depth
             candidate_buffer->candidate_ptr->tx_depth = 0;
-               // (bsize == BLOCK_16X16 ? 2 : bsize == BLOCK_8X8 ? 1 : 0);
-            candidate_buffer->candidate_ptr->fast_luma_rate   = 0;
-            candidate_buffer->candidate_ptr->fast_chroma_rate = 0;
             candidate_buffer->candidate_ptr->interp_filters   = 0;
-            // anaghdin: no need to do everything, we just need the prediction
-            //first_pass_loop_core(pcs_ptr,
-            //                     //context_ptr->sb_ptr,
-            //                     blk_ptr,
-            //                     context_ptr,
-            //                     candidate_buffer,
-            //                     candidate_ptr,
-            //                     input_picture_ptr,
-            //                     input_origin_index,
-            //                     //input_cb_origin_in_index,
-            //                     blk_origin_index,
-            //                     //blk_chroma_origin_index,
-            //                     ref_fast_cost);
             product_prediction_fun_table[candidate_ptr->type](
                 context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
@@ -930,24 +890,13 @@ static int firstpass_inter_prediction(
         // (just as will be done for) accumulation of "coded_error" for
         // the last frame.
         if (fast_candidate_total_count > 2) {
-            //    if ((current_frame->frame_number > 1) && golden_frame != NULL) {
             stats->sr_coded_error += AOMMIN(gf_motion_error, this_intra_error);
         } else {
-            // TODO(chengchen): I believe logically this should also be changed to
-            // stats->sr_coded_error += AOMMIN(gf_motion_error, this_intra_error).
             stats->sr_coded_error += motion_error;
         }
 
         // Motion search in 3rd reference frame.
         int alt_motion_error = motion_error;
-        //if (alt_ref_frame != NULL) {
-        //    xd->plane[0].pre[0].buf = alt_ref_frame->y_buffer + alt_ref_frame_yoffset;
-        //    xd->plane[0].pre[0].stride = alt_ref_frame->y_stride;
-        //    alt_motion_error =
-        //        get_prediction_error_bitdepth(is_high_bitdepth, bitdepth, bsize,
-        //            &x->plane[0].src, &xd->plane[0].pre[0]);
-        //    first_pass_motion_search(cpi, x, &kZeroMv, &tmp_mv, &alt_motion_error);
-        //}
         if (alt_motion_error < motion_error && alt_motion_error < gf_motion_error &&
             alt_motion_error < this_intra_error) {
             ++stats->third_ref_count;
@@ -956,11 +905,10 @@ static int firstpass_inter_prediction(
         // best of the motion predicted score and the intra coded error
         // (just as will be done for) accumulation of "coded_error" for
         // the last frame.
+        // alt_ref_frame is not supported yet
         if (0 /*alt_ref_frame != NULL*/) {
             stats->tr_coded_error += AOMMIN(alt_motion_error, this_intra_error);
         } else {
-            // TODO(chengchen): I believe logically this should also be changed to
-            // stats->tr_coded_error += AOMMIN(alt_motion_error, this_intra_error).
             stats->tr_coded_error += motion_error;
         }
     } else {
