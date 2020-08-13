@@ -501,6 +501,12 @@ extern "C" {
 
 #define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
 #define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
+
+#define ADAPTIVE_ME_SEARCH  1 // Add Adaptive ME: detect and improve the pred of high active block(s)
+#define FIX_MV_BOUND        1 // Clip inherited ME MVs to stay within pic boundaries
+#define IMPROVE_GMV         1 // Make GMV params/candidates derivation multi-ref aware, and set multi-ref to be considered = f(input_complexity)
+#define ENABLE_GM_ID_EXIT   1 // Enable gm_identiy_exit
+#define UPGRADE_SUBPEL      1 // Upgrade subpel of me and of pme to use libaom subpel search
 #endif
 
 ///////// END MASTER_SYNCH
@@ -524,8 +530,12 @@ extern "C" {
 #endif
 
 #define ALT_REF_QP_THRESH 20
+#if UPGRADE_SUBPEL
+// Q threshold for high precision mv.
+#define HIGH_PRECISION_MV_QTHRESH 128
+#else
 #define HIGH_PRECISION_MV_QTHRESH 150
-
+#endif
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC         0 // bypass encDec to test cmpliance of MD. complained achieved when skip_flag is OFF. Port sample code from VCI-SW_AV1_Candidate1 branch
@@ -565,7 +575,9 @@ typedef enum GM_LEVEL {
     GM_DOWN      = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
 #if GM_DOWN_16
     GM_DOWN16    = 2, // Downsampled search mode, with a downsampling factor of 4 in each dimension
+#if !IMPROVE_GMV
     GM_TRAN_ONLY = 3 // Translation only using ME MV.
+#endif
 #else
     GM_TRAN_ONLY = 2 // Translation only using ME MV.
 #endif
