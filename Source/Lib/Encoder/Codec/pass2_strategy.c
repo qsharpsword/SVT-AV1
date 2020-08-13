@@ -20,27 +20,6 @@
 #include "EbEntropyCoding.h"
 
 #if TWOPASS_RC
-#if 0
-#include "config/aom_config.h"
-#include "config/aom_scale_rtcd.h"
-
-#include "aom/aom_codec.h"
-#include "aom/aom_encoder.h"
-
-#include "aom_ports/system_state.h"
-
-#include "av1/common/av1_common_int.h"
-
-#include "av1/encoder/encoder.h"
-#include "av1/encoder/firstpass.h"
-#include "av1/encoder/gop_structure.h"
-#include "av1/encoder/pass2_strategy.h"
-#include "av1/encoder/ratectrl.h"
-#include "av1/encoder/rc_utils.h"
-#include "av1/encoder/tpl_model.h"
-#include "av1/encoder/use_flat_gop_model_params.h"
-#include "av1/encoder/encode_strategy.h"
-#endif
 
 #define INT_MAX 0x7fffffff
 
@@ -159,7 +138,6 @@ static void subtract_stats(FIRSTPASS_STATS *section,
 
 // This function returns the maximum target rate per frame.
 static int frame_max_bits(const RATE_CONTROL *rc,
-                          //const AV1EncoderConfig *oxcf)
                           const EncodeContext *encode_context_ptr) {
   int64_t max_bits = ((int64_t)rc->avg_frame_bandwidth *
                       (int64_t)encode_context_ptr->two_pass_cfg.vbrmax_section) /
@@ -2988,11 +2966,11 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
   FIRSTPASS_STATS this_frame;
   av1_zero(this_frame);
   // call above fn
-  //if (is_stat_consumption_stage(cpi)) {
+  if (1/*is_stat_consumption_stage(cpi)*/) {
     process_first_pass_stats(pcs_ptr, &this_frame);
-  //} else {
-  //  rc->active_worst_quality = oxcf->rc_cfg.cq_level;
-  //}
+  } else {
+    rc->active_worst_quality = encode_context_ptr->rc_cfg.cq_level;
+  }
 
   // Keyframe and section processing.
     if (rc->frames_to_key <= 0 || (frame_is_intra_only(pcs_ptr) && pcs_ptr->idr_flag)/*(frame_flags & FRAMEFLAGS_KEY)*/) {

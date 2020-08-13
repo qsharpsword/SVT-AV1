@@ -5385,8 +5385,7 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
-            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr
-                                ->kf_zeromotion_pct /*(double)cpi->twopass.kf_zeromotion_pct*/);
+            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr->kf_zeromotion_pct);
 
         // Convert the adjustment factor to a qindex delta
         // on active_best_quality.
@@ -5557,8 +5556,7 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
-            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr
-                                ->kf_zeromotion_pct /*(double)cpi->twopass.kf_zeromotion_pct*/);
+            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr->kf_zeromotion_pct);
 
         // Convert the adjustment factor to a qindex delta
         // on active_best_quality.
@@ -5573,9 +5571,11 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
 #else
         int num_stats_required_for_gfu_boost = pcs_ptr->parent_pcs_ptr->frames_in_sw + scs_ptr->static_config.look_ahead_distance;
 #endif
-        rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, num_stats_required_for_gfu_boost);
+        if (pcs_ptr->parent_pcs_ptr->r0 != 0)
+            rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, num_stats_required_for_gfu_boost);
 #else
-        rc->gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
+        if (pcs_ptr->parent_pcs_ptr->r0 != 0)
+            rc->gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
 #endif
         rc->arf_boost_factor = 1;
 #if TPL_1PASS_IMP
@@ -5719,8 +5719,7 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
-            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr
-                                ->kf_zeromotion_pct /*(double)cpi->twopass.kf_zeromotion_pct*/);
+            0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr->kf_zeromotion_pct);
 
         // Convert the adjustment factor to a qindex delta
         // on active_best_quality.
@@ -6561,8 +6560,7 @@ static void get_intra_q_and_bounds(PictureControlSet *pcs_ptr,
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
-            0.05 - (0.001 * /*(double)pcs_ptr->parent_pcs_ptr->kf_zeromotion_pct*/
-                            (double)twopass->kf_zeromotion_pct);
+            0.05 - (0.001 * (double)twopass->kf_zeromotion_pct);
 
         // Convert the adjustment factor to a qindex delta
         // on active_best_quality.
@@ -7233,7 +7231,6 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
   }
 
   //update_frames_till_gf_update(cpi);
-#if 1
   // TODO(weitinglin): Updating this counter for is_frame_droppable
   // is a work-around to handle the condition when a frame is drop.
   // We should fix the cpi->common.show_frame flag
@@ -7250,7 +7247,6 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
     if (rc->frames_till_gf_update_due > 0)
       rc->frames_till_gf_update_due--;
   }
-#endif
 
   //update_gf_group_index(cpi);
   // Increment the gf group index ready for the next frame. If this is
@@ -7406,7 +7402,7 @@ void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
     if (rc_cfg->mode == AOM_VBR || rc_cfg->mode == AOM_CQ)
         vbr_rate_correction(pcs_ptr, &target_rate);
     av1_rc_set_frame_target(pcs_ptr, target_rate, width, height);
- //   printf("\n%lld\t%lld\t%lld\n", pcs_ptr->picture_number, rc->base_frame_target, rc->this_frame_target);
+    //printf("\n%lld\t%lld\t%lld\n", pcs_ptr->picture_number, rc->base_frame_target, rc->this_frame_target);
 }
 #endif
 void *rate_control_kernel(void *input_ptr) {
