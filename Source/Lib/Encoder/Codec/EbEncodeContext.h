@@ -212,7 +212,7 @@ typedef struct EncodeContext {
     // Number of stats buffers required for look ahead
     int num_lap_buffers;
     STATS_BUFFER_CTX stats_buf_context;
-    aom_fixed_buf_t rc_twopass_stats_in; //anaghdin: replaced oxcf->two_pass_cfg.stats_in in aom
+    aom_fixed_buf_t rc_twopass_stats_in; // replaced oxcf->two_pass_cfg.stats_in in aom
 #endif
 } EncodeContext;
 

@@ -6208,6 +6208,30 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
 #endif
 
 #if TWOPASS_RC
+int av1_find_qindex(double desired_q, aom_bit_depth_t bit_depth,
+    int best_qindex, int worst_qindex) {
+    assert(best_qindex <= worst_qindex);
+    int low = best_qindex;
+    int high = worst_qindex;
+    while (low < high) {
+        const int mid = (low + high) >> 1;
+        const double mid_q = eb_av1_convert_qindex_to_q(mid, bit_depth);
+        if (mid_q < desired_q) {
+            low = mid + 1;
+        }
+        else {
+            high = mid;
+        }
+    }
+    assert(low == high);
+    assert(eb_av1_convert_qindex_to_q(low, bit_depth) >= desired_q ||
+        low == worst_qindex);
+    return low;
+}
+static int find_fp_qindex(aom_bit_depth_t bit_depth) {
+    aom_clear_system_state();
+    return av1_find_qindex(FIRST_PASS_Q, bit_depth, 0, QINDEX_RANGE - 1);
+}
 int av1_rc_get_default_min_gf_interval(int width, int height,
                                        double framerate) {
   // Assume we do not need any constraint lower than 4K 20 fps
@@ -7454,8 +7478,8 @@ void *rate_control_kernel(void *input_ptr) {
                     }
                     else {
 #if FIRST_PASS_SETUP
-                        new_qindex = 33;
-                        //anaghdin: call find_fp_qindex
+                        new_qindex =
+                            find_fp_qindex((AomBitDepth)scs_ptr->static_config.encoder_bit_depth);
 #else
                         new_qindex = cqp_qindex_calc(
                             pcs_ptr,

@@ -79,7 +79,7 @@ static void encode_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->rate_control_tables_array);
 #if TWOPASS_STAT_BUF
     destroy_stats_buffer(&obj->stats_buf_context, obj->frame_stats_buffer);
-    free(obj->rc_twopass_stats_in.buf);//anaghdin to double check for pass 1
+    free(obj->rc_twopass_stats_in.buf);
 #endif
 }
 
@@ -204,7 +204,7 @@ EbErrorType encode_context_ctor(EncodeContext* encode_context_ptr, EbPtr object_
     EB_CREATE_MUTEX(encode_context_ptr->shared_reference_mutex);
     EB_CREATE_MUTEX(encode_context_ptr->stat_file_mutex);
 #if TWOPASS_STAT_BUF
-    encode_context_ptr->num_lap_buffers = 0;// anaghdin to set properly
+    encode_context_ptr->num_lap_buffers = 0;// lap not supported for now
     int *num_lap_buffers = &encode_context_ptr->num_lap_buffers;
     create_stats_buffer(&encode_context_ptr->frame_stats_buffer,
                         &encode_context_ptr->stats_buf_context,

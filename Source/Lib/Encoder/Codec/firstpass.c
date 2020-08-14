@@ -29,7 +29,6 @@
 
 #define OUTPUT_FPF 0
 
-#define FIRST_PASS_Q 10.0
 #define INTRA_MODE_PENALTY 1024
 #define NEW_MV_MODE_PENALTY 32
 #define DARK_THRESH 64
@@ -354,7 +353,7 @@ void average_non_16x16_stats(FRAME_STATS *mb_stats, int blk_num) {
     mb_stats->inter_count /= blk_num;
     mb_stats->intra_skip_count /= blk_num;
     mb_stats->mv_count /= blk_num;
-    mb_stats->neutral_count /= blk_num; //anaghdin check the calculation
+    mb_stats->neutral_count /= blk_num;
     mb_stats->new_mv_count /= blk_num;
     mb_stats->second_ref_count /= blk_num;
     mb_stats->sum_in_vectors /= blk_num;
@@ -787,7 +786,7 @@ static int firstpass_inter_prediction(
 
     int motion_error = 0;
     // TODO(pengchong): Replace the hard-coded threshold
-    // anaghdin to check
+    // anaghdin: to add support
     if (1) //(raw_motion_error > LOW_MOTION_ERROR_THRESH)
     {
         uint32_t                      cand_index = 1;
@@ -1119,8 +1118,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
     // Perform md reference pruning
     perform_md_reference_pruning(pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);
 #endif
-    context_ptr->inject_inter_candidates = 1; // anaghdin add signal_derivation_block
-    // anaghdin create a new one
+    context_ptr->inject_inter_candidates = 1;
     generate_md_stage_0_cand(
         context_ptr->sb_ptr, context_ptr, &fast_candidate_total_count, pcs_ptr);
 
@@ -1675,7 +1673,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // 2                                              Tx_weight 2
     // 3                                              Tx_weight 1 + disabling rdoq and sssse
     // 4                                              Tx_weight 1 + disabling rdoq and sssse + reduced set
-    context_ptr->md_txt_search_level = 1;// anaghdin??
+    context_ptr->md_txt_search_level = 1;
 
     uint8_t txt_cycles_reduction_level = 0;
     set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
@@ -1693,7 +1691,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // CHROMA_MODE_1  1     Fast chroma search @ MD
     // CHROMA_MODE_2  2     Chroma blind @ MD + CFL @ EP
     // CHROMA_MODE_3  3     Chroma blind @ MD + no CFL @ EP
-    context_ptr->chroma_level = CHROMA_MODE_2; //anaghdin first_pass_opt // or CHROMA_MODE_3
+    context_ptr->chroma_level = CHROMA_MODE_2;
 
     // Chroma independent modes search
     // Level                Settings

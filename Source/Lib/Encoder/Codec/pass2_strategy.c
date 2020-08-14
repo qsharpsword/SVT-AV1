@@ -1194,7 +1194,7 @@ void set_last_prev_low_err(int *cur_start_ptr, int *cur_last_ptr, int *cut_pos,
   return;
 }
 // This function imposes the gf group length of future frames in batch based on the intra refresh
-//anaghdin MAX_NUM_GF_INTERVALS is limited. Also only supports for 5L
+// only supports for 5L
 static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals) {
     SequenceControlSet *scs_ptr            = pcs_ptr->scs_ptr;
     EncodeContext *     encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -1233,250 +1233,6 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
     }
     rc->cur_gf_index = 0;
 }
-#if 0
-// This function decides the gf group length of future frames in batch
-// rc->gf_intervals is modified to store the group lengths
-static void calculate_gf_length(PictureParentControlSet *pcs_ptr, int max_gop_length,
-                                int max_intervals) {
-  SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
-  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-  RATE_CONTROL *const rc = &encode_context_ptr->rc;
-  TWO_PASS *const twopass = &scs_ptr->twopass;
-  FIRSTPASS_STATS next_frame;
-  const FIRSTPASS_STATS *const start_pos = twopass->stats_in;
-  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
-  int i;
-
-  int flash_detected;
-
-  //aom_clear_system_state();
-  av1_zero(next_frame);
-
-#if 0
-  if (has_no_stats_stage(cpi)) {
-    for (i = 0; i < MAX_NUM_GF_INTERVALS; i++) {
-      rc->gf_intervals[i] = AOMMIN(rc->max_gf_interval, max_gop_length);
-    }
-    rc->cur_gf_index = 0;
-    rc->intervals_till_gf_calculate_due = MAX_NUM_GF_INTERVALS;
-    return;
-  }
-#endif
-
-  // TODO(urvang): Try logic to vary min and max interval based on q.
-  const int active_min_gf_interval = rc->min_gf_interval;
-  const int active_max_gf_interval =
-      AOMMIN(rc->max_gf_interval, max_gop_length);
-  const int min_shrink_int = AOMMIN(MIN_SHRINK_LEN, active_min_gf_interval);
-
-  i = 0;
-  max_intervals = scs_ptr->lap_enabled ? 1 : max_intervals;
-  int cut_pos[MAX_NUM_GF_INTERVALS + 1] = { 0 };
-  int count_cuts = 1;
-  int cur_start = 0, cur_last;
-  int cut_here;
-  int prev_lows = 0;
-  GF_GROUP_STATS gf_stats;
-  init_gf_stats(&gf_stats);
-  while (count_cuts < max_intervals + 1) {
-    ++i;
-
-    // reaches next key frame, break here
-    if (i >= rc->frames_to_key) {
-      cut_pos[count_cuts] = i - 1;
-      count_cuts++;
-      break;
-    }
-
-    // reached maximum len, but nothing special yet (almost static)
-    // let's look at the next interval
-    if (i - cur_start >= rc->static_scene_max_gf_interval) {
-      cut_here = 1;
-    } else {
-      // reaches last frame, break
-      if (EOF == input_stats(twopass, &next_frame)) {
-        cut_pos[count_cuts] = i - 1;
-        count_cuts++;
-        break;
-      }
-      // Test for the case where there is a brief flash but the prediction
-      // quality back to an earlier frame is then restored.
-      //anaghdin_GF to disable for now
-      flash_detected = detect_flash(twopass, 0);
-      // TODO(bohanli): remove redundant accumulations here, or unify
-      // this and the ones in define_gf_group
-      accumulate_next_frame_stats(&next_frame, frame_info, flash_detected,
-                                  rc->frames_since_key, i, &gf_stats);
-      //anaghdin_GF to cut based on PD decisions
-      cut_here = detect_gf_cut(pcs_ptr, i, cur_start, flash_detected,
-                               active_max_gf_interval, active_min_gf_interval,
-                               &gf_stats);
-    }
-    if (cut_here) {
-      cur_last = i - 1;  // the current last frame in the gf group
-      if (encode_context_ptr->kf_cfg.fwd_kf_enabled && rc->next_is_fwd_key) {
-        const int frames_left = rc->frames_to_key - i;
-        const int min_int = AOMMIN(MIN_FWD_KF_INTERVAL, active_min_gf_interval);
-        if (frames_left < min_int) {
-          cur_last = rc->frames_to_key - min_int - 1;
-        }
-      }
-      // only try shrinking if interval smaller than active_max_gf_interval
-      if (cur_last - cur_start <= active_max_gf_interval) {
-        // determine in the current decided gop the higher and lower errs
-        int n;
-        double ratio;
-
-        // load neighboring coded errs
-        int is_high[MAX_GF_INTERVAL + 1 + MAX_PAD_GF_CHECK * 2] = { 0 };
-        double errs[MAX_GF_INTERVAL + 1 + MAX_PAD_GF_CHECK * 2] = { 0 };
-        double si[MAX_GF_INTERVAL + 1 + MAX_PAD_GF_CHECK * 2] = { 0 };
-        int before_pad =
-            AOMMIN(MAX_PAD_GF_CHECK, rc->frames_since_key - 1 + cur_start);
-        int after_pad =
-            AOMMIN(MAX_PAD_GF_CHECK, rc->frames_to_key - cur_last - 1);
-        for (n = cur_start - before_pad; n <= cur_last + after_pad; n++) {
-          if (start_pos + n - 1 > twopass->stats_buf_ctx->stats_in_end) {
-            after_pad = n - cur_last - 1;
-            assert(after_pad >= 0);
-            break;
-          } else if (start_pos + n - 1 <
-                     twopass->stats_buf_ctx->stats_in_start) {
-            before_pad = cur_start - n - 1;
-            continue;
-          }
-          errs[n + before_pad - cur_start] = (start_pos + n - 1)->coded_error;
-        }
-        const int len = before_pad + after_pad + cur_last - cur_start + 1;
-        const int reset = determine_high_err_gf(
-            errs, is_high, si, len, &ratio, cur_start, cur_last, before_pad);
-
-        // if the current frame may have high error, try shrinking
-        if (is_high[cur_last - cur_start + before_pad] == 1 ||
-            (!reset && si[cur_last - cur_start + before_pad] < SI_LOW)) {
-          // try not to cut in high err area
-          set_last_prev_low_err(&cur_start, &cur_last, cut_pos, count_cuts,
-                                before_pad, ratio, is_high, si, prev_lows,
-                                min_shrink_int);
-        }  // if current frame high error
-        // count how many trailing lower error frames we have in this decided
-        // gf group
-        prev_lows = 0;
-        for (n = cur_last - 1; n > cur_start + min_shrink_int; n--) {
-          if (is_high[n - cur_start + before_pad] == 0 &&
-              (si[n - cur_start + before_pad] > SI_HIGH || reset)) {
-            prev_lows++;
-          } else {
-            break;
-          }
-        }
-      }
-      cut_pos[count_cuts] = cur_last;
-      count_cuts++;
-
-      // reset pointers to the shrinked location
-      twopass->stats_in = start_pos + cur_last;
-      cur_start = cur_last;
-      i = cur_last;
-
-      // reset accumulators
-      init_gf_stats(&gf_stats);
-    }
-  }
-
-  // save intervals
-  rc->intervals_till_gf_calculate_due = count_cuts - 1;
-  for (int n = 1; n < count_cuts; n++) {
-    rc->gf_intervals[n - 1] = cut_pos[n] + 1 - cut_pos[n - 1];
-  }
-  rc->cur_gf_index = 0;
-  twopass->stats_in = start_pos;
-
-#if GF_SHRINK_OUTPUT
-  printf("\nf_to_key: %d, count_cut: %d. ", rc->frames_to_key, count_cuts);
-  for (int n = 0; n < count_cuts; n++) {
-    printf("%d ", cut_pos[n]);
-  }
-  printf("\n");
-
-  for (int n = 0; n < rc->intervals_till_gf_calculate_due; n++) {
-    printf("%d ", rc->gf_intervals[n]);
-  }
-  printf("\n\n");
-#endif
-}
-#endif
-
-#if 0
-static void correct_frames_to_key(AV1_COMP *cpi) {
-  int lookahead_size =
-      (int)av1_lookahead_depth(cpi->lookahead, cpi->compressor_stage) + 1;
-  if (lookahead_size <
-      av1_lookahead_pop_sz(cpi->lookahead, cpi->compressor_stage)) {
-    cpi->rc.frames_to_key = AOMMIN(cpi->rc.frames_to_key, lookahead_size);
-  }
-}
-
-static void define_gf_group_pass0(AV1_COMP *cpi,
-                                  const EncodeFrameParams *const frame_params) {
-  RATE_CONTROL *const rc = &cpi->rc;
-  GF_GROUP *const gf_group = &cpi->gf_group;
-  const AV1EncoderConfig *const oxcf = &cpi->oxcf;
-  const GFConfig *const gf_cfg = &oxcf->gf_cfg;
-  int target;
-
-  if (oxcf->q_cfg.aq_mode == CYCLIC_REFRESH_AQ) {
-    av1_cyclic_refresh_set_golden_update(cpi);
-  } else {
-    rc->baseline_gf_interval = rc->gf_intervals[rc->cur_gf_index];
-    rc->intervals_till_gf_calculate_due--;
-    rc->cur_gf_index++;
-  }
-
-  // correct frames_to_key when lookahead queue is flushing
-  correct_frames_to_key(cpi);
-
-  if (rc->baseline_gf_interval > rc->frames_to_key)
-    rc->baseline_gf_interval = rc->frames_to_key;
-
-  rc->gfu_boost = DEFAULT_GF_BOOST;
-  rc->constrained_gf_group =
-      (rc->baseline_gf_interval >= rc->frames_to_key) ? 1 : 0;
-
-  gf_group->max_layer_depth_allowed = oxcf->gf_cfg.gf_max_pyr_height;
-
-  // Rare case when the look-ahead is less than the target GOP length, can't
-  // generate ARF frame.
-  if (rc->baseline_gf_interval > gf_cfg->lag_in_frames ||
-      !is_altref_enabled(gf_cfg->lag_in_frames, gf_cfg->enable_auto_arf) ||
-      rc->baseline_gf_interval < rc->min_gf_interval)
-    gf_group->max_layer_depth_allowed = 0;
-
-  // Set up the structure of this Group-Of-Pictures (same as GF_GROUP)
-  av1_gop_setup_structure(cpi, frame_params);
-
-  // Allocate bits to each of the frames in the GF group.
-  // TODO(sarahparker) Extend this to work with pyramid structure.
-  for (int cur_index = 0; cur_index < gf_group->size; ++cur_index) {
-    const FRAME_UPDATE_TYPE cur_update_type = gf_group->update_type[cur_index];
-    if (oxcf->rc_cfg.mode == AOM_CBR) {
-      if (cur_update_type == KEY_FRAME) {
-        target = av1_calc_iframe_target_size_one_pass_cbr(cpi);
-      } else {
-        target = av1_calc_pframe_target_size_one_pass_cbr(cpi, cur_update_type);
-      }
-    } else {
-      if (cur_update_type == KEY_FRAME) {
-        target = av1_calc_iframe_target_size_one_pass_vbr(cpi);
-      } else {
-        target = av1_calc_pframe_target_size_one_pass_vbr(cpi, cur_update_type);
-      }
-    }
-    gf_group->bit_allocation[cur_index] = target;
-  }
-}
-#endif
-
 static INLINE void set_baseline_gf_interval(PictureParentControlSet *pcs_ptr, int arf_position,
                                             int active_max_gf_interval,
                                             int use_alt_ref,
@@ -1544,7 +1300,7 @@ static void init_gf_stats(GF_GROUP_STATS *gf_stats) {
   gf_stats->avg_raw_err_stdev = 0.0;
   gf_stats->non_zero_stdev_count = 0;
 }
-#if 1 //anaghdin function from gop_structure.c
+// function from gop_structure.c
 // Set parameters for frames between 'start' and 'end' (excluding both).
 static void set_multi_layer_params(const TWO_PASS *twopass,
     GF_GROUP *const gf_group, RATE_CONTROL *rc,
@@ -1630,8 +1386,7 @@ static int construct_multi_layer_gf_structure(
     gf_group->max_layer_depth = 0;
     ++frame_index;
 
-#if 1
-    //anaghdin for now only 5L is supported. In 5L case, when there are not enough picture,
+    // anaghdin for now only 5L is supported. In 5L case, when there are not enough picture,
     // we switch to 4L and after that we use 4L P pictures. In the else, we handle the P-case manually
     // this logic has to move to picture decision
     if (gf_interval >= 8) {
@@ -1670,11 +1425,6 @@ static int construct_multi_layer_gf_structure(
             ++(frame_index);
         }
     }
-#else
-    // Rest of the frames.
-    set_multi_layer_params(twopass, gf_group, rc, frame_info, 0, gf_interval,
-        &cur_frame_index, &frame_index, use_altref + 1);
-#endif
     return frame_index;
 }
 
@@ -1701,7 +1451,7 @@ void av1_gop_setup_structure(PictureParentControlSet *pcs_ptr,
 #endif
 }
 
-#endif
+
 // Analyse and define a gf/arf group.
 #define MAX_GF_BOOST 5400
 static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *this_frame,
@@ -1770,7 +1520,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 
   // If this is a key frame or the overlay from a previous arf then
   // the error score / cost of this frame has already been accounted for.
-  // anaghdin: there is not overlay for now
+  // There is no overlay support for now
   if (is_intra_only /*arf_active_or_kf*/) {
     gf_stats.gf_group_err -= first_frame_stats.frame_err;
 #if GROUP_ADAPTIVE_MAXQ
@@ -1784,7 +1534,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   //const int active_min_gf_interval = rc->min_gf_interval;
   const int active_max_gf_interval =
       AOMMIN(rc->max_gf_interval, max_gop_length);
-  //anaghdin: check added
+  // If the first frame is not key frame, we start from i=1
   if (is_intra_only)
       i = 0;
   else
@@ -1881,7 +1631,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 #define REDUCE_GF_LENGTH_TO_KEY_THRESH 9
 #define REDUCE_GF_LENGTH_BY 1
   int alt_offset = 0;
-#if 0 //anaghdin not supported
+#if 0 // not supported yet
   // The length reduction strategy is tweaked for certain cases, and doesn't
   // work well for certain other cases.
   const int allow_gf_length_reduction =
@@ -1920,7 +1670,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   if (use_alt_ref) {
     rc->source_alt_ref_pending = 1;
     gf_group->max_layer_depth_allowed = gf_cfg->gf_max_pyr_height;
-    // anaghdin_GF get from actual minigop size in PD
+    // Get from actual minigop size in PD
     set_baseline_gf_interval(pcs_ptr, i, active_max_gf_interval, use_alt_ref,
                              is_final_pass);
 
@@ -3010,7 +2760,6 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 
   // Define a new GF/ARF group. (Should always enter here for key frames).
   if (rc->frames_till_gf_update_due == 0) {
-      //anaghdin current_frame->frame_number to be reset for key frame
     assert(current_frame->frame_number == 0 ||
         pcs_ptr->gf_group_index == gf_group->size);
     const FIRSTPASS_STATS *const start_position = twopass->stats_in;
@@ -3200,14 +2949,14 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       frame_info->num_mbs = frame_info->mb_cols * frame_info->mb_rows;
       frame_info->bit_depth = scs_ptr->static_config.encoder_bit_depth;
       // input config  from options
-      encode_context_ptr->two_pass_cfg.vbrmin_section = scs_ptr->static_config.vbr_min_section_pct;//0;
-      encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;//2000;
-      encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;//50;
+      encode_context_ptr->two_pass_cfg.vbrmin_section = scs_ptr->static_config.vbr_min_section_pct;
+      encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;
+      encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;
       encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ? AOM_VBR : AOM_Q;
-      encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];//0;
-      encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];//255;
-      encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;//25;
-      encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;//25;
+      encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];
+      encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];
+      encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;
+      encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;
       encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
       encode_context_ptr->rc_cfg.maximum_buffer_size_ms   = is_vbr ? 240000 : 6000;//cfg->rc_buf_sz;
       encode_context_ptr->rc_cfg.starting_buffer_level_ms = is_vbr ? 60000  : 4000;//cfg->rc_buf_initial_sz;
@@ -3218,10 +2967,10 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->gf_cfg.min_gf_interval   = 1 << scs_ptr->static_config.hierarchical_levels;
       encode_context_ptr->gf_cfg.max_gf_interval   = 1 << scs_ptr->static_config.hierarchical_levels;
       encode_context_ptr->gf_cfg.enable_auto_arf   = 1;
-      encode_context_ptr->kf_cfg.sframe_dist   = 0; //?
-      encode_context_ptr->kf_cfg.sframe_mode   = 0; //?
+      encode_context_ptr->kf_cfg.sframe_dist   = 0; // not supported yet
+      encode_context_ptr->kf_cfg.sframe_mode   = 0; // not supported yet
       encode_context_ptr->kf_cfg.auto_key      = 0;
-      encode_context_ptr->kf_cfg.key_freq_max  = scs_ptr->intra_period_length + 1;//anaghdin do we need the +1?
+      encode_context_ptr->kf_cfg.key_freq_max  = scs_ptr->intra_period_length + 1;
   }
 
   stats = twopass->stats_buf_ctx->total_stats;

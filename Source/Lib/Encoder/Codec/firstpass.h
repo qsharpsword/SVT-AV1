@@ -23,6 +23,7 @@ extern "C" {
 
 #if FIRST_PASS_SETUP
 #define FORCED_BLK_SIZE 16
+#define FIRST_PASS_Q 10.0
 #endif
 
 #define DOUBLE_DIVIDE_CHECK(x) ((x) < 0 ? (x)-0.000001 : (x) + 0.000001)

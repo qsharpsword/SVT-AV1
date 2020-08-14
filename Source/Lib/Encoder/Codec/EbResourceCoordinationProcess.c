@@ -701,7 +701,6 @@ static void copy_input_buffer(SequenceControlSet *sequenceControlSet, EbBufferHe
 /******************************************************
  * Read Stat from File
  ******************************************************/
-// anaghdin to handle the memory allocation properly
 static void read_stat_from_file(SequenceControlSet *scs_ptr) {
     size_t nbytes;
 
