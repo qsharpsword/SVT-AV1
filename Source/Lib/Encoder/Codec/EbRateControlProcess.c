@@ -7326,10 +7326,7 @@ void *rate_control_kernel(void *input_ptr) {
                         pcs_ptr->parent_pcs_ptr->rc_me_distortion[sb_addr];
                 }
 #if TWOPASS_RC
-            if (scs_ptr->static_config.rate_control_mode == 0 &&
-                scs_ptr->use_input_stat_file &&
-                1//scs_ptr->static_config.look_ahead_distance != 0
-                ) {
+            if (scs_ptr->use_input_stat_file) {
                 if (pcs_ptr->picture_number == 0) {
                     set_rc_buffer_sizes(scs_ptr);
                     av1_rc_init(scs_ptr);
@@ -7345,21 +7342,6 @@ void *rate_control_kernel(void *input_ptr) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
                 // High level RC
                 if (scs_ptr->static_config.rate_control_mode == 1)
-#if TWOPASS_RC
-                    if (scs_ptr->use_input_stat_file &&
-                        scs_ptr->static_config.look_ahead_distance != 0
-                        ) {
-                        if (pcs_ptr->picture_number == 0) {
-                            set_rc_buffer_sizes(scs_ptr);
-                            av1_rc_init(scs_ptr);
-                        }
-                        av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
-                        av1_configure_buffer_updates(pcs_ptr, &(pcs_ptr->parent_pcs_ptr->refresh_frame), 0);
-                        av1_set_target_rate(pcs_ptr,
-                            pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
-                            pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
-                    } else
-#endif
                     high_level_rc_input_picture_vbr(pcs_ptr->parent_pcs_ptr,
                                                     scs_ptr,
                                                     scs_ptr->encode_context_ptr,
@@ -7533,33 +7515,8 @@ void *rate_control_kernel(void *input_ptr) {
                             (uint8_t)CLIP3((int32_t)scs_ptr->static_config.min_qp_allowed,
                                            (int32_t)scs_ptr->static_config.max_qp_allowed,
                                            (frm_hdr->quantization_params.base_q_idx + 2) >> 2);
-#if TPL_LA && TPL_LA_QPM
-                        // 2pass QPM with tpl_la
-                        if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
-#if !TPL_SW_UPDATE
-                            pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
-#endif
-                            !scs_ptr->use_output_stat_file &&
-#if !TPL_SC_ON
-                            !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-#endif
-                            scs_ptr->static_config.enable_tpl_la &&
-                            pcs_ptr->parent_pcs_ptr->r0 != 0) {
-                            sb_qp_derivation_tpl_la(pcs_ptr);
-                        } else
-#endif
-                        {
-                            pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present = 0;
-                            SuperBlock *sb_ptr;
-                            pcs_ptr->parent_pcs_ptr->average_qp = 0;
-                            for (int sb_addr = 0; sb_addr < pcs_ptr->sb_total_count_pix; ++sb_addr) {
-                                sb_ptr           = pcs_ptr->sb_ptr_array[sb_addr];
-                                sb_ptr->qindex   = quantizer_to_qindex[pcs_ptr->picture_qp];
-                                pcs_ptr->parent_pcs_ptr->average_qp += pcs_ptr->picture_qp;
-                            }
-                        }
-                    } else
-                    {
+
+                    } else {
 #endif
                     frame_level_rc_input_picture_vbr(pcs_ptr,
                                                      scs_ptr,
@@ -7707,9 +7664,8 @@ void *rate_control_kernel(void *input_ptr) {
             }
 
 #if TWOPASS_RC
-            if (scs_ptr->use_input_stat_file &&
-                scs_ptr->static_config.look_ahead_distance != 0)
-            update_rc_counts(pcs_ptr->parent_pcs_ptr);
+            if (scs_ptr->use_input_stat_file)
+                update_rc_counts(pcs_ptr->parent_pcs_ptr);
 #endif
             // Get Empty Rate Control Results Buffer
             eb_get_empty_object(context_ptr->rate_control_output_results_fifo_ptr,

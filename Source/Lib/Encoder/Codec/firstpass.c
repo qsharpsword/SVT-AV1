@@ -375,8 +375,6 @@ void setup_firstpass_data(PictureParentControlSet *pcs_ptr) {
     const uint32_t      mb_cols        = (scs_ptr->seq_header.max_frame_width + 16 - 1) / 16;
     const uint32_t      mb_rows        = (scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
     const uint32_t      num_mbs        = mb_cols * mb_rows;
-    //anaghdin: set the init in another place. It might not be initialized for LAD=0
-    //   memset(firstpass_data->raw_motion_err_list, 0, sizeof(*firstpass_data->raw_motion_err_list) * num_mbs);
     memset(firstpass_data->mb_stats, 0, sizeof(*firstpass_data->mb_stats) * num_mbs);
     for (uint32_t i = 0; i < num_mbs; i++)
         firstpass_data->mb_stats[i].image_data_start_row = INVALID_ROW;
@@ -602,30 +600,19 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
 #endif
 }
 #define LOW_MOTION_ERROR_THRESH 25
-// Computes and returns the intra pred error of a block.
-// intra pred error: sum of squared error of the intra predicted residual.
-// Inputs:
-//   cpi: the encoder setting. Only a few params in it will be used.
-//   this_frame: the current frame buffer.
-//   tile: tile information (not used in first pass, already init to zero)
-//   mb_row: row index in the unit of first pass block size.
-//   mb_col: column index in the unit of first pass block size.
-//   y_offset: the offset of y frame buffer, indicating the starting point of
-//             the current block.
-//   uv_offset: the offset of u and v frame buffer, indicating the starting
-//              point of the current block.
-//   fp_block_size: first pass block size.
-//   qindex: quantization step size to encode the frame.
-//   stats: frame encoding stats.
-// Modifies:
-//   stats->intra_skip_count
-//   stats->image_data_start_row
-//   stats->intra_factor
-//   stats->brightness_factor
-//   stats->intra_error
-//   stats->frame_avg_wavelet_energy
-// Returns:
-//   this_intra_error.
+/***************************************************************************
+* Computes and returns the intra pred error of a block.
+* intra pred error: sum of squared error of the intra predicted residual.
+* Modifies:
+*   stats->intra_skip_count
+*   stats->image_data_start_row
+*   stats->intra_factor
+*   stats->brightness_factor
+*   stats->intra_error
+*   stats->frame_avg_wavelet_energy
+* Returns:
+*   this_intra_error.
+***************************************************************************/
 static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
                                       ModeDecisionContext *        context_ptr,
                                       ModeDecisionCandidateBuffer *candidate_buffer,
@@ -742,19 +729,22 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
     stats->intra_error += (int64_t)this_intra_error;
     return this_intra_error;
 }
-// Computes and returns the inter prediction error from the last frame.
-// Computes inter prediction errors from the golden and alt ref frams and
-// Updates stats accordingly.
-// Modifies:
-//    stats: many member params in it.
-//  Returns:
-//    this_inter_error
+/***************************************************************************
+* Computes and returns the inter prediction error from the last frame.
+* Computes inter prediction errors from the golden and alt ref frams and
+* Updates stats accordingly.
+* Modifies:
+*    stats: many member params in it.
+*  Returns:
+*    this_inter_error
+***************************************************************************/
 static int firstpass_inter_prediction(
     PictureControlSet *pcs_ptr, BlkStruct *blk_ptr, ModeDecisionContext *context_ptr,
     ModeDecisionCandidateBuffer *candidate_buffer, ModeDecisionCandidate *candidate_ptr,
     EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index, uint32_t blk_origin_index,
     uint64_t ref_fast_cost, uint32_t fast_candidate_total_count, const int this_intra_error,
-    /*int *raw_motion_err_list, */ MV *best_ref_mv, MV *last_mv, FRAME_STATS *stats) {
+    /*int *raw_motion_err_list, */ FRAME_STATS *stats) {
+
     int32_t        mb_row = context_ptr->blk_origin_y >> 4;
     int32_t        mb_col = context_ptr->blk_origin_x >> 4;
     const uint32_t mb_cols =
@@ -762,18 +752,8 @@ static int firstpass_inter_prediction(
     const uint32_t mb_rows =
         (pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height + 16 - 1) / 16;
     int this_inter_error = this_intra_error;
-    //const int is_high_bitdepth = context_ptr->hbd_mode_decision;
-    //const int bitdepth = pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth;
-    //const BlockSize bsize = context_ptr->blk_geom->bsize;
-    // Assume 0,0 motion with no mv overhead.
     FULLPEL_MV mv = kZeroFullMv;
-    //  FULLPEL_MV tmp_mv = kZeroFullMv;
-    //xd->plane[0].pre[0].buf = last_frame->y_buffer + recon_yoffset;
-    //// Set up limit values for motion vectors to prevent them extending
-    //// outside the UMV borders.
-    //av1_set_mv_col_limits(mi_params, &x->mv_limits, (mb_col << FP_MIB_SIZE_LOG2),
-    //    (fp_block_size_height >> MI_SIZE_LOG2),
-    //    cpi->oxcf.border_in_pixels);
+    MV last_mv;
 
     uint32_t full_lambda = context_ptr->hbd_mode_decision
                                ? context_ptr->full_lambda_md[EB_10_BIT_MD]
@@ -814,12 +794,12 @@ static int firstpass_inter_prediction(
                              input_origin_index,
                              blk_origin_index,
                              ref_fast_cost);
-
+        // To convert full-pel MV
         mv.col = candidate_buffer->candidate_ptr->motion_vector_xl0 >> 3;
         mv.row = candidate_buffer->candidate_ptr->motion_vector_yl0 >> 3;
 
-        last_mv->col = candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_0];
-        last_mv->row = candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_0];
+        last_mv.col = candidate_buffer->candidate_ptr->motion_vector_pred_x[REF_LIST_0];
+        last_mv.row = candidate_buffer->candidate_ptr->motion_vector_pred_y[REF_LIST_0];
 
         motion_error =
             (uint32_t)(spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
@@ -835,7 +815,7 @@ static int firstpass_inter_prediction(
         if (mv.col != 0 && mv.row != 0) {
             const MV temp_full_mv = get_mv_from_fullmv(&mv);
             motion_error += mv_err_cost(&temp_full_mv,
-                                        last_mv,
+                                        &last_mv,
                                         context_ptr->md_rate_estimation_ptr->nmv_vec_cost,
                                         context_ptr->md_rate_estimation_ptr->nmvcoststack,
                                         errorperbit) +
@@ -865,6 +845,7 @@ static int firstpass_inter_prediction(
                                                       candidate_buffer->prediction_ptr->stride_y,
                                                       context_ptr->blk_geom->bwidth,
                                                       context_ptr->blk_geom->bheight));
+            // To convert full-pel MV
             FULLPEL_MV gf_mv;
             gf_mv.col = candidate_buffer->candidate_ptr->motion_vector_xl1 >> 3;
             gf_mv.row = candidate_buffer->candidate_ptr->motion_vector_yl1 >> 3;
@@ -916,9 +897,6 @@ static int firstpass_inter_prediction(
     }
 
     // Start by assuming that intra mode is best.
-    best_ref_mv->row = 0;
-    best_ref_mv->col = 0;
-
     if (motion_error <= this_intra_error) {
         aom_clear_system_state();
 
@@ -944,9 +922,7 @@ static int firstpass_inter_prediction(
         stats->sum_mvrs += best_mv.row * best_mv.row;
         stats->sum_mvcs += best_mv.col * best_mv.col;
         ++stats->inter_count;
-
-        *best_ref_mv = best_mv;
-        accumulate_mv_stats(best_mv, mv, mb_row, mb_col, mb_rows, mb_cols, last_mv, stats);
+        accumulate_mv_stats(best_mv, mv, mb_row, mb_col, mb_rows, mb_cols, &last_mv, stats);
     }
 
     return this_inter_error;
@@ -1151,9 +1127,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
 
     int this_inter_error = this_intra_error;
     if (pcs_ptr->slice_type != I_SLICE && fast_candidate_total_count > 1) {
-        MV  firstpass_top_mv = kZeroMv;
-        MV *best_ref_mv  = &firstpass_top_mv; // anaghdin to set we might need later if we modify me
-        MV  last_mv      = kZeroMv; // anaghdin: for now we overright it internaly with the mv pred
         this_inter_error = firstpass_inter_prediction(pcs_ptr,
                                                       blk_ptr,
                                                       context_ptr,
@@ -1166,8 +1139,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
                                                       fast_candidate_total_count,
                                                       this_intra_error,
                                                       //raw_motion_err_list,
-                                                      best_ref_mv,
-                                                      &last_mv,
                                                       mb_stats);
 
         mb_stats->coded_error += this_inter_error;

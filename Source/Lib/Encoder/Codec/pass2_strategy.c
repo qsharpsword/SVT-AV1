@@ -1083,19 +1083,6 @@ int determine_high_err_gf(double *errs, int *is_high, double *si, int len,
     reset = 1;
   }
 
-#if GF_SHRINK_OUTPUT
-  printf("\n");
-  for (int i = 0; i < len; i++) {
-    printf("%d: err %.1f, ishigh %d, si %.2f, (i=%d)\n",
-           gf_start + i - before_pad, errs[i], is_high[i], si[i], gf_end);
-  }
-  printf(
-      "count: %d, mean_high: %.1f, mean_low: %.1f, avg_si: %.2f, num_change: "
-      "%d, ratio %.2f, reset: %d\n",
-      count, mean_high, mean_low, avg_si, num_change,
-      mean_high / (mean_low + 0.000001), reset);
-#endif
-
   if (reset) {
     memset(is_high, 0, sizeof(is_high[0]) * len);
     memset(si, 0, sizeof(si[0]) * len);
@@ -1215,7 +1202,7 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
             }
             break;
         }
-        //anaghdin_GF to cut based on PD decisions
+        // To cut based on PD decisions, only supports 5L for now
         cut_here =
             ((i % 16 == 0) || ((rc->frames_to_key - cut_pos[count_cuts - 1]) < 16 && (i % 8 == 0)))
                 ? 1
@@ -1386,7 +1373,7 @@ static int construct_multi_layer_gf_structure(
     gf_group->max_layer_depth = 0;
     ++frame_index;
 
-    // anaghdin for now only 5L is supported. In 5L case, when there are not enough picture,
+    // anaghdin: for now only 5L is supported. In 5L case, when there are not enough picture,
     // we switch to 4L and after that we use 4L P pictures. In the else, we handle the P-case manually
     // this logic has to move to picture decision
     if (gf_interval >= 8) {
@@ -1774,11 +1761,6 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
     twopass->kf_group_error_left -= (int64_t)gf_stats.gf_group_err;
   // Set up the structure of this Group-Of-Pictures (same as GF_GROUP)
   av1_gop_setup_structure(pcs_ptr, frame_params);
- /* printf("\ngf_group_bits:%lld\tgf_group_err:%.2f\tkf_group_error_left:%lld\tgf_interval:%d\n",
-      gf_group_bits,
-      gf_stats.gf_group_err,
-      twopass->kf_group_error_left,
-      rc->baseline_gf_interval);*/
 
   // Reset the file position.
   reset_fpf_position(twopass, start_pos);
@@ -1797,12 +1779,6 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   av1_gop_bit_allocation(rc, gf_group,
                          frame_params->frame_type == KEY_FRAME, use_alt_ref,
                          gf_group_bits);
-
-  //for (int idx = 1; idx < rc->baseline_gf_interval; ++idx) {
-  //    printf("%d\t%d\n",
-  //        gf_group->frame_disp_idx[idx],
-  //        gf_group->bit_allocation[idx]);
-  //}
 }
 
 // #define FIXED_ARF_BITS
@@ -2491,8 +2467,6 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     // Work out how many bits to allocate for the key frame itself.
     kf_bits = calculate_boost_bits((rc->frames_to_key - 1), rc->kf_boost,
         twopass->kf_group_bits);
-    // printf("kf boost = %d kf_bits = %d kf_zeromotion_pct = %d\n", rc->kf_boost,
-    //        kf_bits, twopass->kf_zeromotion_pct);
 #if 0
     // skip it for always no operating_point_idc
     kf_bits = adjust_boost_bits_for_target_level(pcs_ptr, rc, kf_bits,
@@ -2669,37 +2643,6 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     pcs_ptr->gf_group_index = gf_group->index;
   if (/*is_stat_consumption_stage(cpi) &&*/ !twopass->stats_in) return;
 
-#if 0
-  if (rc->frames_till_gf_update_due > 0 && !frame_is_intra_only(pcs_ptr)/*(frame_flags & FRAMEFLAGS_KEY)*/) {
-    assert(pcs_ptr->gf_group_index < gf_group->size);
-    const int update_type = gf_group->update_type[pcs_ptr->gf_group_index];
-
-    setup_target_rate(pcs_ptr);
-
-    // If this is an arf frame then we dont want to read the stats file or
-    // advance the input pointer as we already have what we need.
-    if (update_type == ARF_UPDATE || update_type == INTNL_ARF_UPDATE) {
-      if (0/*cpi->no_show_kf*/) {
-        assert(update_type == ARF_UPDATE);
-        frame_params->frame_type = KEY_FRAME;
-      } else {
-        frame_params->frame_type = INTER_FRAME;
-      }
-
-#if 0
-      // Do the firstpass stats indicate that this frame is skippable for the
-      // partition search?
-      if (cpi->sf.part_sf.allow_partition_search_skip /*&& oxcf->pass == 2*/) {
-        cpi->partition_search_skippable_frame = is_skippable_frame(cpi);
-      }
-#endif
-      printf("\nreturn for INTENL_ARF/ARF_UPDATE gf_group->index=%d, poc%d, frames_till_gf_update_due%d, boost=%d, bits %d/%d, r0=%f\n", gf_group->index, pcs_ptr->picture_number, rc->frames_till_gf_update_due, frame_params->frame_type==KEY_FRAME? rc->kf_boost : rc->gfu_boost, gf_group->bit_allocation[gf_group->index], rc->base_frame_target, pcs_ptr->r0);
-
-      return;
-    }
-  }
-#endif
-
   aom_clear_system_state();
 
   if (encode_context_ptr->rc_cfg.mode == AOM_Q)
@@ -2781,13 +2724,9 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
             ? AOMMIN(MAX_GF_INTERVAL,
                      encode_context_ptr->gf_cfg.lag_in_frames - 7/*oxcf->arnr_max_frames*/ / 2)
             : MAX_GF_LENGTH_LAP;
-    if (rc->intervals_till_gf_calculate_due == 0) {
-#if 1
+    if (rc->intervals_till_gf_calculate_due == 0)
       impose_gf_length(pcs_ptr, MAX_NUM_GF_INTERVALS);
-#else
-      calculate_gf_length(pcs_ptr, max_gop_length, MAX_NUM_GF_INTERVALS);
-#endif
-    }
+    
 #if 0 // not supported
     if (max_gop_length > 16 && scs_ptr->static_config.enable_tpl_la &&
         1/*!cpi->sf.tpl_sf.disable_gop_length_decision*/) {
@@ -3107,7 +3046,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
       const int pyramid_level = gf_group->layer_depth[ppcs_ptr->gf_group_index];
     int i;
     for (i = pyramid_level; i <= MAX_ARF_LAYERS; ++i) {
-      rc->active_best_quality[i] = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;//cpi->common.quant_params.base_qindex;
+      rc->active_best_quality[i] = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;
       // if (pyramid_level >= 2) {
       //   rc->active_best_quality[pyramid_level] =
       //     AOMMAX(rc->active_best_quality[pyramid_level],
@@ -3152,7 +3091,6 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
     const int minq_adj_limit =
         (rc_cfg->mode == AOM_CQ ? MINQ_ADJ_LIMIT_CQ : MINQ_ADJ_LIMIT);
 
-//printf("postencode_update ---> poc%d rate_error_estimate=%d, rolling_target/actual_bits=%d %d, buffer_level=%d\n", ppcs_ptr->picture_number, rc->rate_error_estimate, rc->rolling_target_bits, rc->rolling_actual_bits, rc->buffer_level);
     // Undershoot.
     if (rc->rate_error_estimate > rc_cfg->under_shoot_pct) {
       --twopass->extend_maxq;
