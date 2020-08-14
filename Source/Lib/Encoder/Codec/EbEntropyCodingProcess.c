@@ -423,6 +423,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                     pcs_ptr->entropy_coding_info[tile_idx]->entropy_coding_tile_done = EB_FALSE;
                 }
 
+#if TURN_OFF_EC_FIRST_PASS
+                if (!scs_ptr->use_output_stat_file){
+#endif
                 for (x_sb_index = 0; x_sb_index < tile_width_in_sb; ++x_sb_index) {
                     sb_index = (uint16_t)((x_sb_index + tile_sb_start_x) +
                                           (y_sb_index + tile_sb_start_y) * pic_width_in_sb);
@@ -465,6 +468,9 @@ void *entropy_coding_kernel(void *input_ptr) {
                     row_total_bits += sb_ptr->total_bits;
                 }
 
+#if TURN_OFF_EC_FIRST_PASS
+                }
+#endif
                 // At the end of each SB-row, send the updated bit-count to Entropy Coding
                 {
                     EbObjectWrapper * rate_control_task_wrapper_ptr;

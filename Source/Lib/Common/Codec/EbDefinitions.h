@@ -621,6 +621,8 @@ extern "C" {
 #define USE_OLD_SETTING 1
 
 #define COMBINED_2PASSES_CLI   1 //CLI for combined two passes
+#define TURN_OFF_CDF_UPDATE     1
+#define TURN_OFF_EC_FIRST_PASS  0
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

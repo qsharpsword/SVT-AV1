@@ -1557,7 +1557,11 @@ EbErrorType first_pass_signal_derivation_multi_processes(SequenceControlSet *   
     // 0                                  OFF
     // 1                                  ON
     if (scs_ptr->static_config.frame_end_cdf_update == DEFAULT)
+#if TURN_OFF_CDF_UPDATE
+        pcs_ptr->frame_end_cdf_update_mode = 0;
+#else
         pcs_ptr->frame_end_cdf_update_mode = 1;
+#endif
     else
         pcs_ptr->frame_end_cdf_update_mode =
         scs_ptr->static_config.frame_end_cdf_update;
