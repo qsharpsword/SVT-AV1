@@ -765,7 +765,7 @@ static int firstpass_inter_prediction(
     int this_inter_error = this_intra_error;
     //const int is_high_bitdepth = context_ptr->hbd_mode_decision;
     //const int bitdepth = pcs_ptr->parent_pcs_ptr->av1_cm->bit_depth;
-    const BlockSize bsize = context_ptr->blk_geom->bsize;
+    //const BlockSize bsize = context_ptr->blk_geom->bsize;
     // Assume 0,0 motion with no mv overhead.
     FULLPEL_MV mv = kZeroFullMv;
     //  FULLPEL_MV tmp_mv = kZeroFullMv;

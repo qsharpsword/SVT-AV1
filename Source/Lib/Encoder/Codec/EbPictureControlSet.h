@@ -946,9 +946,7 @@ typedef struct PictureParentControlSet {
     uint32_t tpl_group_size;             //size of above buffer
     void* pd_window[PD_WINDOW_SIZE]; //stores previous, current, future pictures from pd-reord-queue. empty for first I.
 #endif
-#if TWOPASS_IMPOSE_PD_DECISIONS
     unsigned char gf_group_index;
-#endif
 } PictureParentControlSet;
 
 typedef struct PictureControlSetInitData {

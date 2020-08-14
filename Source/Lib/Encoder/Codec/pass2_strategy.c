@@ -1193,7 +1193,6 @@ void set_last_prev_low_err(int *cur_start_ptr, int *cur_last_ptr, int *cut_pos,
   }  // prev_lows
   return;
 }
-#if TWOPASS_IMPOSE_PD_DECISIONS
 // This function imposes the gf group length of future frames in batch based on the intra refresh
 //anaghdin MAX_NUM_GF_INTERVALS is limited. Also only supports for 5L
 static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals) {
@@ -1234,7 +1233,7 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
     }
     rc->cur_gf_index = 0;
 }
-#else
+#if 0
 // This function decides the gf group length of future frames in batch
 // rc->gf_intervals is modified to store the group lengths
 static void calculate_gf_length(PictureParentControlSet *pcs_ptr, int max_gop_length,
@@ -3034,13 +3033,13 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
                      encode_context_ptr->gf_cfg.lag_in_frames - 7/*oxcf->arnr_max_frames*/ / 2)
             : MAX_GF_LENGTH_LAP;
     if (rc->intervals_till_gf_calculate_due == 0) {
-#if TWOPASS_IMPOSE_PD_DECISIONS
+#if 1
       impose_gf_length(pcs_ptr, MAX_NUM_GF_INTERVALS);
 #else
       calculate_gf_length(pcs_ptr, max_gop_length, MAX_NUM_GF_INTERVALS);
 #endif
     }
-#if 0 // anaghdin: not supported
+#if 0 // not supported
     if (max_gop_length > 16 && scs_ptr->static_config.enable_tpl_la &&
         1/*!cpi->sf.tpl_sf.disable_gop_length_decision*/) {
       if (rc->gf_intervals[rc->cur_gf_index] - 1 > 16) {
@@ -3066,13 +3065,11 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     define_gf_group(pcs_ptr, &this_frame, frame_params, max_gop_length, 1);
     rc->frames_till_gf_update_due = rc->baseline_gf_interval;
     assert(pcs_ptr->gf_group_index == 0);
-#if TWOPASS_IMPOSE_PD_DECISIONS
-    // anaghdin: check the condition. This is added for the first frame in minigop when it is not KEY_FRAME
+    // This is added for the first frame in minigop when it is not KEY_FRAME
     if (pcs_ptr->frm_hdr.frame_type != KEY_FRAME) {
         gf_group->index++;
         pcs_ptr->gf_group_index = gf_group->index;
     }
-#endif
 #if ARF_STATS_OUTPUT
     {
       FILE *fpfile;
@@ -3098,7 +3095,6 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 #endif
 
   setup_target_rate(pcs_ptr);
-  //printf("\n---> end gf_group->index/size=%d/%d, poc%d, frames_till_gf_update_due%d, %10d %10d %10d\n", pcs_ptr->gf_group_index, gf_group->size, pcs_ptr->picture_number, rc->frames_till_gf_update_due, rc->kf_boost, rc->gfu_boost, gf_group->bit_allocation[gf_group->index]);
 }
 
 // from aom ratectrl.c
@@ -3182,9 +3178,6 @@ void av1_rc_update_framerate(SequenceControlSet *scs_ptr/*, int width, int heigh
 void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
   //cpi->framerate = framerate < 0.1 ? 30 : framerate;
   scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : framerate;
-#if TWOPASS_RC_HACK_AS_AOM
-  scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : 30.000030000030002;
-#endif
   av1_rc_update_framerate(scs_ptr/*, scs_ptr->seq_header.max_frame_width, scs_ptr->seq_header.max_frame_height*/);
 }
 
@@ -3211,13 +3204,8 @@ void av1_init_second_pass(SequenceControlSet *scs_ptr) {
       encode_context_ptr->two_pass_cfg.vbrmax_section = scs_ptr->static_config.vbr_max_section_pct;//2000;
       encode_context_ptr->two_pass_cfg.vbrbias        = scs_ptr->static_config.vbr_bias_pct;//50;
       encode_context_ptr->rc_cfg.mode = scs_ptr->static_config.rate_control_mode == 1 ? AOM_VBR : AOM_Q;
-#if TWOPASS_AOM_Q && TWOPASS_RC_HACK_AS_AOM
-      encode_context_ptr->rc_cfg.best_allowed_q  = 0;
-      encode_context_ptr->rc_cfg.worst_allowed_q = 255;
-#else
       encode_context_ptr->rc_cfg.best_allowed_q  = (int32_t)quantizer_to_qindex[scs_ptr->static_config.min_qp_allowed];//0;
       encode_context_ptr->rc_cfg.worst_allowed_q = (int32_t)quantizer_to_qindex[scs_ptr->static_config.max_qp_allowed];//255;
-#endif
       encode_context_ptr->rc_cfg.over_shoot_pct  = scs_ptr->static_config.over_shoot_pct;//25;
       encode_context_ptr->rc_cfg.under_shoot_pct = scs_ptr->static_config.under_shoot_pct;//25;
       encode_context_ptr->rc_cfg.cq_level = quantizer_to_qindex[scs_ptr->static_config.qp];
@@ -3367,11 +3355,7 @@ void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
 
   // Update the active best quality pyramid.
   if (!rc->is_src_frame_alt_ref) {
-#if TWOPASS_IMPOSE_PD_DECISIONS
       const int pyramid_level = gf_group->layer_depth[ppcs_ptr->gf_group_index];
-#else
-      const int pyramid_level = gf_group->layer_depth[gf_group->index];
-#endif
     int i;
     for (i = pyramid_level; i <= MAX_ARF_LAYERS; ++i) {
       rc->active_best_quality[i] = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;//cpi->common.quant_params.base_qindex;

@@ -6965,7 +6965,7 @@ void* picture_decision_kernel(void *input_ptr)
                             if (encode_context_ptr->pre_assignment_buffer_count > 1) {
                                 initialize_mini_gop_activity_array(
                                         context_ptr);
-#if KF_MINI_GOP_FIX
+#if TWOPASS_RC
                                 if (encode_context_ptr->pre_assignment_buffer_count >= 32 &&
                                     !(encode_context_ptr->pre_assignment_buffer_count == 32 && pcs_ptr->idr_flag))
                                     context_ptr->mini_gop_activity_array[L6_INDEX] = EB_FALSE;

@@ -12,10 +12,6 @@
 #ifndef AOM_AV1_ENCODER_FIRSTPASS_H_
 #define AOM_AV1_ENCODER_FIRSTPASS_H_
 
-//#include "av1/common/av1_common_int.h"
-//#include "av1/common/enums.h"
-//#include "av1/encoder/lookahead.h"
-//#include "av1/encoder/ratectrl.h"
 #include "EbDefinitions.h"
 #include "EbRateControlProcess.h"
 #include "EbPictureControlSet.h"
@@ -25,8 +21,13 @@
 extern "C" {
 #endif
 
+#if FIRST_PASS_SETUP
+#define FORCED_BLK_SIZE 16
+#endif
+
 #define DOUBLE_DIVIDE_CHECK(x) ((x) < 0 ? (x)-0.000001 : (x) + 0.000001)
 
+#define MAX_LAG_BUFFERS 35
 #define MIN_ZERO_MOTION 0.95
 #define MAX_SR_CODED_ERROR 40
 #define MAX_RAW_ERR_VAR 2000

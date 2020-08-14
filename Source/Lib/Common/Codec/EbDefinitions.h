@@ -607,18 +607,12 @@ extern "C" {
 #define SVT_02_TEMP 1 // based on svt-01 1702a2b5f8dd4d7bf8a06f2c693f3702ee629115
 
 #if SVT_02_TEMP
-#define TWOPASS_RC 1 // port 2pass RC code
-#define TWOPASS_RC_HACK_AS_AOM 0 //hack change to be the same as AOM
-#define TWOPASS_AOM_Q 1 // enable AOM_Q or CQP mode for two pass
-#define TWOPASS_STAT_BUF 1 //
-#define TWOPASS_IMPOSE_PD_DECISIONS 1
+#define TWOPASS_RC 1
+#define TWOPASS_STAT_BUF 1
 #define FORCE_DECODE_ORDER 1
 #define FIRST_PASS_SETUP 1
 #define TWOPASS_CLEANUP 1
-#define MAX_LAG_BUFFERS 35
 #define LOW_DELAY_TUNE 1
-#define FORCED_BLK_SIZE 16
-#define KF_MINI_GOP_FIX 1
 //first_pass_opt
 
 #define FIX_MV_BOUND       0 //Clip inherited ME MVs to stay within pic boundaries
