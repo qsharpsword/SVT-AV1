@@ -10604,10 +10604,7 @@ static void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
             context_ptr->md_staging_spatial_sse_full_loop_level = EB_FALSE;
 
         context_ptr->md_staging_perform_intra_chroma_pred = EB_FALSE;
-#else
-        context_ptr->md_staging_perform_intra_chroma_pred = 0;
-#endif
-#endif
+
         full_loop_core(pcs_ptr,
                        sb_ptr,
                        blk_ptr,
