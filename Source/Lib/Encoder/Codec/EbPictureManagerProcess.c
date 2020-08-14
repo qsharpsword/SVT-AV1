@@ -230,6 +230,74 @@ void copy_dep_cnt_cleaning_list(
 
 }
 #endif
+#if INL_TPL_ME
+static EbErrorType tpl_get_open_loop_me(
+    PictureManagerContext           *context_ptr,
+    SequenceControlSet              *scs_ptr,
+    PictureParentControlSet         *pcs_tpl_base_ptr) {
+    if (scs_ptr->in_loop_me &&
+            scs_ptr->static_config.enable_tpl_la &&
+            pcs_tpl_base_ptr->temporal_layer_index == 0) {
+        // Do tpl ME to get ME results
+        // Do it in reverse order, for IDR, the 1st may need to wait for the mctf
+        for (int i = pcs_tpl_base_ptr->tpl_group_size - 1; i >= 0; i--) {
+            PictureParentControlSet* pcs_tpl_group_frame_ptr = pcs_tpl_base_ptr->tpl_group[i];
+            if (!pcs_tpl_group_frame_ptr->tpl_me_done) {
+#if INL_TPL_ME_DBG
+                printf("[%ld]: Sending TPL ME request for frame %ld\n",
+                        pcs_tpl_base_ptr->picture_number,
+                        pcs_tpl_group_frame_ptr->picture_number);
+#endif
+
+                if (pcs_tpl_group_frame_ptr->do_mctf) {
+                    // Wait for MCTF
+#if INL_TPL_ME_DBG
+                    printf("\tpicture %ld need to do MCTF, wait for its done\n", pcs_tpl_group_frame_ptr->picture_number);
+#endif
+                    eb_block_on_semaphore(pcs_tpl_group_frame_ptr->temp_filt_done_semaphore);
+                }
+
+                if (pcs_tpl_group_frame_ptr->slice_type != I_SLICE &&
+                        pcs_tpl_group_frame_ptr != pcs_tpl_base_ptr) {
+                    // Initialize Segments
+                    pcs_tpl_group_frame_ptr->tpl_me_segments_column_count = 1;//scs_ptr->tf_segment_column_count;
+                    pcs_tpl_group_frame_ptr->tpl_me_segments_row_count = 1;//scs_ptr->tf_segment_row_count;
+                    pcs_tpl_group_frame_ptr->tpl_me_segments_total_count = (uint16_t)(pcs_tpl_group_frame_ptr->tpl_me_segments_column_count  * pcs_tpl_group_frame_ptr->tpl_me_segments_row_count);
+                    pcs_tpl_group_frame_ptr->tpl_me_seg_acc = 0;
+
+                    for (int16_t seg_idx = 0; seg_idx < pcs_tpl_group_frame_ptr->tpl_me_segments_total_count; ++seg_idx) {
+                        EbObjectWrapper               *out_results_wrapper_ptr;
+
+                        eb_get_empty_object(
+                                context_ptr->picture_manager_output_fifo_ptr,
+                                &out_results_wrapper_ptr);
+
+                        PictureManagerResults   *out_results_ptr = (PictureManagerResults*)out_results_wrapper_ptr->object_ptr;
+                        out_results_ptr->pcs_wrapper_ptr = pcs_tpl_group_frame_ptr->p_pcs_wrapper_ptr;
+                        out_results_ptr->segment_index = seg_idx;
+                        out_results_ptr->task_type = 2;
+                        out_results_ptr->tpl_base_picture_number = pcs_tpl_base_ptr->picture_number;
+                        out_results_ptr->tpl_base_decode_order = pcs_tpl_base_ptr->decode_order;
+                        out_results_ptr->tpl_ref_skip = !pcs_tpl_base_ptr->idr_flag;
+                        eb_post_full_object(out_results_wrapper_ptr);
+                    }
+
+                    eb_block_on_semaphore(pcs_tpl_group_frame_ptr->tpl_me_done_semaphore);
+
+                    // When TPL16, flag tpl_me_done of 17/18/19 will be set done during TPL32
+                    if (pcs_tpl_base_ptr->idr_flag ||
+                            pcs_tpl_group_frame_ptr->picture_number > pcs_tpl_base_ptr->picture_number)
+                        pcs_tpl_group_frame_ptr->tpl_me_done = 1;
+                }
+            }
+        }
+    }
+
+    // Release pa reference
+    release_pa_reference_objects(scs_ptr, pcs_tpl_base_ptr);
+    return 0;
+}
+#endif
 /* Picture Manager Kernel */
 
 /***************************************************************************************************
@@ -318,6 +386,10 @@ void *picture_manager_kernel(void *input_ptr) {
             encode_context_ptr = scs_ptr->encode_context_ptr;
 
             //SVT_LOG("\nPicture Manager Process @ %d \n ", pcs_ptr->picture_number);
+
+#if INL_TPL_ME
+            tpl_get_open_loop_me(context_ptr, scs_ptr, pcs_ptr);
+#endif
 
 #if !DECOUPLE_ME_RES
             queue_entry_index = (int32_t)(
@@ -999,6 +1071,10 @@ void *picture_manager_kernel(void *input_ptr) {
                         eb_object_inc_live_count(child_pcs_wrapper_ptr, 1);
 
                         child_pcs_ptr = (PictureControlSet *)child_pcs_wrapper_ptr->object_ptr;
+#if INL_ME
+
+                        child_pcs_ptr->c_pcs_wrapper_ptr = child_pcs_wrapper_ptr;
+#endif
 
                         //1.Link The Child PCS to its Parent
                         child_pcs_ptr->picture_parent_control_set_wrapper_ptr =
@@ -1559,7 +1635,8 @@ void *picture_manager_kernel(void *input_ptr) {
                                 &out_results_wrapper_ptr);
 
                             PictureManagerResults   *out_results_ptr = (PictureManagerResults*)out_results_wrapper_ptr->object_ptr;
-                            out_results_ptr->pcs_wrapper_ptr = child_pcs_wrapper_ptr;
+                            // PM output ppcs to iME kernel
+                            out_results_ptr->pcs_wrapper_ptr = child_pcs_ptr->parent_pcs_ptr->p_pcs_wrapper_ptr;
                             out_results_ptr->segment_index = segment_index;
                             out_results_ptr->task_type = 0;
                             // Post the Full Results Object

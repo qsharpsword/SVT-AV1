@@ -9,6 +9,9 @@
 #include "EbThreads.h"
 #include "EbReferenceObject.h"
 #include "EbPictureBufferDesc.h"
+#if INL_TPL_ME
+#include "EbUtility.h"
+#endif
 
 void initialize_samples_neighboring_reference_picture16_bit(EbByte   recon_samples_buffer_ptr,
                                                             uint16_t stride, uint16_t recon_width,
@@ -304,6 +307,10 @@ EbErrorType eb_reference_object_creator(EbPtr *object_dbl_ptr, EbPtr object_init
 
 static void eb_pa_reference_object_dctor(EbPtr p) {
     EbPaReferenceObject *obj = (EbPaReferenceObject *)p;
+#if INL_TPL_ME
+    if (obj->dummy_obj)
+        return;
+#endif
     EB_DELETE(obj->input_padded_picture_ptr);
     EB_DELETE(obj->quarter_decimated_picture_ptr);
     EB_DELETE(obj->sixteenth_decimated_picture_ptr);
@@ -327,6 +334,9 @@ EbErrorType eb_pa_reference_object_ctor(EbPaReferenceObject *pa_ref_obj_,
 #if INL_ME
     EbPaReferenceObjectDescInitData *pa_ref_init_data_ptr =
         (EbPaReferenceObjectDescInitData *)object_init_data_ptr;
+#if INL_TPL_ME
+    pa_ref_obj_->dummy_obj = pa_ref_init_data_ptr->empty_pa_buffers;
+#endif
 
     if (pa_ref_init_data_ptr->empty_pa_buffers)
         return EB_ErrorNone;
@@ -407,5 +417,45 @@ EbErrorType eb_down_scaled_object_creator(EbPtr *object_dbl_ptr,
     *object_dbl_ptr = obj;
 
     return EB_ErrorNone;
+}
+#endif
+
+#if INL_TPL_ME
+/************************************************
+* Release Pa Reference Objects
+** Check if reference pictures are needed
+** release them when appropriate
+************************************************/
+void release_pa_reference_objects(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
+    // PA Reference Pictures
+    uint32_t num_of_list_to_search;
+    uint32_t list_index;
+    uint32_t ref_pic_index;
+    if (pcs_ptr->slice_type != I_SLICE) {
+        num_of_list_to_search = (pcs_ptr->slice_type == P_SLICE) ? REF_LIST_0 : REF_LIST_1;
+
+        // List Loop
+        for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
+            // Release PA Reference Pictures
+            uint8_t num_of_ref_pic_to_search =
+                (pcs_ptr->slice_type == P_SLICE)
+                    ? MIN(pcs_ptr->ref_list0_count, scs_ptr->reference_count)
+                    : (list_index == REF_LIST_0)
+                          ? MIN(pcs_ptr->ref_list0_count, scs_ptr->reference_count)
+                          : MIN(pcs_ptr->ref_list1_count, scs_ptr->reference_count);
+
+            for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
+                if (pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index] != EB_NULL) {
+                    eb_release_object(pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]);
+                }
+            }
+        }
+    }
+
+    if (pcs_ptr->pa_reference_picture_wrapper_ptr != EB_NULL) {
+        eb_release_object(pcs_ptr->pa_reference_picture_wrapper_ptr);
+    }
+
+    return;
 }
 #endif

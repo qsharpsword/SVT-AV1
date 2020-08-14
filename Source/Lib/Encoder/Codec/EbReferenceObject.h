@@ -10,6 +10,9 @@
 #include "EbObject.h"
 #include "EbCabacContextModel.h"
 #include "EbCodingUnit.h"
+#if INL_TPL_ME
+#include "EbSequenceControlSet.h"
+#endif
 
 typedef struct EbReferenceObject {
     EbDctor              dctor;
@@ -99,6 +102,11 @@ typedef struct EbPaReferenceObject {
     EB_SLICE             slice_type;
     uint32_t             dependent_pictures_count; //number of pic using this reference frame
 #endif
+#if INL_TPL_ME
+    uint64_t             picture_number;
+    uint64_t             decode_order;
+    uint8_t              dummy_obj;
+#endif
 } EbPaReferenceObject;
 
 typedef struct EbPaReferenceObjectDescInitData {
@@ -142,5 +150,8 @@ extern EbErrorType eb_pa_reference_object_creator(EbPtr *object_dbl_ptr,
 #if INL_ME
 extern EbErrorType eb_down_scaled_object_creator(EbPtr *object_dbl_ptr,
                                                  EbPtr object_init_data_ptr);
+#endif
+#if INL_TPL_ME
+void release_pa_reference_objects(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr);
 #endif
 #endif //EbReferenceObject_h

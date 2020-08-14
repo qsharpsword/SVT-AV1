@@ -6288,6 +6288,9 @@ void mctf_frame(
 #endif
 
 
+#if INL_TPL_ME
+    pcs_ptr->do_mctf = context_ptr->tf_ctrls.enabled;
+#endif
     if (context_ptr->tf_ctrls.enabled) {
 
         derive_tf_window_params(
@@ -6330,6 +6333,10 @@ void mctf_frame(
             }
 
             eb_block_on_semaphore(pcs_ptr->temp_filt_done_semaphore);
+#if INL_TPL_ME_DBG
+            if (scs_ptr->in_loop_me)
+                printf("[%ld]: MCTF done\n", pcs_ptr->picture_number);
+#endif
         }
 
     }
@@ -6355,6 +6362,9 @@ void store_tpl_pictures(
         //for (uint32_t pic_i = 0; pic_i < pcs->tpl_group_size; ++pic_i)
         //    printf("TPL group Delayed-I  %I64u  \n", ((PictureParentControlSet *)pcs->tpl_group[pic_i])->picture_number);
 
+        //    printf("=====[%ld]: TPL group Delayed-I  %I64u  \n",
+        //            pcs->picture_number,
+        //            ((PictureParentControlSet *)pcs->tpl_group[pic_i])->picture_number);
     }
     else {
         memcpy(&pcs->tpl_group[0], ctx->mg_pictures_array, mg_size * sizeof(PictureParentControlSet*));
@@ -6369,7 +6379,24 @@ void store_tpl_pictures(
 
         //for (uint32_t pic_i = 0; pic_i < pcs->tpl_group_size; ++pic_i)
         //    printf("TPL group Base %I64u  \n", ((PictureParentControlSet *)pcs->tpl_group[pic_i])->picture_number);
+        //    printf("====[%ld]: TPL group Base %I64u  \n",pcs->picture_number, ((PictureParentControlSet *)pcs->tpl_group[pic_i])->picture_number);
     }
+
+#if INL_TPL_ME
+    for (uint32_t pic_i = 0; pic_i < pcs->tpl_group_size; ++pic_i) {
+
+        PictureParentControlSet* pcs_tpl_ptr = (PictureParentControlSet *)pcs->tpl_group[pic_i];
+        if (!pcs_tpl_ptr->me_data_wrapper_ptr) {
+            EbObjectWrapper               *me_wrapper;
+            eb_get_empty_object(ctx->me_fifo_ptr, &me_wrapper);
+            pcs_tpl_ptr->me_data_wrapper_ptr = me_wrapper;
+            pcs_tpl_ptr->pa_me_data = (MotionEstimationData *)me_wrapper->object_ptr;
+            //printf("[%ld]: Got me data %p\n", pcs_tpl_ptr->picture_number, pcs_tpl_ptr->pa_me_data);
+        }
+        //printf("====[%ld]: TPL group Base %ld, TPL group size %d\n",pcs->picture_number, pcs_tpl_ptr->picture_number, pcs->tpl_group_size);
+    }
+#endif
+
 }
 /* Sends a picture out from Picture Decision
 */
@@ -6394,13 +6421,22 @@ void send_picture_out(
         eb_object_inc_live_count(pcs->reference_picture_wrapper_ptr, 1);
     }
     //get a new ME data buffer
+#if INL_TPL_ME
+    if (!pcs->me_data_wrapper_ptr) {
+        eb_get_empty_object(ctx->me_fifo_ptr, &me_wrapper);
+        pcs->me_data_wrapper_ptr = me_wrapper;
+        pcs->pa_me_data = (MotionEstimationData *)me_wrapper->object_ptr;
+        //printf("[%ld]: Got me data %p\n", pcs->picture_number, pcs->pa_me_data);
+    }
+#else
     eb_get_empty_object(ctx->me_fifo_ptr, &me_wrapper);
     pcs->me_data_wrapper_ptr = me_wrapper;
 
     pcs->pa_me_data = (MotionEstimationData *)me_wrapper->object_ptr;
+#endif
 
     //char stype[] = { 'B','P','I' };
-    //printf("PD-OUT  POC:%I64u  %c L%i\n", pcs->picture_number, stype[pcs->slice_type], pcs->temporal_layer_index);
+    //printf("PD-OUT  POC:%ld  %c L%i\n", pcs->picture_number, stype[pcs->slice_type], pcs->temporal_layer_index);
 
     for (uint32_t segment_index = 0; segment_index < pcs->me_segments_total_count; ++segment_index) {
         // Get Empty Results Object
@@ -7092,6 +7128,7 @@ void* picture_decision_kernel(void *input_ptr)
         encode_context_ptr = (EncodeContext*)scs_ptr->encode_context_ptr;
         loop_count++;
 
+        //printf("[%ld]: PD in\n", pcs_ptr->picture_number);
         // Input Picture Analysis Results into the Picture Decision Reordering Queue
         // P.S. Since the prior Picture Analysis processes stage is multithreaded, inputs to the Picture Decision Process
         // can arrive out-of-display-order, so a the Picture Decision Reordering Queue is used to enforce processing of
@@ -8107,6 +8144,10 @@ void* picture_decision_kernel(void *input_ptr)
                             }
                             else
                                 pcs_ptr->decode_order = pcs_ptr->picture_number_alt;
+#if INL_TPL_ME
+                            ((EbPaReferenceObject*)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr)->picture_number = pcs_ptr->picture_number;
+                            ((EbPaReferenceObject*)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr)->decode_order = pcs_ptr->decode_order;
+#endif
                             encode_context_ptr->terminating_sequence_flag_received = (pcs_ptr->end_of_sequence_flag == EB_TRUE) ?
                                 EB_TRUE :
                                 encode_context_ptr->terminating_sequence_flag_received;

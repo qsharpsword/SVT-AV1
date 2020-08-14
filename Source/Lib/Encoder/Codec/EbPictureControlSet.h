@@ -251,6 +251,9 @@ typedef struct PictureControlSet {
     // Packetization (used to encode SPS, PPS, etc)
     Bitstream *bitstream_ptr;
 
+#if INL_ME
+    EbObjectWrapper *          c_pcs_wrapper_ptr;
+#endif
     // Reference Lists
     // Reference Lists
     EbObjectWrapper *ref_pic_ptr_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
@@ -884,6 +887,15 @@ typedef struct PictureParentControlSet {
 
     uint8_t  temp_filt_prep_done;
     uint16_t temp_filt_seg_acc;
+#if INL_TPL_ME
+    EbHandle                        tpl_me_done_semaphore;
+    EbHandle                        tpl_me_mutex;
+    uint16_t                        tpl_me_seg_acc;
+    int16_t                         tpl_me_segments_total_count;
+    uint8_t                         tpl_me_segments_column_count;
+    uint8_t                         tpl_me_segments_row_count;
+    uint8_t                         do_mctf;
+#endif
 
     int16_t tf_segments_total_count;
     uint8_t tf_segments_column_count;
@@ -947,6 +959,9 @@ typedef struct PictureParentControlSet {
     void* tpl_group[MAX_TPL_GROUP_SIZE]; //stores pcs pictures needed for tpl algorithm
     uint32_t tpl_group_size;             //size of above buffer
     void* pd_window[PD_WINDOW_SIZE]; //stores previous, current, future pictures from pd-reord-queue. empty for first I.
+#endif
+#if INL_TPL_ME
+    uint8_t tpl_me_done;
 #endif
 } PictureParentControlSet;
 

@@ -10031,6 +10031,14 @@ void integer_search_sb(
                     reference_object =
                         (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                         ->object_ptr;
+#if INL_TPL_ME
+                    if (context_ptr->me_inl_tpl &&
+                            context_ptr->tpl_ref_can_skip &&
+                            (reference_object->picture_number > context_ptr->tpl_base_poc + 3 ||
+                            reference_object->decode_order < context_ptr->tpl_base_decode_order)) {
+                        continue;
+                    }
+#endif
                     ref_pic_ptr = (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
                 }
 #else
@@ -10754,6 +10762,21 @@ void hme_level0_sb(
                     (EbPaReferenceObject *)pcs_ptr
                     ->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                     ->object_ptr;
+#if INL_TPL_ME
+                if (context_ptr->me_inl_tpl &&
+                        context_ptr->tpl_ref_can_skip &&
+                        (referenceObject->picture_number > context_ptr->tpl_base_poc + 3 ||
+                         referenceObject->decode_order < context_ptr->tpl_base_decode_order)) {
+                    continue;
+#if INL_TPL_ME_DBG
+                } else {
+                    if (scs_ptr->in_loop_me && sb_origin_x == 0 && sb_origin_y == 0)
+                        printf("\t Running ME %ld => %ld\n",
+                                pcs_ptr->picture_number,
+                                referenceObject->picture_number);
+#endif
+                }
+#endif
                 sixteenthRefPicPtr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
                     (EbPictureBufferDesc*)referenceObject->sixteenth_filtered_picture_ptr :
                     (EbPictureBufferDesc*)referenceObject->sixteenth_decimated_picture_ptr;
@@ -11018,6 +11041,14 @@ void hme_level1_sb(
                     (EbPaReferenceObject *)pcs_ptr
                     ->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                     ->object_ptr;
+#if INL_TPL_ME
+                if (context_ptr->me_inl_tpl &&
+                        context_ptr->tpl_ref_can_skip &&
+                        (referenceObject->picture_number > context_ptr->tpl_base_poc + 3 ||
+                         referenceObject->decode_order < context_ptr->tpl_base_decode_order)) {
+                    continue;
+                }
+#endif
                 quarterRefPicPtr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
                     (EbPictureBufferDesc*)referenceObject->quarter_filtered_picture_ptr :
                     (EbPictureBufferDesc*)referenceObject->quarter_decimated_picture_ptr;
@@ -11254,6 +11285,14 @@ void hme_level2_sb(
                         (EbPaReferenceObject *)pcs_ptr
                         ->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                         ->object_ptr;
+#if INL_TPL_ME
+                    if (context_ptr->me_inl_tpl &&
+                            context_ptr->tpl_ref_can_skip &&
+                            (referenceObject->picture_number > context_ptr->tpl_base_poc + 3 ||
+                             referenceObject->decode_order < context_ptr->tpl_base_decode_order)) {
+                        continue;
+                    }
+#endif
                     refPicPtr = (EbPictureBufferDesc*)referenceObject->input_padded_picture_ptr;
                 }
 #else
@@ -12654,6 +12693,9 @@ EbErrorType motion_estimate_sb(
     uint8_t prune_ref = (context_ptr->enable_hme_flag && context_ptr->enable_hme_level2_flag &&
         context_ptr->me_alt_ref == EB_FALSE && sb_height == BLOCK_SIZE_64 &&
         pcs_ptr->temporal_layer_index > 0) ? 1 : 0;
+#endif
+#if INL_TPL_ME
+    prune_ref = context_ptr->me_inl_tpl ? 0 : prune_ref;
 #endif
     //init hme results buffer
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {

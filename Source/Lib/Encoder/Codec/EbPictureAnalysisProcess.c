@@ -4357,6 +4357,13 @@ void *picture_analysis_kernel(void *input_ptr) {
                 gathering_picture_statistics_ex(
                         scs_ptr, pcs_ptr,
                         pcs_ptr->chroma_downsampled_picture_ptr);
+#if INL_TPL_ME
+                // Save pointer of raw input to PA
+                pa_ref_obj_ = (EbPaReferenceObject *)pcs_ptr->pa_reference_picture_wrapper_ptr->object_ptr;
+                pa_ref_obj_->input_padded_picture_ptr = ds_obj->picture_ptr;
+                pa_ref_obj_->quarter_decimated_picture_ptr = pa_ref_obj_->quarter_filtered_picture_ptr = ds_obj->quarter_picture_ptr;
+                pa_ref_obj_->sixteenth_decimated_picture_ptr = pa_ref_obj_->sixteenth_filtered_picture_ptr = ds_obj->sixteenth_picture_ptr;
+#endif
             } else {
                 // Original path
                 // Get PA ref, copy 8bit luma to pa_ref->input_padded_picture_ptr

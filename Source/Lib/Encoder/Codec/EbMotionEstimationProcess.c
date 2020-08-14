@@ -2571,11 +2571,125 @@ EbErrorType ime_context_ctor(EbThreadContext *  thread_context_ptr,
     return EB_ErrorNone;
 }
 
+static void init_lambda(InLoopMeContext *context_ptr,
+    SequenceControlSet *     scs_ptr,
+    PictureParentControlSet *ppcs_ptr) {
+    if (scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS) {
+        if (ppcs_ptr->temporal_layer_index == 0)
+            context_ptr->me_context_ptr->lambda =
+                lambda_mode_decision_ra_sad[ppcs_ptr->picture_qp];
+        else if (ppcs_ptr->temporal_layer_index < 3)
+            context_ptr->me_context_ptr->lambda =
+                lambda_mode_decision_ra_sad_qp_scaling_l1[ppcs_ptr->picture_qp];
+        else
+            context_ptr->me_context_ptr->lambda =
+                lambda_mode_decision_ra_sad_qp_scaling_l3[ppcs_ptr->picture_qp];
+    } else {
+        if (ppcs_ptr->temporal_layer_index == 0)
+            context_ptr->me_context_ptr->lambda =
+                lambda_mode_decision_ld_sad[ppcs_ptr->picture_qp];
+        else
+            context_ptr->me_context_ptr->lambda =
+                lambda_mode_decision_ld_sad_qp_scaling[ppcs_ptr->picture_qp];
+    }
+}
+
+static void prepare_sb_me_buffer(InLoopMeContext *context_ptr,
+    PictureParentControlSet *ppcs_ptr,
+    uint32_t sb_origin_x, uint32_t sb_origin_y) {
+
+    // Get 1/4 and 1/16 ME reference buffer(s); filtered or decimated
+    EbDownScaledObject *src_ds_object =
+        (EbDownScaledObject*)
+        ppcs_ptr->down_scaled_picture_wrapper_ptr->object_ptr;
+    EbPictureBufferDesc *quarter_picture_ptr = src_ds_object->quarter_picture_ptr;
+    EbPictureBufferDesc *sixteenth_picture_ptr = src_ds_object->sixteenth_picture_ptr;
+    EbPictureBufferDesc *input_picture_ptr = ppcs_ptr->enhanced_picture_ptr;
+
+    uint32_t sb_width =
+        (ppcs_ptr->aligned_width - sb_origin_x) < BLOCK_SIZE_64
+        ? ppcs_ptr->aligned_width - sb_origin_x
+        : BLOCK_SIZE_64;
+    uint32_t sb_height =
+        (ppcs_ptr->aligned_height - sb_origin_y) < BLOCK_SIZE_64
+        ? ppcs_ptr->aligned_height  - sb_origin_y
+        : BLOCK_SIZE_64;
+
+    // Load the SB from the input to the intermediate SB buffer
+    uint32_t buffer_index = (input_picture_ptr->origin_y + sb_origin_y) *
+        input_picture_ptr->stride_y +
+        input_picture_ptr->origin_x + sb_origin_x;
+
+    {
+        uint8_t *src_ptr = &input_picture_ptr->buffer_y[buffer_index];
+
+        //_MM_HINT_T0     //_MM_HINT_T1    //_MM_HINT_T2//_MM_HINT_NTA
+        uint32_t i;
+        for (i = 0; i < sb_height; i++) {
+            char const *p =
+                (char const *)(src_ptr +
+                        i * input_picture_ptr->stride_y);
+            _mm_prefetch(p, _MM_HINT_T2);
+        }
+    }
+
+    context_ptr->me_context_ptr->sb_src_ptr =
+        &input_picture_ptr->buffer_y[buffer_index];
+    context_ptr->me_context_ptr->sb_src_stride =
+        input_picture_ptr->stride_y;
+
+    // Load the 1/4 decimated SB from the 1/4 decimated input to the 1/4 intermediate SB buffer
+    if (context_ptr->me_context_ptr->enable_hme_level1_flag) {
+        buffer_index = (quarter_picture_ptr->origin_y + (sb_origin_y >> 1)) *
+            quarter_picture_ptr->stride_y +
+            quarter_picture_ptr->origin_x + (sb_origin_x >> 1);
+        for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 1); sb_row++) {
+            EB_MEMCPY(
+                    (&(context_ptr->me_context_ptr
+                       ->quarter_sb_buffer[sb_row *
+                       context_ptr->me_context_ptr
+                       ->quarter_sb_buffer_stride])),
+                    (&(quarter_picture_ptr
+                       ->buffer_y[buffer_index +
+                       sb_row * quarter_picture_ptr->stride_y])),
+                    (sb_width >> 1) * sizeof(uint8_t));
+        }
+    }
+
+    // Load the 1/16 decimated SB from the 1/16 decimated input to the 1/16 intermediate SB buffer
+    if (context_ptr->me_context_ptr->enable_hme_level0_flag) {
+        buffer_index = (sixteenth_picture_ptr->origin_y + (sb_origin_y >> 2)) *
+            sixteenth_picture_ptr->stride_y +
+            sixteenth_picture_ptr->origin_x + (sb_origin_x >> 2);
+
+        uint8_t *frame_ptr = &sixteenth_picture_ptr->buffer_y[buffer_index];
+        uint8_t *local_ptr =
+            context_ptr->me_context_ptr->sixteenth_sb_buffer;
+        if (context_ptr->me_context_ptr->hme_search_method ==
+                FULL_SAD_SEARCH) {
+            for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
+                EB_MEMCPY(local_ptr,
+                        frame_ptr,
+                        (sb_width >> 2) * sizeof(uint8_t));
+                local_ptr += 16;
+                frame_ptr += sixteenth_picture_ptr->stride_y;
+            }
+        } else {
+            for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row += 2) {
+                EB_MEMCPY(local_ptr,
+                        frame_ptr,
+                        (sb_width >> 2) * sizeof(uint8_t));
+                local_ptr += 16;
+                frame_ptr += sixteenth_picture_ptr->stride_y << 1;
+            }
+        }
+    }
+}
+
 void *inloop_me_kernel(void *input_ptr) {
     EbThreadContext *          thread_context_ptr = (EbThreadContext *)input_ptr;
     InLoopMeContext *context_ptr = (InLoopMeContext *)thread_context_ptr->priv;
 
-    PictureParentControlSet *ppcs_ptr;
     SequenceControlSet *     scs_ptr;
 
     EbObjectWrapper *       in_results_wrapper_ptr;
@@ -2585,8 +2699,6 @@ void *inloop_me_kernel(void *input_ptr) {
 
     EbPictureBufferDesc *input_picture_ptr;
 
-    uint32_t buffer_index;
-
     uint32_t sb_index;
     uint32_t x_sb_index;
     uint32_t y_sb_index;
@@ -2594,8 +2706,6 @@ void *inloop_me_kernel(void *input_ptr) {
     uint32_t picture_height_in_sb;
     uint32_t sb_origin_x;
     uint32_t sb_origin_y;
-    uint32_t sb_width;
-    uint32_t sb_height;
 
     // Segments
     uint32_t segment_index = 0;
@@ -2605,17 +2715,21 @@ void *inloop_me_kernel(void *input_ptr) {
     uint32_t x_sb_end_index;
     uint32_t y_sb_start_index;
     uint32_t y_sb_end_index;
+    uint32_t segment_col_count = 0;
+    uint32_t segment_row_count = 0;
 
+    uint8_t  task_type = 0;
     for (;;) {
         // Get Input Full Object
         eb_get_full_object(context_ptr->input_fifo_ptr,
                 &in_results_wrapper_ptr);
 
         in_results_ptr = (PictureManagerResults *)in_results_wrapper_ptr->object_ptr;
-        PictureControlSet* pcs = (PictureControlSet *)in_results_ptr->pcs_wrapper_ptr->object_ptr;
-        ppcs_ptr = pcs->parent_pcs_ptr;
+        PictureParentControlSet* ppcs_ptr = (PictureParentControlSet*)in_results_ptr->pcs_wrapper_ptr->object_ptr;
         scs_ptr = (SequenceControlSet *)ppcs_ptr->scs_wrapper_ptr->object_ptr;
+        task_type = in_results_ptr->task_type;
 
+        // iME get ppcs input, and output pcs to RC kernel
 
         //printf("iME-IN  POC:%ld, segment %d/%d\n",
         //        ppcs_ptr->picture_number,
@@ -2626,33 +2740,24 @@ void *inloop_me_kernel(void *input_ptr) {
 
             context_ptr->me_context_ptr->me_alt_ref = EB_FALSE;
             context_ptr->me_context_ptr->me_in_loop = EB_TRUE;
-
-            // Get 1/4 and 1/16 ME reference buffer(s); filtered or decimated
-            EbDownScaledObject *src_ds_object =
-                (EbDownScaledObject*)
-                ppcs_ptr->down_scaled_picture_wrapper_ptr->object_ptr;
-            EbPictureBufferDesc *quarter_picture_ptr = src_ds_object->quarter_picture_ptr;
-            EbPictureBufferDesc *sixteenth_picture_ptr = src_ds_object->sixteenth_picture_ptr;
+            segment_col_count = ppcs_ptr->inloop_me_segments_column_count;
+            segment_row_count = ppcs_ptr->inloop_me_segments_row_count;
+#if INL_TPL_ME
+            context_ptr->me_context_ptr->me_inl_tpl = EB_FALSE;
+            if (task_type != 0) {
+                // TPL ME
+                segment_col_count = ppcs_ptr->tpl_me_segments_column_count;
+                segment_row_count = ppcs_ptr->tpl_me_segments_row_count;
+                context_ptr->me_context_ptr->me_in_loop = EB_FALSE;
+                context_ptr->me_context_ptr->me_inl_tpl = EB_TRUE;
+				context_ptr->me_context_ptr->tpl_base_poc = in_results_ptr->tpl_base_picture_number;
+				context_ptr->me_context_ptr->tpl_base_decode_order = in_results_ptr->tpl_base_decode_order;
+				context_ptr->me_context_ptr->tpl_ref_can_skip = in_results_ptr->tpl_ref_skip; //if base IDR, no skip ref
+            }
+#endif
 
             // Lambda Assignement
-            if (scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS) {
-                if (ppcs_ptr->temporal_layer_index == 0)
-                    context_ptr->me_context_ptr->lambda =
-                        lambda_mode_decision_ra_sad[ppcs_ptr->picture_qp];
-                else if (ppcs_ptr->temporal_layer_index < 3)
-                    context_ptr->me_context_ptr->lambda =
-                        lambda_mode_decision_ra_sad_qp_scaling_l1[ppcs_ptr->picture_qp];
-                else
-                    context_ptr->me_context_ptr->lambda =
-                        lambda_mode_decision_ra_sad_qp_scaling_l3[ppcs_ptr->picture_qp];
-            } else {
-                if (ppcs_ptr->temporal_layer_index == 0)
-                    context_ptr->me_context_ptr->lambda =
-                        lambda_mode_decision_ld_sad[ppcs_ptr->picture_qp];
-                else
-                    context_ptr->me_context_ptr->lambda =
-                        lambda_mode_decision_ld_sad_qp_scaling[ppcs_ptr->picture_qp];
-            }
+            init_lambda(context_ptr, scs_ptr, ppcs_ptr);
 
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, ppcs_ptr, (MotionEstimationContext_t*)context_ptr);
@@ -2664,15 +2769,15 @@ void *inloop_me_kernel(void *input_ptr) {
             picture_height_in_sb =
                 (ppcs_ptr->aligned_height + scs_ptr->sb_sz - 1) / scs_ptr->sb_sz;
             SEGMENT_CONVERT_IDX_TO_XY(
-                    segment_index, x_segment_index, y_segment_index, ppcs_ptr->inloop_me_segments_column_count);
+                    segment_index, x_segment_index, y_segment_index, segment_col_count);
             x_sb_start_index = SEGMENT_START_IDX(
-                    x_segment_index, pic_width_in_sb, ppcs_ptr->inloop_me_segments_column_count);
+                    x_segment_index, pic_width_in_sb, segment_col_count);
             x_sb_end_index = SEGMENT_END_IDX(
-                    x_segment_index, pic_width_in_sb, ppcs_ptr->inloop_me_segments_column_count);
+                    x_segment_index, pic_width_in_sb, segment_col_count);
             y_sb_start_index = SEGMENT_START_IDX(
-                    y_segment_index, picture_height_in_sb, ppcs_ptr->inloop_me_segments_row_count);
+                    y_segment_index, picture_height_in_sb, segment_row_count);
             y_sb_end_index = SEGMENT_END_IDX(
-                    y_segment_index, picture_height_in_sb, ppcs_ptr->inloop_me_segments_row_count);
+                    y_segment_index, picture_height_in_sb, segment_row_count);
 
             if (ppcs_ptr->slice_type != I_SLICE) {
                 // SB Loop
@@ -2681,142 +2786,79 @@ void *inloop_me_kernel(void *input_ptr) {
                         sb_index    = (uint16_t)(x_sb_index + y_sb_index * pic_width_in_sb);
                         sb_origin_x = x_sb_index * scs_ptr->sb_sz;
                         sb_origin_y = y_sb_index * scs_ptr->sb_sz;
+                        prepare_sb_me_buffer(context_ptr, ppcs_ptr, sb_origin_x, sb_origin_y);
 
-                        sb_width =
-                            (ppcs_ptr->aligned_width - sb_origin_x) < BLOCK_SIZE_64
-                            ? ppcs_ptr->aligned_width - sb_origin_x
-                            : BLOCK_SIZE_64;
-                        sb_height =
-                            (ppcs_ptr->aligned_height - sb_origin_y) < BLOCK_SIZE_64
-                            ? ppcs_ptr->aligned_height  - sb_origin_y
-                            : BLOCK_SIZE_64;
-
-                        // Load the SB from the input to the intermediate SB buffer
-                        buffer_index = (input_picture_ptr->origin_y + sb_origin_y) *
-                            input_picture_ptr->stride_y +
-                            input_picture_ptr->origin_x + sb_origin_x;
-
-                        {
-                            uint8_t *src_ptr = &input_picture_ptr->buffer_y[buffer_index];
-
-                            //_MM_HINT_T0     //_MM_HINT_T1    //_MM_HINT_T2//_MM_HINT_NTA
-                            uint32_t i;
-                            for (i = 0; i < sb_height; i++) {
-                                char const *p =
-                                    (char const *)(src_ptr +
-                                            i * input_picture_ptr->stride_y);
-                                _mm_prefetch(p, _MM_HINT_T2);
-                            }
-                        }
-
-                        context_ptr->me_context_ptr->sb_src_ptr =
-                            &input_picture_ptr->buffer_y[buffer_index];
-                        context_ptr->me_context_ptr->sb_src_stride =
-                            input_picture_ptr->stride_y;
-
-                        // Load the 1/4 decimated SB from the 1/4 decimated input to the 1/4 intermediate SB buffer
-                        if (context_ptr->me_context_ptr->enable_hme_level1_flag) {
-                            buffer_index = (quarter_picture_ptr->origin_y + (sb_origin_y >> 1)) *
-                                               quarter_picture_ptr->stride_y +
-                                           quarter_picture_ptr->origin_x + (sb_origin_x >> 1);
-                            for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 1); sb_row++) {
-                                EB_MEMCPY(
-                                    (&(context_ptr->me_context_ptr
-                                           ->quarter_sb_buffer[sb_row *
-                                                               context_ptr->me_context_ptr
-                                                                   ->quarter_sb_buffer_stride])),
-                                    (&(quarter_picture_ptr
-                                           ->buffer_y[buffer_index +
-                                                      sb_row * quarter_picture_ptr->stride_y])),
-                                    (sb_width >> 1) * sizeof(uint8_t));
-                            }
-                        }
-
-                        // Load the 1/16 decimated SB from the 1/16 decimated input to the 1/16 intermediate SB buffer
-                        if (context_ptr->me_context_ptr->enable_hme_level0_flag) {
-                            buffer_index = (sixteenth_picture_ptr->origin_y + (sb_origin_y >> 2)) *
-                                               sixteenth_picture_ptr->stride_y +
-                                           sixteenth_picture_ptr->origin_x + (sb_origin_x >> 2);
-
-                            {
-                                uint8_t *frame_ptr = &sixteenth_picture_ptr->buffer_y[buffer_index];
-                                uint8_t *local_ptr =
-                                    context_ptr->me_context_ptr->sixteenth_sb_buffer;
-                                if (context_ptr->me_context_ptr->hme_search_method ==
-                                    FULL_SAD_SEARCH) {
-#if ENABLE_HME_AT_INC_SB
-                                    for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
-#else
-                                    for (uint32_t sb_row = 0; sb_row < (sb_height >> 2); sb_row += 1) {
-#endif
-                                        EB_MEMCPY(local_ptr,
-                                                  frame_ptr,
-                                                  (sb_width >> 2) * sizeof(uint8_t));
-                                        local_ptr += 16;
-                                        frame_ptr += sixteenth_picture_ptr->stride_y;
-                                    }
-                                } else {
-#if ENABLE_HME_AT_INC_SB
-#if FIX_HME_LOAD
-                                    for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row += 2) {
-#else
-                                    for (uint32_t sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
-#endif
-#else
-                                    for (uint32_t sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
-#endif
-                                        EB_MEMCPY(local_ptr,
-                                                  frame_ptr,
-                                                  (sb_width >> 2) * sizeof(uint8_t));
-                                        local_ptr += 16;
-                                        frame_ptr += sixteenth_picture_ptr->stride_y << 1;
-                                    }
-                                }
-                            }
-                        }
                         motion_estimate_sb(ppcs_ptr,
                                 sb_index,
                                 sb_origin_x,
                                 sb_origin_y,
                                 context_ptr->me_context_ptr,
                                 input_picture_ptr);
-#if IMPROVE_GMV
-                        eb_block_on_mutex(ppcs_ptr->me_processed_sb_mutex);
-                        ppcs_ptr->me_processed_sb_count++;
-                        eb_release_mutex(ppcs_ptr->me_processed_sb_mutex);
-#endif
+
+                        if (task_type == 0) {
+                            eb_block_on_mutex(ppcs_ptr->me_processed_sb_mutex);
+                            ppcs_ptr->me_processed_sb_count++;
+                            eb_release_mutex(ppcs_ptr->me_processed_sb_mutex);
+                        }
                     }
                 }
             }
-#if IMPROVE_GMV
-            // Global motion estimation
-            // TODO: create an other kernel ?
-            if (context_ptr->me_context_ptr->compute_global_motion &&
-                // Compute only when ME of all 64x64 SBs is performed
-                ppcs_ptr->me_processed_sb_count == ppcs_ptr->sb_total_count) {
-                global_motion_estimation_inl(
-                        ppcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
-            }
+
+            if (task_type == 0) {
+                // Global motion estimation
+                // TODO: create an other kernel ?
+                if (context_ptr->me_context_ptr->compute_global_motion &&
+                        // Compute only when ME of all 64x64 SBs is performed
+                        ppcs_ptr->me_processed_sb_count == ppcs_ptr->sb_total_count) {
+                    global_motion_estimation_inl(
+                            ppcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
+                }
+
+                eb_get_empty_object(context_ptr->output_fifo_ptr,
+                        &out_results_wrapper_ptr);
+
+                RateControlTasks * rate_control_tasks_ptr = (RateControlTasks *)out_results_wrapper_ptr->object_ptr;
+                rate_control_tasks_ptr->pcs_wrapper_ptr = ppcs_ptr->child_pcs->c_pcs_wrapper_ptr;
+                rate_control_tasks_ptr->task_type = RC_INPUT;
+                rate_control_tasks_ptr->segment_index = segment_index;
+
+                // Release the Input Results
+                eb_release_object(in_results_wrapper_ptr);
+
+                // Post the Full Results Object
+                eb_post_full_object(out_results_wrapper_ptr);
+			} else {
+				// TPL ME
+#if INL_TPL_ME
+				eb_block_on_mutex(ppcs_ptr->tpl_me_mutex);
+				ppcs_ptr->tpl_me_seg_acc++;
+
+				if (ppcs_ptr->tpl_me_seg_acc ==
+						ppcs_ptr->tpl_me_segments_total_count) {
+
+					//printf("[%ld]: tpl_segment %d, tpl done\n", ppcs_ptr->picture_number, ppcs_ptr->tpl_me_seg_acc);
+					eb_post_semaphore(ppcs_ptr->tpl_me_done_semaphore);
+				}
+				eb_release_mutex(ppcs_ptr->tpl_me_mutex);
 #endif
+                eb_release_object(in_results_wrapper_ptr);
+			}
+        } else {
+            // Dummy in loop kernel
+            eb_get_empty_object(context_ptr->output_fifo_ptr,
+                    &out_results_wrapper_ptr);
+
+            RateControlTasks * rate_control_tasks_ptr = (RateControlTasks *)out_results_wrapper_ptr->object_ptr;
+            rate_control_tasks_ptr->pcs_wrapper_ptr = ppcs_ptr->child_pcs->c_pcs_wrapper_ptr;
+            rate_control_tasks_ptr->task_type = RC_INPUT;
+            rate_control_tasks_ptr->segment_index = segment_index;
+
+            // Release the Input Results
+            eb_release_object(in_results_wrapper_ptr);
+
+            // Post the Full Results Object
+            eb_post_full_object(out_results_wrapper_ptr);
         }
-
-        //TODO:
-        //Aggregate segment count
-
-        // Get Empty Results Object
-        eb_get_empty_object(context_ptr->output_fifo_ptr,
-                &out_results_wrapper_ptr);
-
-        RateControlTasks * rate_control_tasks_ptr = (RateControlTasks *)out_results_wrapper_ptr->object_ptr;
-        rate_control_tasks_ptr->pcs_wrapper_ptr = in_results_ptr->pcs_wrapper_ptr;
-        rate_control_tasks_ptr->task_type = RC_INPUT;
-        rate_control_tasks_ptr->segment_index = segment_index;
-
-        // Release the Input Results
-        eb_release_object(in_results_wrapper_ptr);
-
-        // Post the Full Results Object
-        eb_post_full_object(out_results_wrapper_ptr);
     }
 
     return EB_NULL;

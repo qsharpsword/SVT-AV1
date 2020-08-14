@@ -545,6 +545,9 @@ void reset_pcs_av1(PictureParentControlSet *pcs_ptr) {
     frm_hdr->frame_refs_short_signaling = 0;
     pcs_ptr->allow_comp_inter_inter     = 0;
     //  int32_t all_one_sided_refs;
+#if INL_TPL_ME
+    pcs_ptr->tpl_me_done = 0;
+#endif
 }
 /***********************************************
 **** Copy the input buffer from the

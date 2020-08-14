@@ -50,6 +50,11 @@ typedef struct PictureManagerResults {
     EbObjectWrapper *pcs_wrapper_ptr;
     uint32_t         segment_index;
     uint8_t          task_type;
+#if INL_TPL_ME
+    uint64_t         tpl_base_picture_number;
+    uint64_t         tpl_base_decode_order;
+    EbBool           tpl_ref_skip;
+#endif
 } PictureManagerResults;
 
 typedef struct PictureManagerResultInitData {

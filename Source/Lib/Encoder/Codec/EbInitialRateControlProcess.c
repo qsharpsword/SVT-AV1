@@ -464,6 +464,7 @@ EbErrorType initial_rate_control_context_ctor(EbThreadContext *  thread_context_
     return EB_ErrorNone;
 }
 
+#if !INL_TPL_ME
 /************************************************
 * Release Pa Reference Objects
 ** Check if reference pictures are needed
@@ -501,6 +502,8 @@ void release_pa_reference_objects(SequenceControlSet *scs_ptr, PictureParentCont
 
     return;
 }
+#endif
+
 #if !IMPROVE_GMV
 /************************************************
 * Global Motion Detection Based on ME information
@@ -2078,7 +2081,13 @@ void *initial_rate_control_kernel(void *input_ptr) {
 #if TPL_LA
             if (scs_ptr->static_config.look_ahead_distance == 0 || scs_ptr->static_config.enable_tpl_la == 0) {
                 // Release Pa Ref pictures when not needed
+#if INL_TPL_ME
+                // Release Pa ref after TPL
+                if (!scs_ptr->in_loop_me)
+                    release_pa_reference_objects(scs_ptr, pcs_ptr);
+#else
                 release_pa_reference_objects(scs_ptr, pcs_ptr);
+#endif
             }
 #else
             // Release Pa Ref pictures when not needed
@@ -2363,6 +2372,10 @@ void *initial_rate_control_kernel(void *input_ptr) {
 #if TPL_LA
                         if (scs_ptr->static_config.look_ahead_distance != 0 && scs_ptr->static_config.enable_tpl_la
                             && ((has_overlay == 0 && loop_index == 0) || (has_overlay == 1 && loop_index == 1))) {
+#if INL_TPL_ME
+                            //TODO:
+                            //Move the whole logic to RC kernel later
+#endif
                             // Release Pa Ref pictures when not needed
                             release_pa_reference_objects(scs_ptr, pcs_ptr);
                                 //loop_index ? pcs_ptr : queueEntryPtr);

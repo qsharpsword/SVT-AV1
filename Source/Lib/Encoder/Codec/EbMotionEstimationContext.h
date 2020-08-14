@@ -584,6 +584,9 @@ typedef struct MeContext {
     EbBool   me_in_loop;
     void * alt_ref_reference_ptr_inl;
 #endif
+#if INL_TPL_ME
+    EbBool me_inl_tpl;
+#endif
     // tf
 #if FAST_M8_V1 // tf_hp
     uint8_t high_precision;
@@ -611,6 +614,11 @@ typedef struct MeContext {
     uint8_t mrp_level;
 #endif
     // -------
+#if INL_TPL_ME
+    uint64_t tpl_base_poc;
+    uint64_t tpl_base_decode_order;
+    uint64_t tpl_ref_can_skip;
+#endif
 } MeContext;
 
 typedef uint64_t (*EB_ME_DISTORTION_FUNC)(uint8_t *src, uint32_t src_stride, uint8_t *ref,

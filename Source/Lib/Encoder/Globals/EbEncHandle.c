@@ -660,6 +660,9 @@ EbErrorType load_default_buffer_configuration_settings(
 
 #if DECOUPLE_ME_RES
         min_me = scs_ptr->static_config.look_ahead_distance==0 ? 1 : min_parent;
+#if INL_TPL_ME
+        min_me = mg_size + 3;
+#endif
 #endif
         //Pa-References.Min to sustain flow (RA-5L-MRP-ON) -->TODO: derive numbers for other GOP Structures.
 #if TPL_LA
@@ -2587,6 +2590,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #if INL_ME
     if (scs_ptr->static_config.rate_control_mode == 0 && scs_ptr->static_config.enable_tpl_la ==0)
         scs_ptr->in_loop_me = 1;
+    printf("in_loop_me is %d\n", scs_ptr->in_loop_me);
 #endif
 
     // Set over_boundary_block_mode     Settings

@@ -654,6 +654,10 @@ extern "C" {
 #define INL_ME_ON_INPUT_DBG 1 //ME on original debug
 #define INL_GM_ON_INPUT_DBG 1 //GM on original debug
 #endif
+#define INL_TPL_ME          1 // TPL ME
+#if INL_TPL_ME
+#define INL_TPL_ME_DBG      1 // TPL ME debug info
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
