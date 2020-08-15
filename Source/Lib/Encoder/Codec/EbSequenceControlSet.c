@@ -152,7 +152,7 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
     if (scs_ptr->static_config.cdef_level == DEFAULT)
         scs_ptr->seq_header.cdef_level = 1;
     else
-        scs_ptr->seq_header.cdef_level = (uint8_t)(scs_ptr->static_config.cdef_level > 0);
+        scs_ptr->seq_header.cdef_level = (uint8_t) scs_ptr->static_config.cdef_level;
 
     if (scs_ptr->static_config.enable_restoration_filtering == DEFAULT)
         scs_ptr->seq_header.enable_restoration = 1;
