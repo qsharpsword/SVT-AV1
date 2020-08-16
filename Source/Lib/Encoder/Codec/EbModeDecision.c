@@ -567,6 +567,11 @@ void choose_best_av1_mv_pred(ModeDecisionContext *           context_ptr,
                              uint8_t *bestDrlIndex, // output
                              IntMv    best_pred_mv[2] // output
 ) {
+#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+    if (context_ptr->coeff_split_flag_rate_only) {
+        return;
+    }
+#endif
     uint8_t  drli, max_drl_index;
     IntMv    nearestmv[2];
     IntMv    nearmv[2];

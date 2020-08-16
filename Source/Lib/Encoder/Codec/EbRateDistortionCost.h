@@ -126,7 +126,10 @@ extern uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
                                     uint8_t skip_flag_context,
 #endif
                                     uint8_t enable_inter_intra,
-                                    EbBool full_cost_shut_fast_rate_flag, uint8_t md_pass,
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+                                    EbBool full_cost_shut_fast_rate_flag, 
+#endif
+                                    uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);
 
 extern uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidate_ptr,
@@ -141,7 +144,10 @@ extern uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
                                     uint8_t skip_flag_context,
 #endif
                                     uint8_t enable_inter_intra,
-                                    EbBool full_cost_shut_fast_rate_flag, uint8_t md_pass,
+#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+                                    EbBool full_cost_shut_fast_rate_flag, 
+#endif
+                                    uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);
 
 extern EbErrorType av1_intra_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
