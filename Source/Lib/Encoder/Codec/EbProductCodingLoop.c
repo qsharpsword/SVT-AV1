@@ -370,7 +370,9 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    bwdith,
                                    bheight,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
+#if OPT_1 // no T-1 @ PD0 
+    if (!context_ptr->skip_intra) {
+#endif
     if (!context_ptr->hbd_mode_decision) {
 #if !REMOVE_UNUSED_CODE_PH2
         if (intraMdOpenLoop == EB_FALSE) {
@@ -526,7 +528,9 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                              bwheight_uv);
         }
     }
-
+#if OPT_1 // no T-1 @ PD0 
+    }
+#endif
     return;
 }
 
@@ -829,6 +833,9 @@ void init_sq_nsq_block(SequenceControlSet *scs_ptr, ModeDecisionContext *context
         context_ptr->md_local_blk_unit[blk_idx].left_neighbor_partition = INVALID_NEIGHBOR_DATA;
         context_ptr->md_local_blk_unit[blk_idx].above_neighbor_partition = INVALID_NEIGHBOR_DATA;
 #if SSE_BASED_SPLITTING
+#if OPT_2
+        if (context_ptr->md_disallow_nsq == EB_FALSE)
+#endif
         for (uint8_t shape_idx = 0; shape_idx < NUMBER_OF_SHAPES; shape_idx++)
             context_ptr->md_local_blk_unit[blk_idx].sse_gradian_band[shape_idx] = 1;
 #endif
@@ -6557,6 +6564,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
         }
     }
 #endif
+#if !OPT_3
 #if M8_CLEAN_UP
 #if ON_OFF_FEATURE_MRP
     if ((!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) ||
@@ -6568,7 +6576,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
 #endif
         return;
-
+#endif
     // Distortion measure
     EbBool use_ssd = EB_FALSE;
 
@@ -12630,7 +12638,11 @@ EbErrorType signal_derivation_block(
 #if INTER_COMP_REDESIGN
 #if SOFT_CYCLES_REDUCTION
     // Set inter_inter_distortion_based_reference_pruning
+#if OPT_3
+    if  (pcs->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 1 || pcs->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try > 1) {
+#else
     if (pcs->slice_type != I_SLICE) {
+#endif
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
@@ -14062,7 +14074,10 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     if (is_block_allowed(pcs_ptr, context_ptr)) {
 #endif
     const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
-    context_ptr->source_variance =
+#if OPT_4
+    if (context_ptr->pd_pass == PD_PASS_2) // source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+#endif
+        context_ptr->source_variance =
         eb_av1_get_sby_perpixel_variance(fn_ptr,
                                             (input_picture_ptr->buffer_y + input_origin_index),
                                             input_picture_ptr->stride_y,
@@ -14171,6 +14186,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 #if MD_REFERENCE_MASKING
     // Perform md reference pruning
+#if OPT_3
+    if (context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled || context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+#endif
     perform_md_reference_pruning(
         pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);
 #endif
@@ -14467,6 +14485,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
     }
 #if REMOVE_UNUSED_CODE_PH2
+#if OPT_1 // no T-1 @ PD0 
+    if (!context_ptr->skip_intra)
+#endif
     av1_perform_inverse_transform_recon(
         context_ptr, candidate_buffer);
 #if !CLEAN_UP_SB_DATA_8
@@ -14519,6 +14540,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         if (!context_ptr->hbd_mode_decision) {
 #if SSE_BASED_SPLITTING
 #if FIX_WARNINGS
+#if OPT_0
+            if (context_ptr->pd_pass == PD_PASS_0 && pcs_ptr->parent_pcs_ptr->disallow_nsq == EB_FALSE)
+#endif
             distortion_based_modulator(context_ptr,input_picture_ptr, input_origin_index,
 #else
             distortion_based_modulator(pcs_ptr, context_ptr,input_picture_ptr, input_origin_index,

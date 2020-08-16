@@ -649,6 +649,16 @@ extern "C" {
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 #define UNIFY_LEVELS                    1 // Have the mode-switching features use the regular MD feature levels when switching modes
 #define AUG5_ADOPTS                     1 // Adoptions for MR and M2
+#define LOSSLESS_OPT                    1 // Lossless opt
+#if LOSSLESS_OPT
+#define OPT_0                         1 // bypass distortion_based_modulator() if no nsq
+#define OPT_1                         1 // no T-1 @ PD0 and no recon samples update if context_ptr->skip_intra == 1
+#define OPT_2                         1 // bypass sse_gradian_band init if no nsq
+#define OPT_3                         1 // bypass ref pruning init if no mrp
+#define OPT_4                         1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+#define OPT_5                         1 // shut useless pred depth refinement operations
+#endif
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
