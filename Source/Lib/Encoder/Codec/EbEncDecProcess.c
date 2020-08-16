@@ -7807,6 +7807,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_number_input_mv = 1;
 #endif
 #endif
+#if !SHUT_FAST_RATE_PD0
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
     if (pd_pass == PD_PASS_0)
         context_ptr->md_skip_mvp_generation = EB_TRUE;
@@ -7814,7 +7815,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_skip_mvp_generation = EB_FALSE;
     else
         context_ptr->md_skip_mvp_generation = EB_FALSE;
-
+#endif
     // Set dc_cand_only_flag
     if (pd_pass == PD_PASS_0)
         context_ptr->dc_cand_only_flag = EB_TRUE;
@@ -7841,14 +7842,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->disable_angle_z2_intra_flag = EB_TRUE;
     else
         context_ptr->disable_angle_z2_intra_flag = EB_FALSE;
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if SHUT_FAST_RATE_PD0
     // Use coeff rate and slit flag rate only (i.e. no fast rate)
     if (pd_pass == PD_PASS_0)
-        context_ptr->coeff_split_flag_rate_only = EB_TRUE;
+        context_ptr->shut_fast_rate = EB_TRUE;
     else if (pd_pass == PD_PASS_1)
-        context_ptr->coeff_split_flag_rate_only = EB_FALSE;
+        context_ptr->shut_fast_rate = EB_FALSE;
     else
-        context_ptr->coeff_split_flag_rate_only = EB_FALSE;
+        context_ptr->shut_fast_rate = EB_FALSE;
 #else
     // Set full_cost_derivation_fast_rate_blind_flag
     if (pd_pass == PD_PASS_0)

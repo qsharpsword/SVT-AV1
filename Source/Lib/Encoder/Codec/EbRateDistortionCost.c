@@ -582,7 +582,7 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                              uint8_t skip_flag_context,
 #endif
                              uint8_t enable_inter_intra, 
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if !SHUT_FAST_RATE_PD0
                              EbBool full_cost_shut_fast_rate_flag,
 #endif
                              uint8_t md_pass, uint32_t left_neighbor_mode,
@@ -844,7 +844,7 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
         chroma_rate = (uint32_t)(intra_chroma_mode_bits_num + intra_chroma_ang_mode_bits_num);
 
         // Keep the Fast Luma and Chroma rate for future use
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if SHUT_FAST_RATE_PD0
         candidate_ptr->fast_luma_rate = luma_rate;
         candidate_ptr->fast_chroma_rate = chroma_rate;
 #else
@@ -1462,7 +1462,7 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                              uint8_t skip_flag_context,
 #endif
                              uint8_t enable_inter_intra, 
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if !SHUT_FAST_RATE_PD0
                              EbBool full_cost_shut_fast_rate_flag,
 #endif
                              uint8_t md_pass, uint32_t left_neighbor_mode,
@@ -1775,7 +1775,7 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
     //chroma_rate = intra_chroma_mode_bits_num + intra_chroma_ang_mode_bits_num;
 
     // Keep the Fast Luma and Chroma rate for future use
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if SHUT_FAST_RATE_PD0
     candidate_ptr->fast_luma_rate = luma_rate;
     candidate_ptr->fast_chroma_rate = chroma_rate;
 #else
@@ -1990,6 +1990,9 @@ EbErrorType av1_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 
     // For CFL, costs of alphas are not computed in fast loop, since they are computed in the full loop. The rate costs are added to the full loop.
     // In fast loop CFL alphas are not know yet. The chroma mode bits are calculated based on DC Mode, and if CFL is the winner compared to CFL, ChromaBits are updated in Full loop
+#if SHUT_FAST_RATE_PD0
+    if (!context_ptr->shut_fast_rate)
+#endif
     if (context_ptr->blk_geom->has_uv) {
         if (candidate_buffer_ptr->candidate_ptr->type == INTRA_MODE &&
             candidate_buffer_ptr->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {

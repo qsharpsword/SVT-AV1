@@ -658,10 +658,8 @@ extern "C" {
 #define OPT_4                         1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
 #define OPT_5                         1 // shut useless pred depth refinement operations
 #endif
-#define PD0_COEFF_RATE_SPLIT_RATE_ONLY  1 // Improve PD0 rate estimation
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-#define PD0_COEFF_RATE_SPLIT_LOSSLESS 1
-#endif
+#define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
+
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////

@@ -353,8 +353,8 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    NEIGHBOR_ARRAY_UNIT_LEFT_MASK);
 
     // Update the Inter Pred Type Neighbor Array
-#if PD0_COEFF_RATE_SPLIT_LOSSLESS
-    if (!context_ptr->coeff_split_flag_rate_only)
+#if SHUT_FAST_RATE_PD0
+    if (!context_ptr->shut_fast_rate)
 #endif
     neighbor_array_unit_mode_write(context_ptr->inter_pred_dir_neighbor_array,
                                    &inter_pred_direction_index,
@@ -365,8 +365,8 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
     // Update the refFrame Type Neighbor Array
-#if PD0_COEFF_RATE_SPLIT_LOSSLESS
-    if (!context_ptr->coeff_split_flag_rate_only)
+#if SHUT_FAST_RATE_PD0
+    if (!context_ptr->shut_fast_rate)
 #endif
     neighbor_array_unit_mode_write(context_ptr->ref_frame_type_neighbor_array,
                                    &ref_frame_type,
@@ -785,8 +785,8 @@ void md_update_all_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionCont
     mode_decision_update_neighbor_arrays(
         pcs_ptr, context_ptr, last_blk_index_mds, pcs_ptr->intra_md_open_loop_flag, EB_FALSE);
 #endif
-#if PD0_COEFF_RATE_SPLIT_LOSSLESS
-    if (!context_ptr->coeff_split_flag_rate_only)
+#if SHUT_FAST_RATE_PD0
+    if (!context_ptr->shut_fast_rate)
 #endif
     update_mi_map(context_ptr,
                   context_ptr->blk_ptr,
@@ -1413,8 +1413,8 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     } else
         chroma_fast_distortion = 0;
     // Fast Cost
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-    if (context_ptr->coeff_split_flag_rate_only) {
+#if SHUT_FAST_RATE_PD0
+    if (context_ptr->shut_fast_rate) {
         *(candidate_buffer->fast_cost_ptr) = luma_fast_distortion + chroma_fast_distortion;
         candidate_ptr->fast_luma_rate = 0;
         candidate_ptr->fast_chroma_rate = 0;
@@ -1450,13 +1450,13 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context,
 #endif
         context_ptr->md_inter_intra_level,
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if !SHUT_FAST_RATE_PD0
         context_ptr->full_cost_shut_fast_rate_flag,
 #endif
         1,
         context_ptr->intra_luma_left_mode,
         context_ptr->intra_luma_top_mode);
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if SHUT_FAST_RATE_PD0
     }
 #endif
 #if R2R_FIX
@@ -13363,7 +13363,7 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context,
 #endif
                     context_ptr->md_inter_intra_level,
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if !SHUT_FAST_RATE_PD0
                     context_ptr->full_cost_shut_fast_rate_flag,
 #endif
                     1,
@@ -14147,7 +14147,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     }
     FrameHeader *frm_hdr       = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     // Generate MVP(s)
+#if SHUT_FAST_RATE_PD0
+    if (!context_ptr->shut_fast_rate) {
+#else
     if (!context_ptr->md_skip_mvp_generation) {
+#endif
         if (frm_hdr->allow_intrabc) // pcs_ptr->slice_type == I_SLICE
             generate_av1_mvp_table(&context_ptr->sb_ptr->tile_info,
                                     context_ptr,

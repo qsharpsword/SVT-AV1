@@ -186,7 +186,7 @@ typedef uint64_t (*EbFastCostFunc)(BlkStruct *                   blk_ptr,
                                    uint8_t skip_flag_context,
 #endif
                                    uint8_t enable_inter_intra, 
-#if !PD0_COEFF_RATE_SPLIT_RATE_ONLY
+#if !SHUT_FAST_RATE_PD0
                                    EbBool full_cost_shut_fast_rate_flag,
 #endif
                                    uint8_t md_pass, uint32_t left_neighbor_mode,

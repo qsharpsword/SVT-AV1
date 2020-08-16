@@ -567,8 +567,8 @@ void choose_best_av1_mv_pred(ModeDecisionContext *           context_ptr,
                              uint8_t *bestDrlIndex, // output
                              IntMv    best_pred_mv[2] // output
 ) {
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-    if (context_ptr->coeff_split_flag_rate_only) {
+#if SHUT_FAST_RATE_PD0
+    if (context_ptr->shut_fast_rate) {
         return;
     }
 #endif

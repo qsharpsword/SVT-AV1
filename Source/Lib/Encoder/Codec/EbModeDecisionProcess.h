@@ -773,8 +773,8 @@ typedef struct ModeDecisionContext {
 #endif
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
-#if PD0_COEFF_RATE_SPLIT_RATE_ONLY
-    uint8_t      coeff_split_flag_rate_only;
+#if SHUT_FAST_RATE_PD0
+    uint8_t      shut_fast_rate; // use coeff rate and slipt flag rate only 
 #else
     uint8_t      full_cost_shut_fast_rate_flag;
 #endif
@@ -847,7 +847,9 @@ typedef struct ModeDecisionContext {
 #endif
 #endif
     uint8_t      md_max_ref_count;
+#if !SHUT_FAST_RATE_PD0
     EbBool       md_skip_mvp_generation;
+#endif
     int16_t      pred_me_full_pel_search_width;
     int16_t      pred_me_full_pel_search_height;
 
