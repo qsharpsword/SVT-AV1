@@ -658,17 +658,17 @@ extern "C" {
 #define OPT_4                         1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit
 #define OPT_5                         1 // shut useless pred depth refinement operations
 #endif
-#define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
-
-#define BLOCK_BASED_DEPTH_REFINMENT 1
-#define FAST_TXT                    1
-#define OPT_ADAPT_ME                1
-#define IFS_PUSH_BACK_STAGE_3       1
-#define FASTER_INTRA                1
-
-#define FIX_R2R                     1
-
-#define BALANCE_M6_M7               1
+#define SHUT_FAST_RATE_PD0               1 // Improve PD0 rate estimation
+#define M7_OPT                           1 // Faster_M7
+#if M7_OPT
+#define BLOCK_BASED_DEPTH_REFINMENT     1
+#define FAST_TXT                        1
+#define OPT_ADAPT_ME                    1
+#define IFS_PUSH_BACK_STAGE_3           1
+#define FASTER_INTRA                    1
+#endif
+#define FIX_R2R                          1 // Fixed accessing invalid temporal-information @ adapt_me for non-lp=1/compound construction for pme.
+#define BALANCE_M6_M7                    1 // Balance M6/M7 settings 
 
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
