@@ -3747,11 +3747,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_LEVELS
     EbEncMode enc_mode;
     if (mode_offset)
-#if M7_PRESET
-        enc_mode = CLIP3(ENC_M0, ENC_M6, pcs_ptr->enc_mode + mode_offset);
-#else
         enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + mode_offset);
-#endif
     else
         enc_mode = pcs_ptr->enc_mode;
 #else

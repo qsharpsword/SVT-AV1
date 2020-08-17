@@ -660,14 +660,12 @@ extern "C" {
 #endif
 #define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
 
-#define M7_PRESET 1
-#if M7_PRESET
 #define BLOCK_BASED_DEPTH_REFINMENT 1
-#define FAST_TXT 1
-#define OPT_ADAPT_ME 1
-#define IFS_PUSH_BACK_STAGE_3 1
-#define FASTER_INTRA 1
-#endif
+#define FAST_TXT                    1
+#define OPT_ADAPT_ME                1
+#define IFS_PUSH_BACK_STAGE_3       1
+#define FASTER_INTRA                1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
