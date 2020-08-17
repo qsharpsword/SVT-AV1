@@ -3979,11 +3979,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if FAST_M8_V1 // Move nic=1 before bypass generation (lossless towards the adaptive bypass)
     uint8_t use_nic_1_last_stage;
 #if SHIFT_PRESETS
-#if 0//BALANCE_M6_M7 // nic
-    if (pcs_ptr->enc_mode <= ENC_M6) {
-#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
-#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif
