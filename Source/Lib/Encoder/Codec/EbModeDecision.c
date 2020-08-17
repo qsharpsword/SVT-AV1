@@ -3167,7 +3167,8 @@ void inject_warped_motion_candidates(
     }
     // NEWMV L0
 #if INCREASE_WM_CANDS
-    const MV neighbors[13] = {
+#define NUM_WM_NEIGHBOUR_POS 13
+    const MV neighbors[NUM_WM_NEIGHBOUR_POS] = {
         {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}, {0, -2}, {2, 0}, {0, 2}, {-2, 0}, {1, 1}, {-1, 1}, {1, -1}, {-1, 1} };
 #else
     const MV neighbors[9] = {
@@ -3216,7 +3217,7 @@ void inject_warped_motion_candidates(
 
             if (!skip_cand) {
 #if INCREASE_WM_CANDS
-                for (int i = 0; i < 13; i++) {
+                for (int i = 0; i < NUM_WM_NEIGHBOUR_POS; i++) {
 #else
                 for (int i = 0; i < 9; i++) {
 #endif
@@ -3315,7 +3316,7 @@ void inject_warped_motion_candidates(
                 context_ptr->blk_geom->shape);
             if (!skip_cand) {
 #if INCREASE_WM_CANDS
-                for (int i = 0; i < 13; i++) {
+                for (int i = 0; i < NUM_WM_NEIGHBOUR_POS; i++) {
 #else
                 for (int i = 0; i < 9; i++) {
 #endif

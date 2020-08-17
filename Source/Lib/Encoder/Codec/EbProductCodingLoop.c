@@ -1453,19 +1453,19 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 7;
 #endif
 #endif
-#if REF_PRUNE_CAT_TUNE
-        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 1;
-        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 1;
-        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
-        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 1;
-        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 1;
-#else
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 7;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 7;
 
+#if REF_PRUNE_CAT_TUNE
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP] = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
