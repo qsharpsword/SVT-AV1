@@ -1275,7 +1275,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #else
 #if SHIFT_PRESETS
+#if M6_FILTER_INTRA
+            if (pcs_ptr->enc_mode <= ENC_M4)
+#else
             if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
             if (pcs_ptr->enc_mode <= ENC_M6)
 #endif

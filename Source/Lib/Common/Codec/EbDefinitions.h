@@ -660,15 +660,28 @@ extern "C" {
 #endif
 #define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
 
-#define M7_PRESET 1
-#if M7_PRESET
 #define BLOCK_BASED_DEPTH_REFINMENT 1
 #define FAST_TXT 1
 #define OPT_ADAPT_ME 1
 #define IFS_PUSH_BACK_STAGE_3 1
 #define FASTER_INTRA 1
 #endif
-#endif
+
+
+#define M6_GMV          0
+#define M6_BIPRED_3X3   0
+#define M6_SUBPEL       0
+#define M6_DEPTH_REF    0
+#define M6_FILTER_INTRA 0
+#define M6_ME           0
+#define M6_HME          0  
+#define M6_TF_ME        0
+#define M6_TF_HP        0
+#define M6_LOOP_FILTER  0
+#define M6_TF_LEVEL     0
+#define M6_MRP          0
+#define M6_NIC_MDS_3_1  0
+#define M6_RESTORATION  0
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
 #if NEW_DELAY

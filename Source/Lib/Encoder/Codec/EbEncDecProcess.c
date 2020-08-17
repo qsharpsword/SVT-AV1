@@ -3747,11 +3747,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_LEVELS
     EbEncMode enc_mode;
     if (mode_offset)
-#if M7_PRESET
-        enc_mode = CLIP3(ENC_M0, ENC_M6, pcs_ptr->enc_mode + mode_offset);
-#else
         enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + mode_offset);
-#endif
     else
         enc_mode = pcs_ptr->enc_mode;
 #else
@@ -4947,7 +4943,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
 #if SHIFT_PRESETS
+#if M6_GMV
+            if (enc_mode <= ENC_M4)
+#else
             if (enc_mode <= ENC_M5)
+#endif
 #else
             if (enc_mode <= ENC_M6)
 #endif
@@ -5218,7 +5218,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->bipred3x3_injection = 1;
 #if FAST_M8_V1
 #if SHIFT_PRESETS
+#if M6_BIPRED_3X3
+        else if (enc_mode <= ENC_M4)
+#else
         else if (enc_mode <= ENC_M5)
+#endif
 #else
         else if (enc_mode <= ENC_M7)
 #endif
@@ -7785,7 +7789,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (pd_pass == PD_PASS_0)
 #if FAST_M8_V1
 #if SHIFT_PRESETS
+#if M6_SUBPEL
+        context_ptr->md_subpel_me_level = enc_mode <= ENC_M4 ? 3 : 0;
+#else
         context_ptr->md_subpel_me_level = enc_mode <= ENC_M5 ? 3 : 0;
+#endif
 #else
         context_ptr->md_subpel_me_level = enc_mode <= ENC_M7 ? 3 : 0;
 #endif
@@ -7796,7 +7804,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_subpel_me_level = 3;
     else
 #if SHIFT_PRESETS
+#if M6_SUBPEL
+        if (enc_mode <= ENC_M4)
+#else
         if (enc_mode <= ENC_M5)
+#endif
 #else
         if (enc_mode <= ENC_M7)
 #endif
@@ -7809,7 +7821,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (pd_pass == PD_PASS_0)
 #if FAST_M8_V1
 #if SHIFT_PRESETS
+#if M6_SUBPEL
+        context_ptr->md_subpel_pme_level = enc_mode <= ENC_M4 ? 3 : 0;
+#else
         context_ptr->md_subpel_pme_level = enc_mode <= ENC_M5 ? 3 : 0;
+#endif
 #else
         context_ptr->md_subpel_pme_level = enc_mode <= ENC_M7 ? 3 : 0;
 #endif
@@ -7820,7 +7836,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_subpel_pme_level = 3;
     else
 #if SHIFT_PRESETS
+#if M6_SUBPEL
+        if (enc_mode <= ENC_M4)
+#else
         if (enc_mode <= ENC_M5)
+#endif
 #else
         if (enc_mode <= ENC_M7)
 #endif
@@ -10957,7 +10977,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if MAY16_7PM_ADOPTIONS
 #if JUNE26_ADOPTIONS
 #if SHIFT_PRESETS
+#if M6_DEPTH_REF
+                             if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
                             if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
                             if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif

@@ -3979,7 +3979,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if FAST_M8_V1 // Move nic=1 before bypass generation (lossless towards the adaptive bypass)
     uint8_t use_nic_1_last_stage;
 #if SHIFT_PRESETS
+#if M6_NIC_MDS_3_1
+    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif
@@ -12697,11 +12701,7 @@ EbErrorType signal_derivation_block(
 #if UNIFY_LEVELS
     EbEncMode enc_mode;
     if (mode_offset)
-#if M7_PRESET
-        enc_mode = CLIP3(ENC_M0, ENC_M6, pcs->parent_pcs_ptr->enc_mode + mode_offset);
-#else
         enc_mode = MIN(ENC_M8, pcs->parent_pcs_ptr->enc_mode + mode_offset);
-#endif
     else
         enc_mode = pcs->parent_pcs_ptr->enc_mode;
 #endif

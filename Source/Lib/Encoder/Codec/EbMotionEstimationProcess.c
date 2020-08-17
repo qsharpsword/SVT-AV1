@@ -215,7 +215,11 @@ void* set_me_hme_params_oq(
 #else
 #if UNIFY_SC_NSC
 #if SHIFT_PRESETS
+#if M6_ME
+            else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif
@@ -558,7 +562,11 @@ void* set_me_hme_params_oq(
         }
 #endif
 #if SHIFT_PRESETS
+#if M6_HME
+        else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
         else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif
@@ -1029,7 +1037,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
 #if SHIFT_PRESETS
+#if M6_GMV
+        if (enc_mode <= ENC_M4)
+#else
         if (enc_mode <= ENC_M5)
+#endif
 #else
         if (enc_mode <= ENC_M6)
 #endif
@@ -1350,7 +1362,11 @@ void* tf_set_me_hme_params_oq(
 #if APR22_ADOPTIONS
 #if FAST_M8_V1
 #if SHIFT_PRESETS
+#if M6_TF_ME
+    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
@@ -1518,7 +1534,11 @@ void* tf_set_me_hme_params_oq(
 
 #if FAST_M8_V1 // tf_hp
 #if SHIFT_PRESETS
+#if M6_TF_HP
+    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
