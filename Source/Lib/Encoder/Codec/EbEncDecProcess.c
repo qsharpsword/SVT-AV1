@@ -4947,7 +4947,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
 #if SHIFT_PRESETS
+#if BALANCE_M6_M7 // gmv
+            if (enc_mode <= ENC_M6)
+#else
             if (enc_mode <= ENC_M5)
+#endif
 #else
             if (enc_mode <= ENC_M6)
 #endif
@@ -5218,7 +5222,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->bipred3x3_injection = 1;
 #if FAST_M8_V1
 #if SHIFT_PRESETS
+#if BALANCE_M6_M7 // bipred3x3
+        else if (enc_mode <= ENC_M6)
+#else
         else if (enc_mode <= ENC_M5)
+#endif
 #else
         else if (enc_mode <= ENC_M7)
 #endif

@@ -2031,7 +2031,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M6_LOOP_FILTER_MODE
 #if UNIFY_SC_NSC
 #if SHIFT_PRESETS
+#if BALANCE_M6_M7 // loop_filter
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M6)
 #endif
@@ -3079,7 +3083,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                     context_ptr->tf_level = 0;
             }
 #if SHIFT_PRESETS
+#if BALANCE_M6_M7 // tf
+            else if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
 #endif

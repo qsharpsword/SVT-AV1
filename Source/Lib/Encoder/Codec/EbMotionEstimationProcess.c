@@ -1029,7 +1029,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if UNIFY_SC_NSC
 #if JUNE26_ADOPTIONS
 #if SHIFT_PRESETS
+#if BALANCE_M6_M7 // gmv
+        if (enc_mode <= ENC_M6)
+#else
         if (enc_mode <= ENC_M5)
+#endif
 #else
         if (enc_mode <= ENC_M6)
 #endif

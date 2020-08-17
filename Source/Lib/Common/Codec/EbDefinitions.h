@@ -668,6 +668,8 @@ extern "C" {
 
 #define FIX_R2R                     1
 
+#define BALANCE_M6_M7               1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
