@@ -660,7 +660,14 @@ extern "C" {
 #endif
 #define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
 
-
+#define M7_PRESET 1
+#if M7_PRESET
+#define BLOCK_BASED_DEPTH_REFINMENT 1
+#define FAST_TXT 1
+#define OPT_ADAPT_ME 1
+#define IFS_PUSH_BACK_STAGE_3 1
+#define FASTER_INTRA 1
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
@@ -1253,6 +1260,13 @@ typedef struct InterpFilterParams {
     InterpFilter   interp_filter;
 } InterpFilterParams;
 
+#if FAST_TXT
+typedef enum TxSearchLevel {
+   TX_SEARCH_DCT_DCT_ONLY, // DCT_DCT only
+   TX_SEARCH_ALL_TX_TYPES, // Tx search all type(s)
+   TX_SEARCH_DCT_TX_TYPES, // Tx search DCT type(s): DCT_DCT, V_DCT, H_DCT
+} TxSearchLevel;
+#else
 typedef enum TxSearchLevel {
     TX_SEARCH_OFF,
 #if !REMOVE_UNUSED_CODE_PH2
@@ -1261,13 +1275,22 @@ typedef enum TxSearchLevel {
     TX_SEARCH_INTER_DEPTH,
     TX_SEARCH_FULL_LOOP
 } TxSearchLevel;
-
+#endif
+#if IFS_PUSH_BACK_STAGE_3
+typedef enum IfsLevel {
+    IFS_OFF,  // IFS OFF 
+    IFS_MDS0, // IFS @ md_stage_0()
+    IFS_MDS1, // IFS @ md_stage_1()
+    IFS_MDS2, // IFS @ md_stage_2()
+    IFS_MDS3, // IFS @ md_stage_3() 
+} IfsLevel;
+#else
 typedef enum InterpolationSearchLevel {
     IT_SEARCH_OFF,
     IT_SEARCH_FAST_LOOP_UV_BLIND,
     IT_SEARCH_FAST_LOOP,
 } InterpolationSearchLevel;
-
+#endif
 typedef enum NsqSearchLevel {
     NSQ_SEARCH_OFF,
     NSQ_SEARCH_LEVEL1,

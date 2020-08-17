@@ -1765,7 +1765,30 @@ void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionCon
 }
 #endif
 
+#if BLOCK_BASED_DEPTH_REFINMENT
+void set_block_based_depth_refinement_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_refinement_level) {
 
+    DepthRefinementCtrls *depth_refinement_ctrls = &mdctxt->depth_refinement_ctrls;
+
+    switch (block_based_depth_refinement_level)
+    {
+    case 0:
+
+        depth_refinement_ctrls->enabled = 0;
+        break;
+
+    case 1:
+
+        depth_refinement_ctrls->enabled = 1;
+        depth_refinement_ctrls->parent_to_current_th = -10;
+        depth_refinement_ctrls->sub_to_current_th = 5;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
 void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level) {
 
@@ -1978,6 +2001,36 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
             md_sq_me_ctrls->sprs_lev2_w = 3;
             md_sq_me_ctrls->sprs_lev2_h = 3;
             break;
+#if OPT_ADAPT_ME
+        case 4:
+            md_sq_me_ctrls->enabled = 1;
+            md_sq_me_ctrls->use_ssd = 0;
+
+            md_sq_me_ctrls->size_colocated_area = 2;
+            md_sq_me_ctrls->pame_distortion_th = 10;
+
+            md_sq_me_ctrls->sprs_lev0_enabled = 1;
+            md_sq_me_ctrls->sprs_lev0_step = 4;
+            md_sq_me_ctrls->sprs_lev0_w = 15;
+            md_sq_me_ctrls->sprs_lev0_h = 15;
+            md_sq_me_ctrls->max_sprs_lev0_w = 150;
+            md_sq_me_ctrls->max_sprs_lev0_h = 150;
+            md_sq_me_ctrls->sprs_lev0_multiplier = 100;
+
+            md_sq_me_ctrls->sprs_lev1_enabled = 1;
+            md_sq_me_ctrls->sprs_lev1_step = 2;
+            md_sq_me_ctrls->sprs_lev1_w = 4;
+            md_sq_me_ctrls->sprs_lev1_h = 4;
+            md_sq_me_ctrls->max_sprs_lev1_w = 50;
+            md_sq_me_ctrls->max_sprs_lev1_h = 50;
+            md_sq_me_ctrls->sprs_lev1_multiplier = 100;
+
+            md_sq_me_ctrls->sprs_lev2_enabled = 1;
+            md_sq_me_ctrls->sprs_lev2_step = 1;
+            md_sq_me_ctrls->sprs_lev2_w = 3;
+            md_sq_me_ctrls->sprs_lev2_h = 3;
+            break;
+#endif
         default:
             assert(0);
             break;
@@ -3694,7 +3747,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UNIFY_LEVELS
     EbEncMode enc_mode;
     if (mode_offset)
+#if M7_PRESET
+        enc_mode = CLIP3(ENC_M0, ENC_M6, pcs_ptr->enc_mode + mode_offset);
+#else
         enc_mode = MIN(ENC_M8, pcs_ptr->enc_mode + mode_offset);
+#endif
     else
         enc_mode = pcs_ptr->enc_mode;
 #else
@@ -3846,6 +3903,25 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+
+#if FAST_TXT
+    // Tx_search Level for Luma                       Settings
+    // TX_SEARCH_DCT_DCT_ONLY                         DCT_DCT only
+    // TX_SEARCH_ALL_TX_TYPES                         Tx search all type(s)
+    // TX_SEARCH_DCT_TX_TYPES                         Tx search DCT type(s): DCT_DCT, V_DCT, H_DCT
+    if (pd_pass == PD_PASS_0)
+        context_ptr->tx_search_level = TX_SEARCH_DCT_DCT_ONLY;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->tx_search_level = TX_SEARCH_DCT_DCT_ONLY;
+    else
+        if (enc_mode <= ENC_M6)
+            context_ptr->tx_search_level = TX_SEARCH_ALL_TX_TYPES;
+        else
+            if(pcs_ptr->parent_pcs_ptr->slice_type == I_SLICE)
+                context_ptr->tx_search_level = TX_SEARCH_ALL_TX_TYPES;
+            else
+                context_ptr->tx_search_level = TX_SEARCH_DCT_TX_TYPES;
+#else
     // Tx_search Level                                Settings
     // 0                                              OFF
     // 1                                              Tx search at encdec
@@ -3898,6 +3974,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
+#endif
 #endif
 #endif
 #if TXT_CONTROL
@@ -4153,6 +4230,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
 #endif
+
+#if IFS_PUSH_BACK_STAGE_3
+    if (pd_pass == PD_PASS_0)
+        context_ptr->interpolation_search_level = IFS_OFF;
+    else if (pd_pass == PD_PASS_1) 
+        context_ptr->interpolation_search_level = IFS_OFF;
+    else 
+        if (enc_mode <= ENC_M6)
+            context_ptr->interpolation_search_level = IFS_MDS1;
+        else
+            context_ptr->interpolation_search_level = IFS_MDS3;
+#else
     // Interpolation search Level                     Settings
     // 0                                              OFF
     // 1                                              Interpolation search at
@@ -4191,7 +4280,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     else
         context_ptr->interpolation_search_level = IT_SEARCH_OFF;
-
+#endif
     // Set Chroma Mode
     // Level                Settings
     // CHROMA_MODE_0  0     Full chroma search @ MD
@@ -5563,6 +5652,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->combine_class12 = sequence_control_set_ptr->static_config.combine_class_12;
 #endif
+#if 1//!IFS_PUSH_BACK_STAGE_3
     // Set interpolation filter search blk size
     // Level                Settings
     // 0                    ON for 8x8 and above
@@ -5587,7 +5677,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->interpolation_filter_search_blk_size = 1;
 #endif
-
+#endif
     // Derive Spatial SSE Flag
 #if SSSE_CLI
     // spatial_sse_full_loop_level | Default Encoder Settings            | Command Line Settings
@@ -7519,6 +7609,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
 #endif
+#if BLOCK_BASED_DEPTH_REFINMENT
+    if (enc_mode <= ENC_M6)
+        context_ptr->block_based_depth_refinement_level = 0;
+    else {
+        if (pcs_ptr->slice_type == I_SLICE) {
+            context_ptr->block_based_depth_refinement_level = 0;
+        }
+        else {
+            context_ptr->block_based_depth_refinement_level = 1;
+        }
+    }
+    set_block_based_depth_refinement_controls(context_ptr, context_ptr->block_based_depth_refinement_level);
+#endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
     if (pd_pass == PD_PASS_0)
         context_ptr->block_based_depth_reduction_level = 0;
@@ -7611,9 +7714,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M5)
 #endif
             context_ptr->md_sq_mv_search_level = 2;
+#if OPT_ADAPT_ME
+        else if (enc_mode <= ENC_M6)
+            context_ptr->md_sq_mv_search_level = 3;
+        else
+            context_ptr->md_sq_mv_search_level = 4;
+#else
         else
             context_ptr->md_sq_mv_search_level = 3;
-
+#endif
     md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif
 #if ADD_MD_NSQ_SEARCH
@@ -11402,6 +11511,64 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)blk_geom->sq_size);
 #endif
                     // Add block indices of upper depth(s)
+#if BLOCK_BASED_DEPTH_REFINMENT
+                    int64_t parent_to_current_deviation = MIN_SIGNED_VALUE;
+                    // block-based depth refinement using cost is applicable for only [s_depth=-1, e_depth=1]
+                    if (context_ptr->depth_refinement_ctrls.enabled && s_depth == -1 && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index] && blk_geom->sq_size < ((scs_ptr->seq_header.sb_size == BLOCK_128X128) ? 128 : 64)) {
+                        // Get the parent of the current block
+                        uint32_t parent_depth_idx_mds =
+                            (blk_geom->sqi_mds -
+                            (blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth]) -
+                            parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+
+                        if (context_ptr->md_local_blk_unit[parent_depth_idx_mds].avail_blk_flag) {
+
+                            // Get the child of the parent (1 of the child is the current block)
+                            const BlockGeom *parent_blk_geom = get_blk_geom_mds(parent_depth_idx_mds);
+                            uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
+                            child_block_idx_1 = parent_depth_idx_mds + d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][parent_blk_geom->depth];
+                            child_block_idx_2 = child_block_idx_1 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][parent_blk_geom->depth + 1];
+                            child_block_idx_3 = child_block_idx_2 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][parent_blk_geom->depth + 1];
+                            child_block_idx_4 = child_block_idx_3 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][parent_blk_geom->depth + 1];
+
+                            if (child_block_idx_1 != blk_index && child_block_idx_2 != blk_index && child_block_idx_3 != blk_index && child_block_idx_4 != blk_index)
+                                printf("error\n");
+                            uint64_t current_depth_cost = 0;
+                            uint8_t child_cnt = 0;
+
+                            if (context_ptr->md_local_blk_unit[child_block_idx_1].avail_blk_flag) {
+                                current_depth_cost += context_ptr->md_local_blk_unit[child_block_idx_1].default_cost;
+                                child_cnt++;
+                            }
+                            if (context_ptr->md_local_blk_unit[child_block_idx_2].avail_blk_flag) {
+                                current_depth_cost += context_ptr->md_local_blk_unit[child_block_idx_2].default_cost;
+                                child_cnt++;
+                            }
+                            if (context_ptr->md_local_blk_unit[child_block_idx_3].avail_blk_flag) {
+                                current_depth_cost += context_ptr->md_local_blk_unit[child_block_idx_3].default_cost;
+                                child_cnt++;
+                            }
+                            if (context_ptr->md_local_blk_unit[child_block_idx_4].avail_blk_flag) {
+                                current_depth_cost += context_ptr->md_local_blk_unit[child_block_idx_4].default_cost;
+                                child_cnt++;
+                            }
+                            // Derive currrent depth cost
+                            current_depth_cost = (current_depth_cost / child_cnt) * 4;
+#if 0
+                            parent_to_current_deviation =
+                                (int64_t)(((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)current_depth_cost) * 100) /
+                                (int64_t)current_depth_cost;
+#else
+                            parent_to_current_deviation =
+                                (int64_t)(((int64_t)context_ptr->md_local_blk_unit[parent_depth_idx_mds].default_cost - (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4)) * 100) /
+                                (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost * 4);
+#endif
+                        }
+
+                    }
+                    if (parent_to_current_deviation > context_ptr->depth_refinement_ctrls.parent_to_current_th)
+                        s_depth = 0;
+#endif
                     if (s_depth != 0)
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR
@@ -11417,6 +11584,47 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 
                     // Add block indices of lower depth(s)
+#if BLOCK_BASED_DEPTH_REFINMENT
+                    int64_t child_to_current_deviation = MIN_SIGNED_VALUE;
+                    // block-based depth refinement using cost is applicable for only [s_depth=-1, e_depth=1]
+                    if (context_ptr->depth_refinement_ctrls.enabled && e_depth == 1 && pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[blk_index]) {
+
+                        uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
+                        child_block_idx_1 = blk_index + d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+                        child_block_idx_2 = child_block_idx_1 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+                        child_block_idx_3 = child_block_idx_2 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+                        child_block_idx_4 = child_block_idx_3 + ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth + 1];
+
+                        uint64_t child_cost = 0;
+                        uint8_t child_cnt = 0;
+                        if (context_ptr->md_local_blk_unit[child_block_idx_1].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_1].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_2].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_2].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_3].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_3].default_cost;
+                            child_cnt++;
+                        }
+                        if (context_ptr->md_local_blk_unit[child_block_idx_4].avail_blk_flag) {
+                            child_cost += context_ptr->md_local_blk_unit[child_block_idx_4].default_cost;
+                            child_cnt++;
+                        }
+
+                        if (child_cnt) {
+                            child_cost = (child_cost / child_cnt) * 4;
+                            child_to_current_deviation =
+                                (int64_t)(((int64_t)child_cost - (int64_t)context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost) * 100) /
+                                (int64_t)(context_ptr->md_local_blk_unit[blk_geom->sqi_mds].default_cost);
+                        }
+                    }
+
+                    if (child_to_current_deviation > context_ptr->depth_refinement_ctrls.sub_to_current_th)
+                        e_depth = 0;
+#endif
                     if (e_depth != 0)
 #if TRACK_PER_DEPTH_DELTA
 #if ADAPTIVE_DEPTH_CR

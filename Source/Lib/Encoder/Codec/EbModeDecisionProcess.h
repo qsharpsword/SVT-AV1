@@ -291,6 +291,15 @@ typedef struct RefPruningControls {
 #endif
 }RefPruningControls;
 #endif
+#if BLOCK_BASED_DEPTH_REFINMENT
+typedef struct DepthRefinementCtrls {
+    uint8_t enabled;
+
+    int64_t sub_to_current_th; // decrease towards a more agressive level
+    int64_t parent_to_current_th; // decrease towards a more agressive level
+
+}DepthRefinementCtrls;
+#endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
 typedef struct DepthReductionCtrls {
     uint8_t enabled;
@@ -813,6 +822,10 @@ typedef struct ModeDecisionContext {
 #if MD_REFERENCE_MASKING
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;
+#endif
+#if BLOCK_BASED_DEPTH_REFINMENT
+    uint8_t block_based_depth_refinement_level;
+    DepthRefinementCtrls depth_refinement_ctrls;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
     uint8_t      block_based_depth_reduction_level;

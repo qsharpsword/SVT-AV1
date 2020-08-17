@@ -199,8 +199,11 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                            : EB_FALSE;
 
     uint16_t tile_idx = context_ptr->tile_index;
-
+#if IFS_PUSH_BACK_STAGE_3
+    if (context_ptr->interpolation_search_level != IFS_OFF)
+#else
     if (context_ptr->interpolation_search_level != IT_SEARCH_OFF)
+#endif
         neighbor_array_unit_mode_write32(context_ptr->interpolation_type_neighbor_array,
                                          context_ptr->blk_ptr->interp_filters,
                                          origin_x,
@@ -4428,12 +4431,17 @@ void md_stage_0(
         context_ptr->fast_lambda_md[EB_8_BIT_MD];
 #endif
     // Set MD Staging fast_loop_core settings
+#if IFS_PUSH_BACK_STAGE_3
+    context_ptr->md_staging_skip_interpolation_search =
+        (context_ptr->interpolation_search_level == IFS_MDS0) ? EB_FALSE : EB_TRUE;
+#else
     context_ptr->md_staging_skip_interpolation_search =
         (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
          context_ptr->md_staging_mode == MD_STAGING_MODE_2)
             ? EB_TRUE
             : context_ptr->interpolation_search_level >= IT_SEARCH_FAST_LOOP_UV_BLIND ? EB_FALSE
                                                                                       : EB_TRUE;
+#endif
 #if REMOVE_CHROMA_INTRA_S0
     context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
 #else
@@ -9734,6 +9742,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
     uint64_t txb_full_distortion_txt[TX_TYPES][DIST_CALC_TOTAL]= { 0 };
 #endif
     for (tx_type = txk_start; tx_type < txk_end; ++tx_type) {
+#if FAST_TXT
+        if (context_ptr->tx_search_level == TX_SEARCH_DCT_TX_TYPES)
+            if (tx_type != DCT_DCT && tx_type != V_DCT && tx_type != H_DCT)
+                continue;
+#endif
 #if COEFF_BASED_TXT_BYPASS
         // Perform search selectively based on statistics (DCT_DCT always performed)
         if (context_ptr->txt_cycles_red_ctrls.enabled && tx_type != DCT_DCT) {
@@ -10792,7 +10805,11 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                 context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
         else
 #endif
+#if FAST_TXT
+            tx_search_skip_flag = context_ptr->tx_search_level != TX_SEARCH_DCT_DCT_ONLY
+#else
             tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
+#endif
 #if TXT_CONTROL
             ? get_tx_search_config(context_ptr,
                 context_ptr->blk_geom->sq_size,
@@ -10812,7 +10829,11 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     }
     else
         tx_search_skip_flag =
+#if FAST_TXT
+            context_ptr->tx_search_level != TX_SEARCH_DCT_DCT_ONLY ? EB_FALSE : EB_TRUE;
+#else
             context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
+#endif
     // Transform Depth Loop
     for (context_ptr->tx_depth = start_tx_depth; context_ptr->tx_depth <= end_tx_depth;
          context_ptr->tx_depth++) {
@@ -11788,14 +11809,24 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         candidate_ptr->txs_level = 0;
 #endif
 #if REFACTOR_SIGNALS
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_perform_inter_pred =
+            (context_ptr->interpolation_search_level == IFS_MDS1) ? EB_TRUE : EB_FALSE;
+#else
         context_ptr->md_staging_perform_inter_pred = EB_TRUE;
+#endif
 #else
         context_ptr->md_staging_skip_full_pred            = EB_FALSE;
 #endif
 #if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
 #else
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_skip_interpolation_search =
+            (context_ptr->interpolation_search_level == IFS_MDS1) ? EB_FALSE : EB_TRUE;
+#else
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
+#endif
 #endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
@@ -11868,11 +11899,21 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_skip_rdoq                 = EB_FALSE;
         context_ptr->md_staging_skip_full_chroma          = EB_TRUE;
 #if REFACTOR_SIGNALS
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_perform_inter_pred =
+            (context_ptr->interpolation_search_level == IFS_MDS2) ? EB_TRUE : EB_FALSE;
+#else
         context_ptr->md_staging_perform_inter_pred = EB_FALSE;
+#endif
 #else
         context_ptr->md_staging_skip_full_pred            = EB_TRUE;
 #endif
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_skip_interpolation_search =
+            (context_ptr->interpolation_search_level == IFS_MDS2) ? EB_FALSE : EB_TRUE;
+#else
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
+#endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
 #else
@@ -12067,9 +12108,14 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
+#if IFS_PUSH_BACK_STAGE_3
+        context_ptr->md_staging_skip_interpolation_search =
+            (context_ptr->interpolation_search_level == IFS_MDS3) ? EB_FALSE : EB_TRUE;
+#else
         context_ptr->md_staging_skip_interpolation_search =
             (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
              context_ptr->md_staging_mode == MD_STAGING_MODE_2);
+#endif
 #endif
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
         context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
@@ -12651,7 +12697,11 @@ EbErrorType signal_derivation_block(
 #if UNIFY_LEVELS
     EbEncMode enc_mode;
     if (mode_offset)
+#if M7_PRESET
+        enc_mode = CLIP3(ENC_M0, ENC_M6, pcs->parent_pcs_ptr->enc_mode + mode_offset);
+#else
         enc_mode = MIN(ENC_M8, pcs->parent_pcs_ptr->enc_mode + mode_offset);
+#endif
     else
         enc_mode = pcs->parent_pcs_ptr->enc_mode;
 #endif

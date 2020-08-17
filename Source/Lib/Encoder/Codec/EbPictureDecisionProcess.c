@@ -2493,7 +2493,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->intra_pred_mode = 3;
 #else
+#if FASTER_INTRA
+        else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         else
+#endif
 #if SHUT_LAYER_BASED_FEATURES
             pcs_ptr->intra_pred_mode = 1;
 #else
@@ -2501,6 +2505,13 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->intra_pred_mode = 1;
             else
                 pcs_ptr->intra_pred_mode = 3;
+#if FASTER_INTRA
+    else
+        if (pcs_ptr->slice_type == I_SLICE)
+            pcs_ptr->intra_pred_mode = 1;
+        else
+            pcs_ptr->intra_pred_mode = 3;
+#endif
 #endif
 #endif
 #else
