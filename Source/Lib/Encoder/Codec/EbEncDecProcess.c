@@ -4234,9 +4234,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if IFS_PUSH_BACK_STAGE_3
     if (pd_pass == PD_PASS_0)
         context_ptr->interpolation_search_level = IFS_OFF;
-    else if (pd_pass == PD_PASS_1) 
+    else if (pd_pass == PD_PASS_1)
         context_ptr->interpolation_search_level = IFS_OFF;
-    else 
+    else
         if (enc_mode <= ENC_M6)
             context_ptr->interpolation_search_level = IFS_MDS1;
         else

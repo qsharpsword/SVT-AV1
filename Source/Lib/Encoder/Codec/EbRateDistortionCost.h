@@ -127,7 +127,7 @@ extern uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
 #endif
                                     uint8_t enable_inter_intra,
 #if !SHUT_FAST_RATE_PD0
-                                    EbBool full_cost_shut_fast_rate_flag, 
+                                    EbBool full_cost_shut_fast_rate_flag,
 #endif
                                     uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);
@@ -145,7 +145,7 @@ extern uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
 #endif
                                     uint8_t enable_inter_intra,
 #if !SHUT_FAST_RATE_PD0
-                                    EbBool full_cost_shut_fast_rate_flag, 
+                                    EbBool full_cost_shut_fast_rate_flag,
 #endif
                                     uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);

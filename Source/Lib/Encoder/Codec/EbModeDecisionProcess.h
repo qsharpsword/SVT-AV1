@@ -784,7 +784,7 @@ typedef struct ModeDecisionContext {
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
 #if SHUT_FAST_RATE_PD0
-    uint8_t      shut_fast_rate; // use coeff rate and slipt flag rate only 
+    uint8_t      shut_fast_rate; // use coeff rate and slipt flag rate only
 #else
     uint8_t      full_cost_shut_fast_rate_flag;
 #endif

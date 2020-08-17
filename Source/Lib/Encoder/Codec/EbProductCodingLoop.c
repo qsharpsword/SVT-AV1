@@ -378,7 +378,7 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    bwdith,
                                    bheight,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-#if OPT_1 // no T-1 @ PD0 
+#if OPT_1 // no T-1 @ PD0
     if (!context_ptr->skip_intra) {
 #endif
     if (!context_ptr->hbd_mode_decision) {
@@ -536,7 +536,7 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                              bwheight_uv);
         }
     }
-#if OPT_1 // no T-1 @ PD0 
+#if OPT_1 // no T-1 @ PD0
     }
 #endif
     return;
@@ -5536,7 +5536,7 @@ uint8_t check_spatial_mv_size(ModeDecisionContext *ctx, uint8_t list_idx, uint8_
     }
     return search_area_multiplier;
 }
-#if FIX_R2R 
+#if FIX_R2R
 /*
  * Check the size of the temporal MVs
  *
@@ -5681,7 +5681,7 @@ void md_sq_motion_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
             EbReferenceObject *ref_obj = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
 
             if (!(ref_obj == NULL || ref_obj->frame_type == KEY_FRAME || ref_obj->frame_type == INTRA_ONLY_FRAME)) {
-#if FIX_R2R 
+#if FIX_R2R
                 search_area_multiplier = check_temporal_mv_size(pcs, ctx);
 #else
                 search_area_multiplier = check_temporal_mv_size(pcs, ctx, list_idx, ref_idx);
@@ -14192,7 +14192,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
     const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
 #if OPT_4
-    if (context_ptr->pd_pass == PD_PASS_2) // source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+    if (context_ptr->pd_pass == PD_PASS_2) // source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit
 #endif
         context_ptr->source_variance =
         eb_av1_get_sby_perpixel_variance(fn_ptr,
@@ -14606,7 +14606,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
     }
 #if REMOVE_UNUSED_CODE_PH2
-#if OPT_1 // no T-1 @ PD0 
+#if OPT_1 // no T-1 @ PD0
     if (!context_ptr->skip_intra)
 #endif
     av1_perform_inverse_transform_recon(

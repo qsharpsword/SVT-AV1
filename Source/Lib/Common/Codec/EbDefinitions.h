@@ -655,7 +655,7 @@ extern "C" {
 #define OPT_1                         1 // no T-1 @ PD0 and no recon samples update if context_ptr->skip_intra == 1
 #define OPT_2                         1 // bypass sse_gradian_band init if no nsq
 #define OPT_3                         1 // bypass ref pruning init if no mrp
-#define OPT_4                         1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit 
+#define OPT_4                         1 // bypass variance computation @ PD0; source_variance used only @ PD2 for inter-inter compound reduction and for txs early exit
 #define OPT_5                         1 // shut useless pred depth refinement operations
 #endif
 #define SHUT_FAST_RATE_PD0              1 // Improve PD0 rate estimation
@@ -1280,11 +1280,11 @@ typedef enum TxSearchLevel {
 #endif
 #if IFS_PUSH_BACK_STAGE_3
 typedef enum IfsLevel {
-    IFS_OFF,  // IFS OFF 
+    IFS_OFF,  // IFS OFF
     IFS_MDS0, // IFS @ md_stage_0()
     IFS_MDS1, // IFS @ md_stage_1()
     IFS_MDS2, // IFS @ md_stage_2()
-    IFS_MDS3, // IFS @ md_stage_3() 
+    IFS_MDS3, // IFS @ md_stage_3()
 } IfsLevel;
 #else
 typedef enum InterpolationSearchLevel {
