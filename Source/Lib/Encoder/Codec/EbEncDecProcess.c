@@ -1920,8 +1920,9 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         case 1:
             md_sq_me_ctrls->enabled = 1;
             md_sq_me_ctrls->use_ssd = 0;
-
+#if !FIX_R2R
             md_sq_me_ctrls->size_colocated_area = 2;
+#endif
             md_sq_me_ctrls->pame_distortion_th = 10;
 
             md_sq_me_ctrls->sprs_lev0_enabled = 1;
@@ -1948,8 +1949,9 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         case 2:
             md_sq_me_ctrls->enabled = 1;
             md_sq_me_ctrls->use_ssd = 0;
-
+#if !FIX_R2R
             md_sq_me_ctrls->size_colocated_area = 2;
+#endif
             md_sq_me_ctrls->pame_distortion_th = 10;
 
             md_sq_me_ctrls->sprs_lev0_enabled = 1;
@@ -1976,8 +1978,9 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         case 3:
             md_sq_me_ctrls->enabled = 1;
             md_sq_me_ctrls->use_ssd = 0;
-
+#if !FIX_R2R
             md_sq_me_ctrls->size_colocated_area = 2;
+#endif
             md_sq_me_ctrls->pame_distortion_th = 10;
 
             md_sq_me_ctrls->sprs_lev0_enabled = 1;
@@ -2005,8 +2008,9 @@ void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_
         case 4:
             md_sq_me_ctrls->enabled = 1;
             md_sq_me_ctrls->use_ssd = 0;
-
+#if !FIX_R2R
             md_sq_me_ctrls->size_colocated_area = 2;
+#endif
             md_sq_me_ctrls->pame_distortion_th = 10;
 
             md_sq_me_ctrls->sprs_lev0_enabled = 1;

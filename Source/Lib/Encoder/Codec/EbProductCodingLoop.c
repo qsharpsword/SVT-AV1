@@ -5532,16 +5532,42 @@ uint8_t check_spatial_mv_size(ModeDecisionContext *ctx, uint8_t list_idx, uint8_
     }
     return search_area_multiplier;
 }
-
+#if FIX_R2R 
+/*
+ * Check the size of the temporal MVs
+ *
+ * Return a motion category, based on the MV size.
+ */
+uint8_t check_temporal_mv_size(PictureControlSet *pcs, ModeDecisionContext *ctx) {
+#else
 /*
  * Check the size of the temporal MVs of the co-located block, of the reference frame specified by list_idx and ref_idx.
  *
  * Return a motion category, based on the MV size.
  */
 uint8_t check_temporal_mv_size(PictureControlSet *pcs, ModeDecisionContext *ctx, uint8_t list_idx, uint8_t ref_idx) {
+#endif
 
     uint8_t search_area_multiplier = 0;
 
+#if FIX_R2R
+    Av1Common * cm = pcs->parent_pcs_ptr->av1_cm;
+    int32_t     mi_row = ctx->blk_origin_y >> MI_SIZE_LOG2;
+    int32_t     mi_col = ctx->blk_origin_x >> MI_SIZE_LOG2;
+    TPL_MV_REF *prev_frame_mvs = pcs->tpl_mvs + (mi_row >> 1) * (cm->mi_stride >> 1) +
+        (mi_col >> 1);
+    TPL_MV_REF *mv = prev_frame_mvs;
+    if (prev_frame_mvs->mfmv0.as_int != INVALID_MV) {
+        if (ABS(mv->mfmv0.as_mv.row) > MEDIUM_TEMPORAL_MV_TH ||
+            ABS(mv->mfmv0.as_mv.col) > MEDIUM_TEMPORAL_MV_TH) {
+            search_area_multiplier = MAX(2, search_area_multiplier);
+        }
+        else if (ABS(mv->mfmv0.as_mv.row) > LOW_TEMPORAL_MV_TH ||
+            ABS(mv->mfmv0.as_mv.col) > LOW_TEMPORAL_MV_TH) {
+            search_area_multiplier = MAX(1, search_area_multiplier);
+        }
+    }
+#else
     EbReferenceObject *ref_obj = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
     Av1Common *cm = pcs->parent_pcs_ptr->av1_cm;
     const int frame_mvs_stride = ROUND_POWER_OF_TWO(cm->mi_cols, 1);
@@ -5575,6 +5601,7 @@ uint8_t check_temporal_mv_size(PictureControlSet *pcs, ModeDecisionContext *ctx,
             }
         }
     }
+#endif
     return search_area_multiplier;
 }
 #if FIX_MV_BOUND
@@ -5650,7 +5677,11 @@ void md_sq_motion_search(PictureControlSet *pcs, ModeDecisionContext *ctx,
             EbReferenceObject *ref_obj = (EbReferenceObject *)pcs->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
 
             if (!(ref_obj == NULL || ref_obj->frame_type == KEY_FRAME || ref_obj->frame_type == INTRA_ONLY_FRAME)) {
+#if FIX_R2R 
+                search_area_multiplier = check_temporal_mv_size(pcs, ctx);
+#else
                 search_area_multiplier = check_temporal_mv_size(pcs, ctx, list_idx, ref_idx);
+#endif
             }
             else {
                 search_area_multiplier = check_spatial_mv_size(ctx, list_idx, ref_idx, me_mv_x, me_mv_y);

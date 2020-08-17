@@ -5017,8 +5017,13 @@ void inject_predictive_me_candidates(
                                                       to_inject_mv_y_l1,
                                                       to_inject_ref_type) == EB_FALSE) {
                     if (context_ptr->inter_comp_ctrls.mrp_pruning_w_distortion)
+#if FIX_R2R
+                        if (is_reference_best_pme(context_ptr, list_idx_0, ref_idx_0, 2) == 0 ||
+                            is_reference_best_pme(context_ptr, list_idx_1, ref_idx_1, 2) == 0)
+#else
                         if (is_reference_best_pme(context_ptr, 0, ref_idx_0, 2) == 0 ||
                             is_reference_best_pme(context_ptr, 1, ref_idx_1, 2) == 0)
+#endif
                             tot_comp_types = MD_COMP_AVG;
 
                     for (cur_type = MD_COMP_AVG; cur_type <= tot_comp_types; cur_type++) {
@@ -5074,6 +5079,16 @@ void inject_predictive_me_candidates(
                                                 cand_array[cand_total_cnt].motion_vector_yl1,
                                                 &cand_array[cand_total_cnt].drl_index,
                                                 best_pred_mv);
+#if FIX_R2R
+                        cand_array[cand_total_cnt].motion_vector_pred_x[REF_LIST_0] =
+                            best_pred_mv[0].as_mv.col;
+                        cand_array[cand_total_cnt].motion_vector_pred_y[REF_LIST_0] =
+                            best_pred_mv[0].as_mv.row;
+                        cand_array[cand_total_cnt].motion_vector_pred_x[REF_LIST_1] =
+                            best_pred_mv[1].as_mv.col;
+                        cand_array[cand_total_cnt].motion_vector_pred_y[REF_LIST_1] =
+                            best_pred_mv[1].as_mv.row;
+#else
                         cand_array[cand_total_cnt].motion_vector_pred_x[list_idx_0] =
                             best_pred_mv[0].as_mv.col;
                         cand_array[cand_total_cnt].motion_vector_pred_y[list_idx_0] =
@@ -5082,7 +5097,7 @@ void inject_predictive_me_candidates(
                             best_pred_mv[1].as_mv.col;
                         cand_array[cand_total_cnt].motion_vector_pred_y[list_idx_1] =
                             best_pred_mv[1].as_mv.row;
-
+#endif
                         //MVP REFINE
                         if (cur_type == MD_COMP_AVG && tot_comp_types > MD_COMP_AVG)
                             calc_pred_masked_compound(
