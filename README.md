@@ -1,4 +1,4 @@
-# Scalable Video Technology for AV1 (SVT-AV1 Encoder and Decoder)
+# Scalable Video  Technology for AV1 (SVT-AV1 Encoder and Decoder)
 
 [![CI](https://github.com/OpenVisualCloud/SVT-AV1/workflows/CI/badge.svg)](https://github.com/OpenVisualCloud/SVT-AV1/actions?query=workflow%3ACI+branch%3Amaster)
 [![MSVC builds](https://github.com/OpenVisualCloud/SVT-AV1/workflows/MSVC%20builds/badge.svg)](https://github.com/OpenVisualCloud/SVT-AV1/actions?query=workflow%3A%22MSVC+builds%22+branch%3Amaster)
