@@ -594,9 +594,9 @@ gi_step = get_cdef_gi_step(pPcs->cdef_level);
 
 mid_gi = pPcs->cdf_ref_frame_strength;
 
-start_gi = pPcs->use_ref_frame_cdef_strength && pPcs->cdef_filter_level == 5 ? (AOMMAX(0, mid_gi - gi_step)) : 0;
+start_gi = pPcs->use_ref_frame_cdef_strength && pPcs->cdef_level == 5 ? (AOMMAX(0, mid_gi - gi_step)) : 0;
 
-end_gi = pPcs->use_ref_frame_cdef_strength ? AOMMIN(total_strengths, mid_gi + gi_step) : pPcs->cdef_filter_level == 5 ? 8 : total_strengths;
+end_gi = pPcs->use_ref_frame_cdef_strength ? AOMMIN(total_strengths, mid_gi + gi_step) : pPcs->cdef_level == 5 ? 8 : total_strengths;
 
 ```
 
