@@ -666,6 +666,8 @@ extern "C" {
 #define IFS_PUSH_BACK_STAGE_3       1
 #define FASTER_INTRA                1
 
+#define FIX_R2R                     1
+
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

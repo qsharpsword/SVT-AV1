@@ -6336,6 +6336,10 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 #if PERFORM_SUB_PEL_MD
 #if UPGRADE_SUBPEL
                 if (context_ptr->md_subpel_me_ctrls.enabled) {
+#if FIX_MV_BOUND
+                    clip_mv_on_pic_boundary(context_ptr->blk_origin_x, context_ptr->blk_origin_y, context_ptr->blk_geom->bwidth, context_ptr->blk_geom->bheight,
+                        ref_pic, &me_mv_x, &me_mv_y);
+#endif
                     md_subpel_search(pcs_ptr,
                         context_ptr,
                         context_ptr->md_subpel_me_ctrls,
@@ -7437,17 +7441,27 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                    &best_search_distortion);
 
 #if UPGRADE_SUBPEL
-                int besterr = md_subpel_search(pcs_ptr,
-                    context_ptr,
-                    context_ptr->md_subpel_pme_ctrls,
-                    pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr, // 10BIT not supported
-                    list_idx,
-                    ref_idx,
-                    &best_search_mvx,
-                    &best_search_mvy,
-                    best_mvp_x,
-                    best_mvp_y);
-
+                int besterr = (int)best_search_distortion;
+                if (context_ptr->md_subpel_pme_ctrls.enabled) {
+#if FIX_MV_BOUND
+                    EbReferenceObject *ref_obj =
+                        pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+                    EbPictureBufferDesc *ref_pic = hbd_mode_decision ? ref_obj->reference_picture16bit
+                        : ref_obj->reference_picture;
+                    clip_mv_on_pic_boundary(context_ptr->blk_origin_x, context_ptr->blk_origin_y, context_ptr->blk_geom->bwidth, context_ptr->blk_geom->bheight,
+                        ref_pic, &best_search_mvx, &best_search_mvy);
+#endif
+                    besterr = md_subpel_search(pcs_ptr,
+                        context_ptr,
+                        context_ptr->md_subpel_pme_ctrls,
+                        pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr, // 10BIT not supported
+                        list_idx,
+                        ref_idx,
+                        &best_search_mvx,
+                        &best_search_mvy,
+                        best_mvp_x,
+                        best_mvp_y);
+                }
                 context_ptr->best_pme_mv[list_idx][ref_idx][0] = best_search_mvx;
                 context_ptr->best_pme_mv[list_idx][ref_idx][1] = best_search_mvy;
                 context_ptr->valid_pme_mv[list_idx][ref_idx] = 1;

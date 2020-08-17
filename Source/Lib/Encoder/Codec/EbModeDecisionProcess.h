@@ -340,8 +340,9 @@ typedef struct MdNsqMotionSearchCtrls {
 typedef struct MdSqMotionSearchCtrls {
     uint8_t enabled;                    // 0: SQ motion search @ MD OFF; 1: SQ motion search @ MD ON
     uint8_t use_ssd;                    // 0: search using SAD; 1: search using SSD
-
+#if !FIX_R2R
     int16_t size_colocated_area;        // size_colocated_area = f(8x8)
+#endif
     uint16_t pame_distortion_th;        // TH for pa_me distortion to determine whether to search (distortion per pixel)
 
     uint8_t  sprs_lev0_enabled;         // 0: OFF; 1: ON
