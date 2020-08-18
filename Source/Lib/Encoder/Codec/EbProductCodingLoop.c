@@ -1237,7 +1237,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         context_ptr->blk_geom,
         context_ptr->blk_origin_y >> MI_SIZE_LOG2,
         context_ptr->blk_origin_x >> MI_SIZE_LOG2,
-        context_ptr->md_enable_inter_intra,
+        context_ptr->md_inter_intra_level,
         context_ptr->full_cost_shut_fast_rate_flag,
         1,
         context_ptr->intra_luma_left_mode,
@@ -1674,6 +1674,9 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
 
+#if MOVE_SIGNALS_TO_MD
+    uint8_t nics_scling_level = context_ptr->nic_scaling_level;
+#else
     uint8_t nics_scling_level ;
 #if UNIFY_SC_NSC
 #if JUNE23_ADOPTIONS
@@ -1822,6 +1825,7 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 4;
     else
         nics_scling_level = 5;
+#endif
 #endif
 #endif
 #endif
@@ -2713,7 +2717,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
 #if !CLASS_MERGING
 #if INTRA_COMPOUND_OPT
-        if (context_ptr->md_enable_inter_intra > 2 ){
+        if (context_ptr->md_inter_intra_level > 2 ){
             uint8_t division_factor_num   = 7;
             uint8_t division_factor_denum = 8;
             uint8_t i = CAND_CLASS_4 ;
@@ -4401,7 +4405,7 @@ void md_stage_0(
                         context_ptr->blk_geom,
                         context_ptr->blk_origin_y >> MI_SIZE_LOG2,
                         context_ptr->blk_origin_x >> MI_SIZE_LOG2,
-                        context_ptr->md_enable_inter_intra,
+                        context_ptr->md_inter_intra_level,
                         context_ptr->full_cost_shut_fast_rate_flag,
                         1,
                         context_ptr->intra_luma_left_mode,
@@ -8493,6 +8497,77 @@ uint8_t intra_txt_cycles_reduction_th[2/*depth*/][3/*depth refinement*/][3/*tx_s
     }
 };
 #endif
+#if MOVE_TXT_TXS_STATS_TO_FUNCS
+/*
+ * Determine whether to bypass a give tx_type based on statistics of previously chosen tx_types
+ */
+EbBool bypass_txt_based_on_stats(PictureControlSet *pcs_ptr,
+                                 ModeDecisionContext *context_ptr,
+                                 int32_t tx_type,
+                                 TxSize tx_size,
+                                 EbBool is_inter,
+                                 uint16_t dct_dct_count_non_zero_coeffs) {
+    int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].pred_depth_refinement;
+    // Set the bounds of pred_depth_refinement for array indexing
+    pred_depth_refinement = MIN(pred_depth_refinement, 1);
+    pred_depth_refinement = MAX(pred_depth_refinement, -1);
+    pred_depth_refinement++;
+    uint8_t depth_idx = (context_ptr->blk_geom->sq_size == 16) ? 0 : 1;
+    uint8_t tx_size_idx = ((tx_size == TX_4X4) || (tx_size == TX_4X8) || (tx_size == TX_8X4)) ? 0
+                        : ((tx_size == TX_8X8) || (tx_size == TX_8X16) || (tx_size == TX_16X8)) ? 1
+                        : 2;
+    uint16_t total_samples = (context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr]
+        * context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr]);
+    uint8_t freq_band;
+    if (dct_dct_count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+        freq_band = 1;
+    }
+    else {
+        freq_band = 0;
+    }
+#if ADAPTIVE_TXT_CR
+    if (pcs_ptr->slice_type == I_SLICE) {
+        if (is_inter) { // INTER path
+            if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+                < context_ptr->txt_cycles_red_ctrls.inter_th)
+                return EB_TRUE;
+        }
+        else { // INTRA path
+            if (intra_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+                < context_ptr->txt_cycles_red_ctrls.intra_th)
+                return EB_TRUE;
+        }
+    }
+    else {
+#if SEPARATE_ADAPTIVE_TXT_INTER_INTRA
+        if (is_inter) { // INTER path
+            if (context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.inter_th)
+                return EB_TRUE;
+        }
+        else { // INTRA path
+            if (context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.intra_th)
+                return EB_TRUE;
+        }
+#else
+        if (context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.inter_th)
+            continue;
+#endif
+    }
+#else
+    if (is_inter) { // INTER path
+        if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+            < context_ptr->txt_cycles_red_ctrls.inter_th)
+            continue;
+    }
+    else { // INTRA path
+        if (intra_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+            < context_ptr->txt_cycles_red_ctrls.intra_th)
+            continue;
+    }
+#endif
+    return EB_FALSE;
+}
+#endif
 void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                     ModeDecisionCandidateBuffer *candidate_buffer,
 #if QP2QINDEX
@@ -8605,6 +8680,16 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
 #if COEFF_BASED_TXT_BYPASS
         // Perform search selectively based on statistics (DCT_DCT always performed)
         if (context_ptr->txt_cycles_red_ctrls.enabled && tx_type != DCT_DCT) {
+#if MOVE_TXT_TXS_STATS_TO_FUNCS
+            // Determine if current tx_type should be skipped based on statistics
+            if (bypass_txt_based_on_stats(pcs_ptr,
+                context_ptr,
+                tx_type,
+                tx_size,
+                is_inter,
+                y_count_non_zero_coeffs_txt[DCT_DCT]))
+                continue;
+#else
             int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].pred_depth_refinement;
             // Set the bounds of pred_depth_refinement for array indexing
             pred_depth_refinement = MIN(pred_depth_refinement, 1);
@@ -8663,6 +8748,7 @@ void tx_type_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr
                     < context_ptr->txt_cycles_red_ctrls.intra_th)
                     continue;
             }
+#endif
 #endif
         }
 #endif
@@ -10147,6 +10233,47 @@ uint8_t m0_inter_txs_depth_2_cycles_reduction_stats[6/*depth*/][3/*pred-depth de
     }
 };
 #endif
+#if MOVE_TXT_TXS_STATS_TO_FUNCS
+/*
+ * Update the end TX depth based on statistics
+ */
+void bypass_txs_based_on_stats(ModeDecisionContext *context_ptr, uint8_t* end_tx_depth, EbBool is_inter) {
+    int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].pred_depth_refinement;
+    // adjust the recorded pred depth refinement to avoid array access issues
+    pred_depth_refinement = MIN(pred_depth_refinement, 1);
+    pred_depth_refinement = MAX(pred_depth_refinement, -1);
+    pred_depth_refinement++;
+    uint8_t is_nsq = context_ptr->blk_geom->shape == PART_N ? 0 : 1;
+    uint8_t freq_band = context_ptr->sb_class <= SB_CLASS_15 ? 1 : 0;
+    uint8_t sq_size_idx = 7 - (uint8_t)log2f_32(context_ptr->blk_geom->sq_size);
+
+    // Bypass TXS for INTRA
+    if (!is_inter) {
+        // Check TXS depth 1 first; if depth 1 becomes disallowed, do not allow depth 2
+        *end_tx_depth = m0_intra_txs_depth_1_cycles_reduction_stats[sq_size_idx][pred_depth_refinement][is_nsq][freq_band]
+            < context_ptr->txs_cycles_red_ctrls.intra_th
+            ? 0 : *end_tx_depth;
+
+        if (*end_tx_depth == 2) {
+            *end_tx_depth = m0_intra_txs_depth_2_cycles_reduction_stats[sq_size_idx][pred_depth_refinement][is_nsq][freq_band]
+                < context_ptr->txs_cycles_red_ctrls.intra_th
+                ? 1 : *end_tx_depth;
+        }
+    }
+    else {// Bypass TXS for INTER
+        // Check TXS depth 1 first; if depth 1 becomes disallowed, do not allow depth 2
+        *end_tx_depth = m0_inter_txs_depth_1_cycles_reduction_stats[sq_size_idx][pred_depth_refinement][is_nsq][freq_band]
+            < context_ptr->txs_cycles_red_ctrls.inter_th
+            ? 0 : *end_tx_depth;
+
+        if (*end_tx_depth == 2) {
+            *end_tx_depth = m0_inter_txs_depth_2_cycles_reduction_stats[sq_size_idx][pred_depth_refinement][is_nsq][freq_band]
+                < context_ptr->txs_cycles_red_ctrls.inter_th
+                ? 1 : *end_tx_depth;
+        }
+    }
+}
+#endif
 void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
                     ModeDecisionContext *context_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                     ModeDecisionCandidate *candidate_ptr, EbPictureBufferDesc *input_picture_ptr,
@@ -10250,6 +10377,10 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 #if COEFF_BASED_TXS_BYPASS
         // Bypass TXS based on statistics
         if (context_ptr->txs_cycles_red_ctrls.enabled && end_tx_depth != 0) {
+#if MOVE_TXT_TXS_STATS_TO_FUNCS
+            // Update the end TX depth based on statistics
+            bypass_txs_based_on_stats(context_ptr, &end_tx_depth, is_inter);
+#else
             int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].pred_depth_refinement;
             // adjust the recorded pred depth refinement to avoid array access issues
             pred_depth_refinement = MIN(pred_depth_refinement, 1);
@@ -10284,11 +10415,16 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                         ? 1 : end_tx_depth;
                 }
             }
+#endif
         }
 #endif
     }
 #if RESTRICT_INTER_TXS_DEPTH
+#if MOVE_SIGNALS_TO_MD
+    if (is_inter && (context_ptr->txs_in_inter_classes == 2))
+#else
     if (is_inter && (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes == 2))
+#endif
         end_tx_depth = MIN(1, end_tx_depth);
 #endif
 #if !FIX_CFL_OFF
@@ -10736,9 +10872,13 @@ static void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct
                 MD_STAGING_MODE_1 ||
             context_ptr->md_staging_mode == MD_STAGING_MODE_2;
         context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
+#if MOVE_SIGNALS_TO_MD
+        if (context_ptr->txs_in_inter_classes)
+#else
         // only perform TXS for intra frames
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_MR ||
             pcs_ptr->parent_pcs_ptr->txs_in_inter_classes)
+#endif
             context_ptr->md_staging_tx_size_mode = 1;
         else
             context_ptr->md_staging_tx_size_mode = candidate_ptr->cand_class == CAND_CLASS_0 ||
@@ -10993,7 +11133,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
     {
     case 0://OFF
         inter_comp_ctrls->enabled = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
@@ -11008,12 +11152,20 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #else
         inter_comp_ctrls->wedge_variance_th = 100;
 #endif
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk=2;
+#endif
         break;
     case 1://FULL
         inter_comp_ctrls->enabled = 1;
         inter_comp_ctrls->similar_predictions = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions_th = 0;
+#else
         inter_comp_ctrls->similar_predictions_th = 2;
+#endif
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
         inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,4,4,1);
@@ -11031,12 +11183,20 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
 #endif
 #endif
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk=1;
+#endif
         break;
 #if NEW_MRP_SETTINGS
     case 2://FAST - similar based disable
         inter_comp_ctrls->enabled = 1;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
@@ -11047,11 +11207,19 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk = 2;
+#endif
         break;
     case 3://FAST - MRP pruning/ similar based disable
         inter_comp_ctrls->enabled = 1;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_predictions = 0;
+#else
         inter_comp_ctrls->similar_predictions = 1;
+#endif
         inter_comp_ctrls->similar_predictions_th = 0;
 #if ON_OFF_FEATURE_MRP
         inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
@@ -11062,7 +11230,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
 #endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
+#if SHUT_SIMILARITY_FEATURES
+        inter_comp_ctrls->similar_previous_blk = 0;
+#else
         inter_comp_ctrls->similar_previous_blk = 2;
+#endif
         break;
 #else
     case 2://FAST
@@ -11177,7 +11349,11 @@ EbErrorType signal_derivation_block(PictureControlSet *pcs, ModeDecisionContext 
 
 
     // set compound_types_to_try
+#if MOVE_SIGNALS_TO_MD
+    uint8_t compound_mode = context_ptr->inter_compound_mode;
+#else
     uint8_t compound_mode = pcs->parent_pcs_ptr->compound_mode;
+#endif
     if (context_ptr->pd_pass == PD_PASS_0)
         set_inter_comp_controls(context_ptr, 0);
     else if (context_ptr->pd_pass == PD_PASS_1)
@@ -11704,7 +11880,7 @@ static void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                     context_ptr->blk_geom,
                     context_ptr->blk_origin_y >> MI_SIZE_LOG2,
                     context_ptr->blk_origin_x >> MI_SIZE_LOG2,
-                    context_ptr->md_enable_inter_intra,
+                    context_ptr->md_inter_intra_level,
                     context_ptr->full_cost_shut_fast_rate_flag,
                     1,
                     context_ptr->intra_luma_left_mode,
@@ -12371,7 +12547,7 @@ void md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_pt
     //for every CU, perform Luma DC/V/H/S intra prediction to be used later in inter-intra search
 
     int allow_ii = is_interintra_allowed_bsize(context_ptr->blk_geom->bsize);
-    if (context_ptr->md_enable_inter_intra && allow_ii)
+    if (context_ptr->md_inter_intra_level && allow_ii)
         precompute_intra_pred_for_inter_intra(pcs_ptr, context_ptr);
 
     generate_md_stage_0_cand(
@@ -12910,16 +13086,22 @@ uint8_t update_skip_nsq_shapes(
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and H blocks
             skip_nsq = (h_cost > ((sq_cost * sq_weight) / 100));
-
+#if MERGE_SQW_FEATURES
+            // If not skipping, perform a check on the relative H/V costs
+            if (!skip_nsq) {
+#else
             if (!skip_nsq && context_ptr->nsq_hv_level > 0) {
+#endif
                 if (local_cu_unit[sqi + 3].avail_blk_flag &&
                     local_cu_unit[sqi + 4].avail_blk_flag) {
                     //compute the cost of V partition
                     uint64_t v_cost = local_cu_unit[sqi + 3].default_cost +
                         local_cu_unit[sqi + 4].default_cost;
                     uint32_t offset = 10;
+#if !MERGE_SQW_FEATURES
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
                         offset = 5;
+#endif
 #if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0
@@ -12990,15 +13172,21 @@ uint8_t update_skip_nsq_shapes(
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
             skip_nsq = (v_cost > ((sq_cost * sq_weight) / 100));
+#if MERGE_SQW_FEATURES
+            // If not skipping, perform a check on the relative H/V costs
+            if (!skip_nsq) {
+#else
             if (!skip_nsq && context_ptr->nsq_hv_level > 0) {
+#endif
                 if (local_cu_unit[sqi + 1].avail_blk_flag &&
                     local_cu_unit[sqi + 2].avail_blk_flag) {
                     uint64_t h_cost = local_cu_unit[sqi + 1].default_cost +
                         local_cu_unit[sqi + 2].default_cost;
                     uint32_t offset = 10;
-
+#if !MERGE_SQW_FEATURES
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
                         offset = 5;
+#endif
 #if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0

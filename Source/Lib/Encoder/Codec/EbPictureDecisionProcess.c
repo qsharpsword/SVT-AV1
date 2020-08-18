@@ -2255,6 +2255,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->tx_size_search_mode = 0;
 
+#if !MOVE_SIGNALS_TO_MD
 #if APR22_ADOPTIONS
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
@@ -2300,6 +2301,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #endif
+#endif
 #if !INTER_COMP_REDESIGN
         // Set Wedge mode      Settings
         // 0                 FULL: Full search
@@ -2335,6 +2337,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->wedge_mode = 0;
 #endif
 #endif
+#if !MOVE_SIGNALS_TO_MD
         // inter intra pred                      Settings
         // 0                                     OFF
         // 1                                     ON
@@ -2473,6 +2476,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if !WEDGE_SYNCH
         if (pcs_ptr->wedge_mode > 0 && pcs_ptr->compound_mode != 2)
             SVT_LOG("wedge_mode set but will not be active\n");
+#endif
 #endif
         // Set frame end cdf update mode      Settings
         // 0                                     OFF

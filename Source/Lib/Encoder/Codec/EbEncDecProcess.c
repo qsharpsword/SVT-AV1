@@ -4651,6 +4651,28 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_injection =
         sequence_control_set_ptr->static_config.bipred_3x3_inject;
 
+#if MOVE_SIGNALS_TO_MD
+        // Set compound mode      Settings
+        // 0                      OFF: No compond mode search : AVG only
+        // 1                      ON: Full
+        // 2                      ON: Fast : similar based disable
+        // 3                      ON: Fast : MRP pruning/ similar based disable
+        if (sequence_control_set_ptr->compound_mode) {
+            if (sequence_control_set_ptr->static_config.compound_level == DEFAULT) {
+                if (enc_mode <= ENC_M1)
+                    context_ptr->inter_compound_mode = 1;
+                else if (enc_mode <= ENC_M3)
+                    context_ptr->inter_compound_mode = 3;
+                else
+                    context_ptr->inter_compound_mode = 0;
+            }
+            else {
+                context_ptr->inter_compound_mode = sequence_control_set_ptr->static_config.compound_level;
+            }
+        }
+        else
+            context_ptr->inter_compound_mode = 0;
+#endif
     // Level                Settings
     // 0                    Level 0: OFF
     // 1                    Level 1: sub-pel refinement off
@@ -5081,6 +5103,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if SHUT_EDGE_BASED_SKIP_ANGLE_INTRA
+            context_ptr->edge_based_skip_angle_intra = 0;
+#else
 #if !UNIFY_SC_NSC
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -5155,6 +5180,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
+#endif
         } else
             context_ptr->edge_based_skip_angle_intra =
             sequence_control_set_ptr->static_config.edge_skp_angle_intra;
@@ -6053,7 +6079,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->sq_weight = 100 - (10 * context_ptr->coeffcients_area_based_cycles_allocation_level);
     }
 #endif
-
+#if !MERGE_SQW_FEATURES
     // nsq_hv_level  needs sq_weight to be ON
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
@@ -6116,6 +6142,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 2;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
+#endif
     // Set pred ME full search area
 #if UNIFY_SC_NSC
     if (pd_pass == PD_PASS_0) {
@@ -6292,13 +6319,33 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if  CLEANUP_INTER_INTRA
     //Block level switch, has to follow the picture level
 #endif
-    if (pd_pass == PD_PASS_0)
-        context_ptr->md_enable_inter_intra = 0;
-    else if (pd_pass == PD_PASS_1)
-        context_ptr->md_enable_inter_intra = 0;
+#if MOVE_SIGNALS_TO_MD
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE && sequence_control_set_ptr->seq_header.enable_interintra_compound) {
+        if (pd_pass == PD_PASS_0)
+            context_ptr->md_inter_intra_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            context_ptr->md_inter_intra_level = 0;
+        else if (enc_mode <= ENC_M2)
+            context_ptr->md_inter_intra_level = 2;
+        else
+            context_ptr->md_inter_intra_level = 0;
+    }
     else
-        context_ptr->md_enable_inter_intra =
+        context_ptr->md_inter_intra_level = 0;
+#else
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_inter_intra_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_inter_intra_level = 0;
+    else
+        context_ptr->md_inter_intra_level =
         pcs_ptr->parent_pcs_ptr->enable_inter_intra;
+#endif
 
     // Set enable_paeth @ MD
     if (pd_pass == PD_PASS_0)
@@ -6328,6 +6375,42 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
 
+#if MOVE_SIGNALS_TO_MD
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+    if (enc_mode <= ENC_MRS)
+        context_ptr->txs_in_inter_classes = 1;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->txs_in_inter_classes = 2;
+    else
+        context_ptr->txs_in_inter_classes = 0;
+
+    //{10, 8},   // level0
+    //{ 8,8 },    // level1
+    //{ 7,8 },    // level2
+    //{ 6,8 },    // level3
+    //{ 5,8 },    // level4
+    //{ 4,8 },    // level5
+    //{ 3,8 },    // level6
+    //{ 2,8 },    // level7
+    //{ 3,16 },   // level8
+    //{ 1,8 },    // level9
+    //{ 1,16 }    // level10
+    if (enc_mode <= ENC_MR)
+        context_ptr->nic_scaling_level = 0;
+    else if (enc_mode <= ENC_M0)
+        context_ptr->nic_scaling_level = 1;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->nic_scaling_level = 4;
+    else if (enc_mode <= ENC_M2)
+        context_ptr->nic_scaling_level = 6;
+    else if (enc_mode <= ENC_M4)
+        context_ptr->nic_scaling_level = 8;
+    else
+        context_ptr->nic_scaling_level = 9;
+#endif
 #if COEFF_BASED_TXS_BYPASS
     uint8_t txs_cycles_reduction_level = 0;
     set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
@@ -6380,7 +6463,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // intra_similar_mode
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
+#if SHUT_SIMILARITY_FEATURES
+    context_ptr->intra_similar_mode = 0;
+#else
     context_ptr->intra_similar_mode = 1;
+#endif
 
 #if MD_REFERENCE_MASKING
 #if !SOFT_CYCLES_REDUCTION
@@ -7911,11 +7998,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // Set enable_inter_intra @ MD
     //Block level switch, has to follow the picture level
     if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->md_enable_inter_intra = 0;
+        context_ptr->md_inter_intra_level = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->md_enable_inter_intra = 0;
+        context_ptr->md_inter_intra_level = 0;
     else
-        context_ptr->md_enable_inter_intra = pcs_ptr->parent_pcs_ptr->enable_inter_intra;
+        context_ptr->md_inter_intra_level = pcs_ptr->parent_pcs_ptr->enable_inter_intra;
 
     // Set intra_angle_delta @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
